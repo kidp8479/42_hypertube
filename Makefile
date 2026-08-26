@@ -1,28 +1,52 @@
-.PHONY: help install dev format lint test build
+.PHONY: help install install-backend install-frontend \
+        dev dev-backend dev-frontend \
+        format format-backend format-frontend \
+        lint lint-backend lint-frontend \
+        test build
 
 help:
 	@echo "Available targets:"
-	@echo "  install  - install backend dependencies"
-	@echo "  dev      - run backend in watch mode"
-	@echo "  format   - run Prettier on backend source"
-	@echo "  lint     - run ESLint (--fix) on backend source"
-	@echo "  test     - run backend unit tests"
-	@echo "  build    - build backend for production"
+	@echo "  install         - install backend + frontend dependencies"
+	@echo "  dev-backend     - run backend in watch mode"
+	@echo "  dev-frontend    - run frontend dev server"
+	@echo "  format          - run Prettier on backend + frontend"
+	@echo "  lint            - run ESLint (--fix) on backend + frontend"
+	@echo "  test            - run backend unit tests"
+	@echo "  build           - build backend + frontend for production"
 
-install:
+install: install-backend install-frontend
+
+install-backend:
 	cd backend && npm install
 
-dev:
+install-frontend:
+	cd frontend && npm install
+
+dev-backend:
 	cd backend && npm run start:dev
 
-format:
+dev-frontend:
+	cd frontend && npm run dev
+
+format: format-backend format-frontend
+
+format-backend:
 	cd backend && npm run format
 
-lint:
+format-frontend:
+	cd frontend && npm run format
+
+lint: lint-backend lint-frontend
+
+lint-backend:
 	cd backend && npm run lint
+
+lint-frontend:
+	cd frontend && npm run lint
 
 test:
 	cd backend && npm run test
 
 build:
 	cd backend && npm run build
+	cd frontend && npm run build
