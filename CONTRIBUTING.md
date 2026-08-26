@@ -15,6 +15,14 @@ Drop a short comment on the Linear issue when there's meaningful progress
 to log (not just at the end) - it keeps the issue's history useful instead
 of a single "done" at the finish line.
 
+### Keeping branches up to date
+
+If `main` has moved forward while a feature branch is in progress, rebase
+the feature branch onto `main` before opening (or before merging) the PR -
+don't merge `main` into the feature branch. Merge commits are reserved for
+the single moment a PR actually merges into `main`; everything before that
+stays a clean, rebased line of commits.
+
 ## Commits
 
 Commits are atomic: one logical change per commit, not a pile of unrelated
