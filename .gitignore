@@ -62,3 +62,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Downloaded torrent data (media library, not source)
 backend/storage/
+
+# Subject reference material, not project source
+pdf/
