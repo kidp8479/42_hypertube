@@ -35,12 +35,14 @@ Small, focused commits make `git log` and `git blame` actually useful
 later, especially on a project touching this many different areas
 (networking, streaming, auth, UI).
 
-On a feature branch tied to a Linear issue, include the issue key in the
-commit message: `type(HYP-N): summary` (e.g.
-`feat(HYP-9): scaffold NestJS application`). This is on top of the
-branch-name-based link Linear already infers - it reinforces the link and
-helps the status auto-transition on merge. Commits on `main` outside of any
-specific issue (early setup, this history included) don't need it.
+Every commit tied to a Linear issue includes the issue key:
+`type(HYP-N): summary` (e.g. `feat(HYP-9): scaffold NestJS application`).
+This is on top of the branch-name-based link Linear already infers - it
+reinforces the link and helps the status auto-transition on merge. This
+repo's entire early-setup history was done directly on `main` under
+`HYP-9` and carries the prefix too, rewritten retroactively while nothing
+had been pushed yet - going forward, the prefix is added as commits are
+made, not after the fact.
 
 ## Before committing
 
