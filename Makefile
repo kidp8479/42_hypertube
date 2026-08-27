@@ -9,7 +9,7 @@ COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compos
         format-check format-check-backend format-check-frontend \
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
-        test build \
+        test build doc \
         up down ps logs
 
 help:
@@ -27,6 +27,7 @@ help:
 	@echo "  lint-check      - run ESLint (check only, no writes) on backend + frontend"
 	@echo "  test            - run backend unit tests"
 	@echo "  build           - build backend + frontend for production"
+	@echo "  doc             - generate backend code docs (Compodoc) into docs/backend"
 
 install: install-backend install-frontend hooks-install
 
@@ -95,3 +96,6 @@ test:
 build:
 	cd backend && npm run build
 	cd frontend && npm run build
+
+doc:
+	cd backend && npm run doc

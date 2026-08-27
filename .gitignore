@@ -65,3 +65,6 @@ backend/storage/
 
 # Subject reference material, not project source
 pdf/
+
+# Generated code documentation (Compodoc) - regenerate with `make doc`
+docs/
