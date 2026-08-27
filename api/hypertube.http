@@ -1,0 +1,10 @@
+### Hypertube API - manual request collection (VSCode REST Client extension)
+### Run with the "Send Request" link that appears above each ### block.
+### Full endpoint reference: http://localhost:3000/api-docs (Swagger UI)
+
+@baseUrl = http://localhost:3000
+
+### Health check
+GET {{baseUrl}}/
+
+### Add requests below as endpoints land (auth, users, movies, comments...).
