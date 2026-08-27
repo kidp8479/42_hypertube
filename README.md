@@ -47,8 +47,10 @@ workspace for now (see `CONTRIBUTING.md` for the reasoning).
 
 ```sh
 cp .env.example .env   # first time only, fill in real values
-docker compose up      # Postgres on the internal network, backend on :3000, frontend on :5173
+make up                 # Postgres on the internal network, backend on :3000, frontend on :5173
 ```
+
+`make up` auto-detects `docker compose` vs `podman-compose` (see the Makefile) - same command works on Docker or Podman.
 
 **Without containers (backend/frontend only, no Postgres):**
 
@@ -63,8 +65,12 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | Command | Description |
 |---|---|
 | `make install` | Install backend + frontend dependencies, set up git hooks |
-| `make dev-backend` | Run the NestJS API in watch mode |
-| `make dev-frontend` | Run the Vite dev server |
+| `make dev-backend` | Run the NestJS API in watch mode (no containers) |
+| `make dev-frontend` | Run the Vite dev server (no containers) |
+| `make up` | Compose up (db + backend + frontend), Docker or Podman |
+| `make down` | Compose down |
+| `make ps` | Compose ps |
+| `make logs` | Compose logs -f |
 | `make format` | Format code (Prettier, writes) on backend + frontend |
 | `make format-check` | Check formatting without writing (used by the pre-commit hook and CI) |
 | `make lint` | Lint (ESLint --fix) on backend + frontend |

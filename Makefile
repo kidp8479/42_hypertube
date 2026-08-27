@@ -1,16 +1,26 @@
+# Auto-detect the compose CLI: prefer the Docker Compose v2 plugin, fall
+# back to podman-compose on machines that only have that (e.g. the school
+# Podman setup). Override explicitly if needed, e.g. `make COMPOSE=podman-compose up`.
+COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "podman-compose")
+
 .PHONY: help install install-backend install-frontend hooks-install \
         dev dev-backend dev-frontend \
         format format-backend format-frontend \
         format-check format-check-backend format-check-frontend \
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
-        test build
+        test build \
+        up down ps logs
 
 help:
 	@echo "Available targets:"
 	@echo "  install         - install backend + frontend dependencies, set up git hooks"
-	@echo "  dev-backend     - run backend in watch mode"
-	@echo "  dev-frontend    - run frontend dev server"
+	@echo "  dev-backend     - run backend in watch mode (no containers)"
+	@echo "  dev-frontend    - run frontend dev server (no containers)"
+	@echo "  up              - docker/podman compose up -d (db + backend + frontend)"
+	@echo "  down            - docker/podman compose down"
+	@echo "  ps              - docker/podman compose ps"
+	@echo "  logs            - docker/podman compose logs -f"
 	@echo "  format          - run Prettier (write) on backend + frontend"
 	@echo "  format-check    - run Prettier (check only, no writes) on backend + frontend"
 	@echo "  lint            - run ESLint (--fix) on backend + frontend"
@@ -34,6 +44,18 @@ dev-backend:
 
 dev-frontend:
 	cd frontend && npm run dev
+
+up:
+	$(COMPOSE) up -d
+
+down:
+	$(COMPOSE) down
+
+ps:
+	$(COMPOSE) ps
+
+logs:
+	$(COMPOSE) logs -f
 
 format: format-backend format-frontend
 
