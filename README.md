@@ -14,6 +14,9 @@ library) that lets a video start playing while it's still downloading.
 
 - **Language**: TypeScript everywhere (backend and frontend)
 - **Testing**: [Jest](https://jestjs.io) (backend unit + e2e)
+- **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
+- **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand)
+- **Manual API testing**: `api/hypertube.http` (VSCode [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension) - versioned, repo-tracked request collection
 - **Lint/format**: [ESLint](https://eslint.org) + [Prettier](https://prettier.io), shared config across packages
 - **Task runner**: [GNU Make](https://www.gnu.org/software/make/) wrapping the npm scripts
 - **Git hooks**: a versioned pre-commit hook (`.githooks/`, see `CONTRIBUTING.md`) blocks commits that aren't formatted/linted
