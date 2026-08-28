@@ -13,7 +13,7 @@ import { UsersModule } from './users/users.module';
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      autoLoadEntities: true,
       // Auto-syncs the schema from entities - convenient in dev, but can
       // drop/alter columns (and their data) without asking. Never in prod.
       synchronize: process.env.NODE_ENV !== 'production',
