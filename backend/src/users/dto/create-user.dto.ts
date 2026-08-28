@@ -1,1 +1,49 @@
-export class CreateUserDto {}
+import { Transform } from 'class-transformer';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  Length,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import { PreferredLanguage } from '../entities/user.entity';
+
+/**
+ * Payload accepted at registration (`POST /users`).
+ *
+ * Server-managed columns (`id`, `createdAt`, `updatedAt`) are never part
+ * of the input. `profilePicture` is handled outside this DTO: it comes in
+ * as a file upload, with a default avatar when the user provides none.
+ */
+export class CreateUserDto {
+  // Normalise so e-mail uniqueness is case-insensitive (Foo@X.com == foo@x.com).
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsEmail()
+  @MaxLength(255)
+  email!: string;
+
+  @IsString()
+  @Length(3, 30)
+  username!: string;
+
+  @IsString()
+  @Length(1, 100)
+  firstName!: string;
+
+  @IsString()
+  @Length(1, 100)
+  lastName!: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  password!: string;
+
+  @IsOptional()
+  @IsEnum(PreferredLanguage)
+  preferredLanguage?: PreferredLanguage;
+}
