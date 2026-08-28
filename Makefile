@@ -17,8 +17,10 @@ PROJECT := $(notdir $(CURDIR))
         format-check format-check-backend format-check-frontend \
         lint lint-check lint-check-backend lint-check-frontend \
         lint-backend lint-frontend \
+        typecheck typecheck-backend typecheck-frontend \
         test build doc \
         up down ps logs logs-backend logs-frontend logs-db \
+        sh-backend sh-frontend psql be fe \
         clean fclean wipe-db re
 
 help:
@@ -35,6 +37,11 @@ help:
 	@echo "  logs-backend    - docker/podman compose logs -f backend"
 	@echo "  logs-frontend   - docker/podman compose logs -f frontend"
 	@echo "  logs-db         - docker/podman compose logs -f db"
+	@echo "  sh-backend      - interactive shell in the backend container"
+	@echo "  sh-frontend     - interactive shell in the frontend container"
+	@echo "  psql            - psql prompt on the dev database"
+	@echo "  be CMD=\"...\"     - run a command in the backend container (e.g. npx tsc --noEmit)"
+	@echo "  fe CMD=\"...\"     - run a command in the frontend container"
 	@echo "  clean           - stop and remove containers (keeps volumes + images)"
 	@echo "  fclean          - clean + remove volumes (db, node_modules) and locally-built images"
 	@echo "  wipe-db         - remove only the db container + its data volume (fast schema reset)"
@@ -43,6 +50,7 @@ help:
 	@echo "  format-check    - run Prettier (check only, no writes) on backend + frontend"
 	@echo "  lint            - run ESLint (--fix) on backend + frontend"
 	@echo "  lint-check      - run ESLint (check only, no writes) on backend + frontend"
+	@echo "  typecheck       - run tsc --noEmit on backend + frontend"
 	@echo "  test            - run backend unit tests"
 	@echo "  build           - build backend + frontend for production"
 	@echo "  doc             - generate backend code docs (Compodoc) into docs/backend"
@@ -84,6 +92,30 @@ logs-frontend:
 
 logs-db:
 	$(COMPOSE) logs -f db
+
+# --- run things inside the running containers ----------------------------- #
+# `exec` attaches to an already-running container, so `make up` first.
+
+# Interactive shell in a service.
+sh-backend:
+	$(COMPOSE) exec backend sh
+
+sh-frontend:
+	$(COMPOSE) exec frontend sh
+
+# psql prompt on the dev database, using the container's own credentials.
+psql:
+	$(COMPOSE) exec db sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+
+# Run an arbitrary command in a service, e.g.
+#   make be CMD="npx tsc --noEmit"
+#   make be CMD="npm run lint"
+#   make fe CMD="npm run build"
+be:
+	$(COMPOSE) exec backend $(CMD)
+
+fe:
+	$(COMPOSE) exec frontend $(CMD)
 
 # --- cleanup --------------------------------------------------------------- #
 
@@ -141,6 +173,14 @@ lint-check-backend:
 
 lint-check-frontend:
 	cd frontend && npm run lint:check
+
+typecheck: typecheck-backend typecheck-frontend
+
+typecheck-backend:
+	cd backend && npm run typecheck
+
+typecheck-frontend:
+	cd frontend && npm run typecheck
 
 test:
 	cd backend && npm run test
