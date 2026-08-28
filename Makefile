@@ -3,14 +3,23 @@
 # Podman setup). Override explicitly if needed, e.g. `make COMPOSE=podman-compose up`.
 COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "podman-compose")
 
+# The plain container CLI (for label-scoped cleanup that compose can't do
+# portably): `docker` when the Compose v2 plugin is present, `podman` otherwise.
+CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE))),docker,podman)
+
+# Compose derives the project name from the directory name; volumes are then
+# named `<project>_<key>` on both docker compose and podman-compose.
+PROJECT := $(notdir $(CURDIR))
+
 .PHONY: help install install-backend install-frontend hooks-install \
         dev dev-backend dev-frontend \
         format format-backend format-frontend \
         format-check format-check-backend format-check-frontend \
-        lint lint-backend lint-frontend \
-        lint-check lint-check-backend lint-check-frontend \
+        lint lint-check lint-check-backend lint-check-frontend \
+        lint-backend lint-frontend \
         test build doc \
-        up down ps logs logs-backend logs-frontend logs-db
+        up down ps logs logs-backend logs-frontend logs-db \
+        clean fclean wipe-db re
 
 help:
 	@echo "Available targets:"
@@ -26,6 +35,10 @@ help:
 	@echo "  logs-backend    - docker/podman compose logs -f backend"
 	@echo "  logs-frontend   - docker/podman compose logs -f frontend"
 	@echo "  logs-db         - docker/podman compose logs -f db"
+	@echo "  clean           - stop and remove containers (keeps volumes + images)"
+	@echo "  fclean          - clean + remove volumes (db, node_modules) and locally-built images"
+	@echo "  wipe-db         - remove only the db container + its data volume (fast schema reset)"
+	@echo "  re              - fclean then up (full reset)"
 	@echo "  format          - run Prettier (write) on backend + frontend"
 	@echo "  format-check    - run Prettier (check only, no writes) on backend + frontend"
 	@echo "  lint            - run ESLint (--fix) on backend + frontend"
@@ -71,6 +84,31 @@ logs-frontend:
 
 logs-db:
 	$(COMPOSE) logs -f db
+
+# --- cleanup --------------------------------------------------------------- #
+
+# Stop and remove containers. Volumes (the database) and images are kept.
+clean:
+	$(COMPOSE) down --remove-orphans
+
+# Also drop volumes (db_data + the node_modules volumes) and images built
+# locally. `--rmi local` leaves pulled images like postgres:16-alpine alone,
+# so the next `up` doesn't re-download them.
+fclean:
+	$(COMPOSE) down --volumes --remove-orphans --rmi local
+
+# Reset just the database. `down` (no --volumes) removes every container but
+# keeps all named volumes, so we then drop only db_data by name (portable:
+# compose names volumes `<project>_db_data` on both docker and podman-compose).
+# Much faster than fclean: the node_modules volumes and built images stay, so
+# the next `up` needs no rebuild or npm ci - only the containers and a fresh
+# database are recreated. `-` lets it pass when the volume isn't there.
+wipe-db:
+	$(COMPOSE) down
+	-$(CONTAINER) volume rm $(PROJECT)_db_data
+	@echo "Database gone. 'make up' recreates a fresh one."
+
+re: fclean up
 
 format: format-backend format-frontend
 
