@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import * as argon2 from 'argon2';
 
 /**
  * Data access for {@link User} rows. Wraps the TypeORM repository so the
@@ -21,8 +22,12 @@ export class UsersService {
    * it's the in-memory step where password hashing and defaults belong -
    * and `save()` performs the INSERT.
    */
-  create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
+  async create(createUserDto: CreateUserDto) {
+    const hashedPassword = await argon2.hash(createUserDto.password);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
     return this.usersRepository.save(user);
   }
 
