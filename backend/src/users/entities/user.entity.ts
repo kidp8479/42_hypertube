@@ -6,11 +6,18 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+/** UI language a user picked; defaults to English per the subject. */
 export enum PreferredLanguage {
   EN = 'en',
   FR = 'fr',
 }
 
+/**
+ * A Hypertube account - one row per registered user.
+ *
+ * `password` holds a hash and is excluded from default selects, so any
+ * query that needs it must request it explicitly (see the field doc).
+ */
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -28,8 +35,12 @@ export class User {
   @Column({ length: 100 })
   lastName!: string;
 
-  // Holds a hash (bcrypt/argon2), not the raw password - 255 comfortably
-  // fits either algorithm's output.
+  /**
+   * Password hash (argon2/bcrypt), never the plaintext - 255 chars fit
+   * either algorithm's output. `select: false` keeps it out of normal
+   * reads; fetch it deliberately (e.g. at login) with
+   * `{ select: { password: true } }` or a query builder `addSelect`.
+   */
   @Column({ select: false, length: 255 })
   password!: string;
 
