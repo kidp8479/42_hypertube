@@ -1,3 +1,7 @@
+# ---------------------------------------------------------------------------- #
+# Configuration                                                                #
+# ---------------------------------------------------------------------------- #
+
 # Auto-detect the compose CLI: prefer the Docker Compose v2 plugin, fall
 # back to podman-compose on machines that only have that (e.g. the school
 # Podman setup). Override explicitly if needed, e.g. `make COMPOSE=podman-compose up`.
@@ -11,49 +15,57 @@ CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE))),docker,podman)
 # named `<project>_<key>` on both docker compose and podman-compose.
 PROJECT := $(notdir $(CURDIR))
 
-.PHONY: help install install-backend install-frontend hooks-install \
-        dev dev-backend dev-frontend \
+.PHONY: help \
+        install install-backend install-frontend hooks-install \
+        dev-backend dev-frontend \
+        up down ps re \
+        logs logs-backend logs-frontend logs-db \
+        sh-backend sh-frontend psql be fe \
+        clean fclean wipe-db \
         format format-backend format-frontend \
         format-check format-check-backend format-check-frontend \
-        lint lint-check lint-check-backend lint-check-frontend \
-        lint-backend lint-frontend \
+        lint lint-backend lint-frontend \
+        lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test build doc \
-        up down ps logs logs-backend logs-frontend logs-db \
-        sh-backend sh-frontend psql be fe \
-        clean fclean wipe-db re
+        test build doc
 
 help:
-	@echo "Available targets:"
+	@echo "Setup"
 	@echo "  install         - install backend + frontend dependencies, set up git hooks"
-	@echo "  dev-backend     - run backend in watch mode, no containers, NO DATABASE"
-	@echo "                    (db isn't exposed to the host - use 'make up' for"
-	@echo "                    anything touching Postgres)"
-	@echo "  dev-frontend    - run frontend dev server (no containers, no DB needed)"
-	@echo "  up              - docker/podman compose up -d (db + backend + frontend)"
-	@echo "  down            - docker/podman compose down"
-	@echo "  ps              - docker/podman compose ps"
-	@echo "  logs            - docker/podman compose logs -f (all services)"
-	@echo "  logs-backend    - docker/podman compose logs -f backend"
-	@echo "  logs-frontend   - docker/podman compose logs -f frontend"
-	@echo "  logs-db         - docker/podman compose logs -f db"
+	@echo ""
+	@echo "Local dev (no containers)"
+	@echo "  dev-backend     - backend in watch mode, NO DATABASE (db isn't exposed to"
+	@echo "                    the host - use 'make up' for anything touching Postgres)"
+	@echo "  dev-frontend    - frontend dev server (no DB needed)"
+	@echo ""
+	@echo "Container stack"
+	@echo "  up              - compose up -d (db + backend + frontend)"
+	@echo "  down            - compose down"
+	@echo "  ps              - compose ps"
+	@echo "  re              - fclean then up (full reset)"
+	@echo "  logs[-backend|-frontend|-db]  - follow logs (all services, or one)"
 	@echo "  sh-backend      - interactive shell in the backend container"
 	@echo "  sh-frontend     - interactive shell in the frontend container"
 	@echo "  psql            - psql prompt on the dev database"
 	@echo "  be CMD=\"...\"     - run a command in the backend container (e.g. npx tsc --noEmit)"
 	@echo "  fe CMD=\"...\"     - run a command in the frontend container"
+	@echo ""
+	@echo "Cleanup"
 	@echo "  clean           - stop and remove containers (keeps volumes + images)"
 	@echo "  fclean          - clean + remove volumes (db, node_modules) and locally-built images"
 	@echo "  wipe-db         - remove only the db container + its data volume (fast schema reset)"
-	@echo "  re              - fclean then up (full reset)"
-	@echo "  format          - run Prettier (write) on backend + frontend"
-	@echo "  format-check    - run Prettier (check only, no writes) on backend + frontend"
-	@echo "  lint            - run ESLint (--fix) on backend + frontend"
-	@echo "  lint-check      - run ESLint (check only, no writes) on backend + frontend"
-	@echo "  typecheck       - run tsc --noEmit on backend + frontend"
-	@echo "  test            - run backend unit tests"
-	@echo "  build           - build backend + frontend for production"
-	@echo "  doc             - generate backend code docs (Compodoc) into docs/backend"
+	@echo ""
+	@echo "Code quality (host-side)"
+	@echo "  format[-check]   - Prettier, write (or check only) on backend + frontend"
+	@echo "  lint[-check]     - ESLint, --fix (or check only) on backend + frontend"
+	@echo "  typecheck        - tsc --noEmit on backend + frontend"
+	@echo "  test             - backend unit tests"
+	@echo "  build            - production build, backend + frontend"
+	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
+
+# ---------------------------------------------------------------------------- #
+# Setup                                                                        #
+# ---------------------------------------------------------------------------- #
 
 install: install-backend install-frontend hooks-install
 
@@ -66,11 +78,19 @@ install-frontend:
 hooks-install:
 	git config core.hooksPath .githooks
 
+# ---------------------------------------------------------------------------- #
+# Local dev (no containers)                                                    #
+# ---------------------------------------------------------------------------- #
+
 dev-backend:
 	cd backend && npm run start:dev
 
 dev-frontend:
 	cd frontend && npm run dev
+
+# ---------------------------------------------------------------------------- #
+# Container stack - lifecycle                                                  #
+# ---------------------------------------------------------------------------- #
 
 up:
 	$(COMPOSE) up -d
@@ -80,6 +100,12 @@ down:
 
 ps:
 	$(COMPOSE) ps
+
+re: fclean up
+
+# ---------------------------------------------------------------------------- #
+# Container stack - logs                                                       #
+# ---------------------------------------------------------------------------- #
 
 logs:
 	$(COMPOSE) logs -f
@@ -93,8 +119,9 @@ logs-frontend:
 logs-db:
 	$(COMPOSE) logs -f db
 
-# --- run things inside the running containers ----------------------------- #
-# `exec` attaches to an already-running container, so `make up` first.
+# ---------------------------------------------------------------------------- #
+# Container stack - run commands inside a running service (`make up` first)    #
+# ---------------------------------------------------------------------------- #
 
 # Interactive shell in a service.
 sh-backend:
@@ -117,7 +144,9 @@ be:
 fe:
 	$(COMPOSE) exec frontend $(CMD)
 
-# --- cleanup --------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+# Container stack - cleanup                                                    #
+# ---------------------------------------------------------------------------- #
 
 # Stop and remove containers. Volumes (the database) and images are kept.
 clean:
@@ -140,7 +169,9 @@ wipe-db:
 	-$(CONTAINER) volume rm $(PROJECT)_db_data
 	@echo "Database gone. 'make up' recreates a fresh one."
 
-re: fclean up
+# ---------------------------------------------------------------------------- #
+# Code quality - run on the host (fast; matches what the pre-commit hook uses) #
+# ---------------------------------------------------------------------------- #
 
 format: format-backend format-frontend
 
@@ -181,6 +212,10 @@ typecheck-backend:
 
 typecheck-frontend:
 	cd frontend && npm run typecheck
+
+# ---------------------------------------------------------------------------- #
+# Test / build / docs                                                          #
+# ---------------------------------------------------------------------------- #
 
 test:
 	cd backend && npm run test
