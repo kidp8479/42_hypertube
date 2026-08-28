@@ -5,7 +5,7 @@
     "source.fixAll.eslint": "explicit"
   },
   "eslint.workingDirectories": ["backend", "frontend"],
-  "js/ts.tsdk.path": "backend/node_modules/typescript/lib",
+  "typescript.tsdk": "backend/node_modules/typescript/lib",
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true

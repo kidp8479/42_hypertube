@@ -8,15 +8,15 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // vire les champs non déclarés dans le DTO
-      forbidNonWhitelisted: true, // ...et renvoie 400 si on en envoie
-      transform: true, // transforme le payload JSON en instance de la classe DTO
+      whitelist: true, // strips fields not declared in the DTO
+      forbidNonWhitelisted: true, // ...and returns 400 if any are sent
+      transform: true, // turns the JSON payload into a DTO class instance
     }),
   );
 
   app.enableCors({
     origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
-    credentials: true, // nécessaire plus tard pour les cookies / le header Authorization
+    credentials: true, // needed later for cookies / the Authorization header
   });
 
   const swaggerConfig = new DocumentBuilder()
