@@ -14,7 +14,7 @@ import * as argon2 from 'argon2';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
   ) {}
 
   /**
