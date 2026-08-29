@@ -58,6 +58,65 @@ re-commit. The same checks run in CI (`.github/workflows/ci.yml`) on every
 push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
+## Testing
+
+Ship a test with every new unit of behavior (endpoint, service method,
+script) before merging it. Auth flows (register / login / reset / logout)
+also get an e2e test.
+
+Run the suite **host-side** (`make test`), not inside the backend
+container - the container has a memory cap and Jest's workers get
+OOM-killed there. Same for `make lint` / `make typecheck` / `make format`.
+
+### Spec file layout
+
+Specs are co-located (`foo.service.ts` -> `foo.service.spec.ts`) and follow
+one shape, so any spec reads the same way:
+
+```
+type FooDeps = { bar: jest.Mock };          // only the methods the spec drives
+const buildThing = (overrides = {}) => ({ ...sensibleDefaults, ...overrides });
+
+describe('FooService', () => {
+  // shared setup
+  let service: FooService;
+  let deps: FooDeps;
+  beforeEach(async () => { /* compile TestingModule, grab service + mocks */ });
+
+  // tests, grouped by method
+  it('is defined', () => { ... });
+
+  describe('methodUnderTest', () => {
+    it('does X when Y', async () => {
+      // arrange
+      // act
+      // assert
+    });
+  });
+});
+```
+
+- **Setup lives in the hooks, tests are the `it()`s.** The `beforeEach`
+  block is the boundary: everything above it is wiring, everything below
+  is a real assertion.
+- **One `describe` per method under test**, nested in the class-level
+  `describe`. `it('...')` labels read as sentences
+  (`methodUnderTest does X when Y`).
+- **Mock only what the spec drives.** A local `type XMock = { ... }` listing
+  just those methods; the DI fake is passed via `useValue`; retrieve it
+  with `module.get<XMock>(token)` (real token, mock type - see
+  `users.service.spec.ts`).
+- **Fixtures come from a `buildX()` factory** at the top of the file.
+  A test overrides only the fields it asserts on; the rest stay defaults.
+- **Arrange / Act / Assert**, separated by blank lines, not comments.
+- `clearMocks: true` is set globally (`package.json` -> `jest`), so mock
+  call history resets between tests automatically.
+- Call `await module.init()` after `.compile()` when the service has
+  lifecycle hooks (`onModuleInit` etc.) - `.compile()` alone does not run
+  them.
+- Don't mock `argon2`; it's fast enough to hash/verify for real in a
+  unit test, and a real hash catches bugs a stub would hide.
+
 ## Tools in use
 
 - **Linear** - issue tracking, milestones, priorities. Labels group issues
