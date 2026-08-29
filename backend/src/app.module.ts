@@ -14,6 +14,9 @@ import { UsersModule } from './users/users.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
+      // Log every generated SQL statement in dev - useful while learning
+      // the ORM and for spotting N+1 queries. Silent in production.
+      logging: process.env.NODE_ENV !== 'production',
       // Auto-syncs the schema from entities - convenient in dev, but can
       // drop/alter columns (and their data) without asking. Never in prod.
       synchronize: process.env.NODE_ENV !== 'production',
