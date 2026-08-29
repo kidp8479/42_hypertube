@@ -40,6 +40,20 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
+  /**
+   * Looks a user up by email for the login flow. Uses a query builder
+   * with `addSelect` so the `password` hash - hidden by `select: false`
+   * on the entity - comes back alongside the normal columns; a plain
+   * `findOneBy` would omit it. Resolves to `null` when there's no match.
+   */
+  findByEmail(email: string) {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
   /** Applies a partial update by id, then returns the refreshed row. */
   async update(id: number, updateUserDto: UpdateUserDto) {
     await this.usersRepository.update(id, updateUserDto);
