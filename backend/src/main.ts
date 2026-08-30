@@ -8,6 +8,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
+  // Close DB connections and run module teardown on SIGTERM/SIGINT
+  // (what `docker stop` sends) instead of dropping them.
+  app.enableShutdownHooks();
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // strips fields not declared in the DTO
