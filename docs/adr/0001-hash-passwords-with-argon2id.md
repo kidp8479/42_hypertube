@@ -31,5 +31,5 @@ and verify with `argon2.verify` at login.
 - The `User.password` column is `varchar(255)` and `select: false` — the
   argon2id encoded hash (~97 chars) fits, and it never leaves the DB by
   accident.
-- Same hashing approach is reused for password-reset tokens — see ADR-0003
-  when written.
+- Same hashing approach is reused for password-reset tokens — to be
+  recorded in its own ADR when that flow is built.
