@@ -21,8 +21,12 @@ export const envValidationSchema = Joi.object({
   // Signing key for auth JWTs. 32 chars minimum so a short placeholder
   // ("change_me") can never reach production.
   JWT_SECRET: Joi.string().min(32).required(),
-  // Access-token lifetime, in the vercel/ms format @nestjs/jwt accepts.
-  JWT_EXPIRES_IN: Joi.string().default('15m'),
+  // Access-token lifetime, in the vercel/ms format @nestjs/jwt accepts
+  // (e.g. "15m", "7d"). The pattern is enforced here so auth.module can
+  // safely assert the value as an ms StringValue.
+  JWT_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+(s|m|h|d)$/)
+    .default('15m'),
 
   // Optional - CORS allowed origin for the SPA. main.ts falls back to the
   // local Vite dev server when unset.

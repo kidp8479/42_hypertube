@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
+import { JwtService } from '@nestjs/jwt';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake stays loose.
@@ -38,6 +39,10 @@ describe('AuthService', () => {
         {
           provide: UsersService,
           useValue: { findByEmail: jest.fn() },
+        },
+        {
+          provide: JwtService,
+          useValue: { signAsync: jest.fn() },
         },
       ],
     }).compile();
