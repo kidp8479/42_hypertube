@@ -19,8 +19,11 @@ export class AuthController {
 
   /**
    * Exchanges email + password for a JWT access token. Answers 200 (not
-   * the POST default 201 - nothing is created), or 401 on any bad
-   * credential with no hint about which part failed.
+   * the POST default 201 - nothing is created).
+   *
+   * @throws {UnauthorizedException} 401 on any bad credential, with no
+   * hint about which part failed (wrong password and unknown email are
+   * indistinguishable, see {@link AuthService.validateUser}).
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)

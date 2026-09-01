@@ -50,11 +50,12 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Mints a signed access token for an already-authenticated user. The
-   * caller is responsible for checking credentials first - this method
-   * trusts its input. `sub` holds the user id per the JWT spec;
-   * `username` rides along so routine requests skip a DB lookup, at the
-   * cost of being stale until the token expires.
+   * Mints a signed access token. `sub` holds the user id per the JWT
+   * spec; `username` rides along so routine requests skip a DB lookup, at
+   * the cost of being stale until the token expires.
+   *
+   * @param user must already be authenticated - this method does no
+   * credential check of its own and trusts its caller.
    */
   async login(user: User): Promise<{ access_token: string }> {
     const payload = { username: user.username, sub: user.id };
