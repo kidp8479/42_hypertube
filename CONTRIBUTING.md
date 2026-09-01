@@ -147,6 +147,29 @@ semantically wrong - a `POST` that does not create a resource
 never a bare number. Thrown `HttpException`s carry their own status and are
 unaffected by `@HttpCode`.
 
+## Doc comments
+
+Public surface (exported classes/methods, controllers, entities, scripts
+called from outside) gets a doc comment; obvious private code does not.
+Comment the *why*, not the *what* - a line restating the identifier name
+earns nothing.
+
+Prose carries the intent. JSDoc tags are added **only when they state
+something the TypeScript signature does not**:
+
+- `@throws` - TS has no throws in the type system, so which exception a
+  method or route raises is real, missing information (ex: the 401 on
+  `POST /auth/login`).
+- `@param` - only for a precondition, unit, or invariant not in the type
+  (ex: "must already be authenticated"). Never `@param foo the foo`.
+- `@returns` - only when the meaning of the return is non-obvious (what a
+  `null` signals, what a shape represents), not to repeat the type.
+- `@example` - for a non-trivial call flow; Compodoc renders it.
+
+Compodoc (`make doc`) turns these into the browsable API docs used as
+defense evidence, so the tags that survive should read as documentation,
+not decoration.
+
 ## Tools in use
 
 - **Linear** - issue tracking, milestones, priorities. Labels group issues
