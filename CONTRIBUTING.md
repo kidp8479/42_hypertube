@@ -117,6 +117,36 @@ describe('FooService', () => {
 - Don't mock `argon2`; it's fast enough to hash/verify for real in a
   unit test, and a real hash catches bugs a stub would hide.
 
+## API conventions (NestJS)
+
+### DTOs
+
+- **Every field is `readonly` and uses definite assignment (`email!: string`).**
+  A DTO models an inbound request: it is read, never mutated. `readonly`
+  encodes that and lets the compiler catch an accidental `dto.x = ...` in a
+  handler; the `!` is still needed because `class-transformer` populates the
+  instance, not a constructor.
+- **Two-sided bounds use `@Length(min, max)`**, not separate `@MinLength` +
+  `@MaxLength`. A one-sided cap stays a single `@MaxLength`.
+- **Email is normalised** with `@Transform((v) => v.trim().toLowerCase())`
+  before `@IsEmail()`, on every DTO that carries an email, so lookups and
+  uniqueness stay case-insensitive.
+- One doc-comment on the class explaining what the payload is for; no
+  per-field comments unless a rule is non-obvious (ex: why login has no
+  password policy).
+- Login/auth DTOs carry **no** password length or complexity rule beyond a
+  size cap - the form must accept legacy credentials, and a policy hint only
+  helps an attacker.
+
+### HTTP status codes
+
+Rely on Nest's default success code for the verb (`GET`/`PATCH`/`DELETE` -> 200,
+`POST` -> 201). Add `@HttpCode(HttpStatus.OK)` **only** when the default is
+semantically wrong - a `POST` that does not create a resource
+(`POST /auth/login` returns a token, so it is 200). Use the `HttpStatus` enum,
+never a bare number. Thrown `HttpException`s carry their own status and are
+unaffected by `@HttpCode`.
+
 ## Tools in use
 
 - **Linear** - issue tracking, milestones, priorities. Labels group issues

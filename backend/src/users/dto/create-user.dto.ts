@@ -6,7 +6,6 @@ import {
   IsString,
   Length,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 import { PreferredLanguage } from '../entities/user.entity';
 
@@ -24,26 +23,25 @@ export class CreateUserDto {
   )
   @IsEmail()
   @MaxLength(255)
-  email!: string;
+  readonly email!: string;
 
   @IsString()
   @Length(3, 30)
-  username!: string;
+  readonly username!: string;
 
   @IsString()
   @Length(1, 100)
-  firstName!: string;
+  readonly firstName!: string;
 
   @IsString()
   @Length(1, 100)
-  lastName!: string;
+  readonly lastName!: string;
 
   @IsString()
-  @MinLength(8)
-  @MaxLength(100)
-  password!: string;
+  @Length(8, 100)
+  readonly password!: string;
 
   @IsOptional()
   @IsEnum(PreferredLanguage)
-  preferredLanguage?: PreferredLanguage;
+  readonly preferredLanguage?: PreferredLanguage;
 }
