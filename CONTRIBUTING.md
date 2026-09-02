@@ -139,6 +139,10 @@ describe('FooService', () => {
 - Login/auth DTOs carry **no** password length or complexity rule beyond a
   size cap - the form must accept legacy credentials, and a policy hint only
   helps an attacker.
+- An "edit" DTO (`PartialType(OmitType(CreateDto, [...]))`) omits every
+  field that needs its own confirmed flow, not just makes them optional.
+  For `UpdateUserDto` that is `password` and `email` (login identifier +
+  reset channel) - each has a dedicated re-auth/verify endpoint.
 
 ### HTTP status codes
 
@@ -153,6 +157,11 @@ A handler acting on a resource id that matches no row throws
 `NotFoundException` (404) - never a 200 with an empty body, and never a
 silent no-op on `PATCH`/`DELETE`. The check lives in the service (single
 source of truth), not the controller.
+
+A Postgres unique-constraint violation (`23505`) is mapped to **409** by
+the global `QueryFailedFilter`, with a message that does not name the
+clashing value - never let it surface as a raw 500 with the SQL error in
+the body/logs.
 
 ## Doc comments
 

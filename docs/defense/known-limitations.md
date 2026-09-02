@@ -38,3 +38,19 @@ backend process (`app.module.ts`).
 - **Cost to fix later:** low. Add the Redis storage adapter and point it
   at the cache instance; the `@Throttle` limits on the routes stay as they
   are.
+
+## Registration still confirms whether an email is registered
+
+`POST /users` with an already-registered email returns **409** (a taken
+username does too). A free email returns 201. That observable difference
+lets someone probe which emails have an account.
+
+- **Why (for now):** a fully enumeration-safe registration returns the
+  same response either way and tells the real owner by email instead -
+  which needs the transactional-email infra. That is **HYP-32**; until it
+  lands, a generic 409 (no SQL leak, no hint at which value clashed) is
+  the interim, and login / password-reset are already uniform.
+- **Real-world:** the 201-vs-409 timing/status oracle is the enumeration
+  vector; the fix is the uniform-response + email side-channel above.
+- **Cost to fix later:** medium - it is HYP-32 + the register handler
+  change, already scoped.
