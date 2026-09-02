@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
-import { DEFAULT_AVATAR, UsersService } from './users.service';
+import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -83,13 +83,13 @@ describe('UsersService', () => {
       expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
     });
 
-    it('falls back to the default avatar when none is provided', async () => {
+    it('does not set a profile picture (left null until the upload flow)', async () => {
       repository.create.mockImplementation((data: Partial<User>) => data);
       repository.save.mockImplementation((data: Partial<User>) => data);
 
       const user = await service.create(buildCreateUserDto());
 
-      expect(user.profilePicture).toBe(DEFAULT_AVATAR);
+      expect(user.profilePicture).toBeUndefined();
     });
   });
 

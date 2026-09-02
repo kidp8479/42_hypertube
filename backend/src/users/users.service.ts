@@ -7,9 +7,6 @@ import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
 import { ARGON2_OPTIONS } from '../auth/argon2.config';
 
-/** Used when a new account is created without uploading an avatar. */
-export const DEFAULT_AVATAR = '/avatars/default.png';
-
 /**
  * Data access for {@link User} rows. Wraps the TypeORM repository so the
  * rest of the app never issues SQL directly.
@@ -34,9 +31,6 @@ export class UsersService {
     const user = this.usersRepository.create({
       ...createUserDto,
       password: hashedPassword,
-      // The upload flow (separate ticket) will pass a real URL here; until
-      // then every account starts with the default avatar.
-      profilePicture: DEFAULT_AVATAR,
     });
     return this.usersRepository.save(user);
   }
