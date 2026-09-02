@@ -1,4 +1,3 @@
-import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -7,6 +6,8 @@ import {
   Length,
   MaxLength,
 } from 'class-validator';
+import { NormalizeEmail } from '../../common/decorators/normalize-email.decorator';
+import { Trim } from '../../common/decorators/trim.decorator';
 import { PreferredLanguage } from '../entities/user.entity';
 
 /**
@@ -17,14 +18,15 @@ import { PreferredLanguage } from '../entities/user.entity';
  * as a file upload, with a default avatar when the user provides none.
  */
 export class CreateUserDto {
-  // Normalise so e-mail uniqueness is case-insensitive (Foo@X.com == foo@x.com).
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @NormalizeEmail()
   @IsEmail()
   @MaxLength(255)
   readonly email!: string;
 
+  // Trimmed but not lower-cased: the username is display text and its
+  // case is preserved. Case-insensitive uniqueness is a separate question
+  // (see backlog).
+  @Trim()
   @IsString()
   @Length(3, 30)
   readonly username!: string;
