@@ -51,15 +51,16 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Mints a signed access token. `sub` holds the user id per the JWT
-   * spec; `username` rides along so routine requests skip a DB lookup, at
-   * the cost of being stale until the token expires.
+   * Mints a signed access token. The payload carries only `sub` (the user
+   * id, per the JWT spec) - profile data is fetched per request, not
+   * carried in the token, so a claim can never go stale and grant access
+   * (ADR-0002).
    *
    * @param user must already be authenticated - this method does no
    * credential check of its own and trusts its caller.
    */
   async login(user: User): Promise<{ access_token: string }> {
-    const payload = { username: user.username, sub: user.id };
+    const payload = { sub: user.id };
     const access_token = await this.jwtService.signAsync(payload);
     return { access_token };
   }
