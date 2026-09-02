@@ -4,6 +4,7 @@ import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entities/user.entity';
+import { ARGON2_OPTIONS } from './argon2.config';
 
 /**
  * Credential verification for the login flow. Sits on top of
@@ -25,7 +26,7 @@ export class AuthService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.dummyHash = await argon2.hash(randomUUID());
+    this.dummyHash = await argon2.hash(randomUUID(), ARGON2_OPTIONS);
   }
 
   /**
