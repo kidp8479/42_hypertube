@@ -30,11 +30,24 @@ services:
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_NAME: ${POSTGRES_DB}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
       - ./backend:/app
+      # Everything the container writes lives in named volumes, never on the
+      # bind-mounted source. Compose runtimes disagree on bind-mount
+      # ownership: Docker maps the container "node" user (UID 1000) to the
+      # host user, but rootless Podman (school) maps the host user to
+      # container root, leaving "node" unable to write into /app. Named
+      # volumes are chowned to the image user by both, so tsc/nest can
+      # always write dist/ and its .tsbuildinfo. (nest-cli.json keeps
+      # deleteOutDir:false because /app/dist is a mount point here and
+      # can't be rmdir'd - the prod build stage has a plain dir.)
       - backend_node_modules:/app/node_modules
+      - backend_dist:/app/dist
     depends_on:
       db:
         condition: service_healthy
@@ -54,4 +67,5 @@ services:
 volumes:
   db_data:
   backend_node_modules:
+  backend_dist:
   frontend_node_modules:
