@@ -37,13 +37,19 @@ done
 [ -n "$pkg_dir" ] || exit 0
 
 # lint just this file (keep warnings: errors-only would hide the warn-level
-# slop rules), cap runtime. JSON output + jq: the "unix" formatter was
-# dropped from core ESLint 9, and jq is already a dependency of this hook.
-out=$(cd "$pkg_dir" && timeout 30 ./node_modules/.bin/eslint --no-error-on-unmatched-pattern --format json "$path" 2>/dev/null || true)
+# slop rules), cap runtime. --no-warn-ignored: editing an ESLint-ignored
+# file (eslint.config.mjs, dist/...) otherwise yields a "File ignored"
+# warning that this hook would report as an unfixable finding. JSON output
+# + jq: the "unix" formatter was dropped from core ESLint 9, and jq is
+# already a dependency of this hook.
+out=$(cd "$pkg_dir" && timeout 30 ./node_modules/.bin/eslint --no-error-on-unmatched-pattern --no-warn-ignored --format json "$path" 2>/dev/null || true)
 
+# Skip messages with no ruleId (parse errors, ignore notices): not slop the
+# model can act on.
 findings=$(printf '%s' "$out" | jq -r '
 	.[]?.messages[]?
-	| "  \(.line):\(.column)  \(if .severity == 2 then "error" else "warning" end)  \(.message)  \(.ruleId // "")"
+	| select(.ruleId != null)
+	| "  \(.line):\(.column)  \(if .severity == 2 then "error" else "warning" end)  \(.message)  \(.ruleId)"
 ' 2>/dev/null || true)
 [ -n "$findings" ] || exit 0
 
