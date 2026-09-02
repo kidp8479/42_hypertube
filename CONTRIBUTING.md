@@ -58,6 +58,25 @@ re-commit. The same checks run in CI (`.github/workflows/ci.yml`) on every
 push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
+## Dependency updates (Dependabot)
+
+Config: `.github/dependabot.yml`. Weekly, per ecosystem (npm backend, npm
+frontend, GitHub Actions).
+
+- **Dev-dependency minor/patch bumps are grouped** into one PR per
+  ecosystem. Review the changelog, check CI is green, merge.
+- **Semver-major bumps on `@nestjs/*`, `typescript`, `@types/node`,
+  `eslint` / `@eslint/js` are ignored.** These are deliberate migrations,
+  not a Dependabot merge (e.g. `@nestjs/core` 12 is the ESM line and
+  breaks the current `ts-jest` setup; TypeScript 7 is the native-compiler
+  rewrite; `@types/node` must track the Node runtime, not lead it). When
+  we take one on: open an issue, remove that dependency's line from the
+  `ignore:` block, let Dependabot reopen the PR, migrate on a branch.
+- **Other majors (GitHub Actions, non-listed libs) are not ignored** -
+  triage them individually; most action bumps are safe.
+- Don't let the queue pile up - a stale queue hides the one bump that
+  matters.
+
 ## Testing
 
 Ship a test with every new unit of behavior (endpoint, service method,
