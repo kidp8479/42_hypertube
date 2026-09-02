@@ -1,7 +1,8 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
-import { UsersService } from './users.service';
+import { DEFAULT_AVATAR, UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -10,6 +11,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 type RepositoryMock = {
   create: jest.Mock;
   save: jest.Mock;
+  findOneBy: jest.Mock;
+  preload: jest.Mock;
+  delete: jest.Mock;
 };
 
 // A valid registration payload. Override just the fields a test cares about.
@@ -43,7 +47,7 @@ describe('UsersService', () => {
             findOneBy: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
-            update: jest.fn(),
+            preload: jest.fn(),
             delete: jest.fn(),
           },
         },
@@ -74,6 +78,62 @@ describe('UsersService', () => {
       // way wouldn't slip past this test.
       expect(user.password).not.toBe(dto.password);
       expect(await argon2.verify(user.password, dto.password)).toBe(true);
+      // The encoded hash carries its parameters; assert argon2id with the
+      // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults.
+      expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
+    });
+
+    it('falls back to the default avatar when none is provided', async () => {
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.create(buildCreateUserDto());
+
+      expect(user.profilePicture).toBe(DEFAULT_AVATAR);
+    });
+  });
+
+  describe('update', () => {
+    it('preloads the merged row and saves it (so entity hooks run)', async () => {
+      const merged = { id: 1, firstName: 'Grace' } as User;
+      repository.preload.mockResolvedValue(merged);
+      repository.save.mockResolvedValue(merged);
+
+      const result = await service.update(1, { firstName: 'Grace' });
+
+      expect(repository.preload).toHaveBeenCalledWith({
+        id: 1,
+        firstName: 'Grace',
+      });
+      expect(repository.save).toHaveBeenCalledWith(merged);
+      expect(result).toBe(merged);
+    });
+  });
+
+  describe('lookups on a missing id', () => {
+    it('findOne throws 404', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.findOne(999)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it('update throws 404 and never saves', async () => {
+      repository.preload.mockResolvedValue(undefined);
+
+      await expect(service.update(999, {})).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it('remove throws 404', async () => {
+      repository.delete.mockResolvedValue({ affected: 0 });
+
+      await expect(service.remove(999)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 });
