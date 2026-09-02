@@ -19,6 +19,18 @@ Content-Type: application/json
   "password": "str0ng-p4ss-phrase"
 }
 
+### Register again with the same email -> 409 (unique violation, generic message)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "ada@example.com",
+  "username": "ada-again",
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "password": "str0ng-p4ss-phrase"
+}
+
 ### Login (public) - captures the token for the requests below
 # @name login
 POST {{baseUrl}}/auth/login
