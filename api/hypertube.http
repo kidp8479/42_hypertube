@@ -4,7 +4,49 @@
 
 @baseUrl = http://localhost:3000
 
-### Health check
+### Health check (public)
 GET {{baseUrl}}/
 
-### Add requests below as endpoints land (auth, users, movies, comments...).
+### Register (public)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "ada@example.com",
+  "username": "ada",
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "password": "str0ng-p4ss-phrase"
+}
+
+### Login (public) - captures the token for the requests below
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ada@example.com",
+  "password": "str0ng-p4ss-phrase"
+}
+
+###
+@token = {{login.response.body.access_token}}
+
+### List users (protected - needs the token)
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### Get one user (protected)
+GET {{baseUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Update own profile (protected + ownership: 403 on another id)
+PATCH {{baseUrl}}/users/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Ada K."
+}
+
+### Add requests below as endpoints land (reset password, movies, comments...).
