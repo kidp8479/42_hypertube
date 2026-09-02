@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -34,10 +36,15 @@ import { envValidationSchema } from './config/env.validation';
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+    // Baseline abuse ceiling for every route (per client IP, in-process
+    // counter). Auth endpoints tighten this further with @Throttle.
+    // A shared Redis store is a nice-to-have once there is more than one
+    // backend instance - not needed for a single-instance deploy.
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
     UsersModule,
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
