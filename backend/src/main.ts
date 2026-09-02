@@ -1,8 +1,9 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { QueryFailedFilter } from './common/filters/query-failed.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +25,11 @@ async function bootstrap() {
   // response body. Relies on handlers returning class instances, which
   // the TypeORM repository already does.
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+  // Maps a Postgres unique-violation to 409 instead of a raw 500.
+  app.useGlobalFilters(
+    new QueryFailedFilter(app.get(HttpAdapterHost).httpAdapter),
+  );
 
   app.enableCors({
     origin: config.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:5173',
