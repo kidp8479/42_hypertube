@@ -25,8 +25,9 @@ becomes a numbered ADR when the decision is actually taken - not before.
 
 | Trigger | Decision to record |
 |---------|--------------------|
-| logout endpoint (HYP-10) | one-click logout with a stateless JWT: client-side discard vs refresh-token rotation vs blocklist |
-| password reset (HYP-10) | reset-token shape: random, single-use, short TTL, hashed at rest (mirrors ADR-0001) |
+| logout endpoint (HYP-35) | one-click logout with a stateless JWT: client-side discard vs refresh-token rotation vs blocklist |
+| password reset (HYP-34) | reset-token shape: random, single-use, short TTL, hashed at rest (mirrors ADR-0001) |
+| password strength (HYP-37) | zxcvbn score threshold vs blocklist, and why |
 | OAuth login | second provider choice, and how an OAuth identity links to a local `User` (email match vs dedicated `oauth_account` table) |
 | BitTorrent client | from-scratch protocol vs allowed low-level libs (`bencode`, `parse-torrent`) - the eliminatory "no ready-made streaming" constraint, spelled out |
 | streaming | piece selection / download ordering and the threshold at which the stream starts |
