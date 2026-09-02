@@ -1,5 +1,5 @@
-import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { NormalizeEmail } from '../../common/decorators/normalize-email.decorator';
 
 /**
  * Credentials accepted at `POST /auth/login`.
@@ -9,11 +9,7 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
  * policy hint here would only help an attacker.
  */
 export class LoginDto {
-  // Same normalisation as CreateUserDto so the lookup is case-insensitive
-  // (Foo@X.com logs in against the row stored as foo@x.com).
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @NormalizeEmail()
   @IsEmail()
   @MaxLength(255)
   readonly email!: string;
