@@ -22,3 +22,19 @@ including in a production build.
   `include:` option) separate from the full internal one.
 - **Cost to fix later:** low. Wrap the `SwaggerModule.setup()` call in a
   `NODE_ENV !== 'production'` check, or protect the route.
+
+## Rate-limiting counter is in-process, not shared
+
+`ThrottlerModule` keeps its request counters in the memory of a single
+backend process (`app.module.ts`).
+
+- **Why:** the graded deployment runs one backend instance. An in-process
+  counter needs no extra service and is enough to blunt brute-force and
+  sign-up spam from a single source.
+- **Real-world:** behind a load balancer with N instances, each instance
+  counts independently, so the effective limit is roughly N times the
+  configured one; counters also reset on every restart/deploy. A shared
+  store (Redis via `@nest-lab/throttler-storage-redis`) fixes both.
+- **Cost to fix later:** low. Add the Redis storage adapter and point it
+  at the cache instance; the `@Throttle` limits on the routes stay as they
+  are.
