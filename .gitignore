@@ -66,5 +66,9 @@ backend/storage/
 # Subject reference material, not project source
 pdf/
 
-# Generated code documentation (Compodoc) - regenerate with `make doc`
-docs/
+# Generated code documentation (Compodoc, in docs/backend/) - regenerate
+# with `make doc`. Ignore everything under docs/ except hand-written docs
+# that belong in the repo (ADRs, defense packet).
+docs/*
+!docs/adr/
+!docs/defense/

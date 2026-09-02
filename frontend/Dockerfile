@@ -1,8 +1,13 @@
 FROM docker.io/library/node:24-alpine AS dev
 WORKDIR /app
-COPY package*.json ./
+# Same reasoning as backend/Dockerfile: run as "node" (UID 1000, matches
+# most host users) instead of root, so anything written into the
+# bind-mounted source stays owned by the host user.
+RUN chown node:node /app
+USER node
+COPY --chown=node:node package*.json ./
 RUN npm ci
-COPY . .
+COPY --chown=node:node . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host"]
 
