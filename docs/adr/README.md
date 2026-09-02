@@ -16,6 +16,7 @@ might ask us to justify.
 | [0001](0001-hash-passwords-with-argon2id.md) | Hash passwords with argon2id | accepted |
 | [0002](0002-jwt-bearer-tokens-for-authentication.md) | JWT bearer tokens for authentication | accepted |
 | [0003](0003-validate-the-environment-at-boot.md) | Validate the environment at boot | accepted |
+| [0004](0004-pin-argon2id-cost-parameters.md) | Pin argon2id cost parameters explicitly | accepted |
 
 ## Planned
 
