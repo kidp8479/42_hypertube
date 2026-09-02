@@ -147,6 +147,11 @@ semantically wrong - a `POST` that does not create a resource
 never a bare number. Thrown `HttpException`s carry their own status and are
 unaffected by `@HttpCode`.
 
+A handler acting on a resource id that matches no row throws
+`NotFoundException` (404) - never a 200 with an empty body, and never a
+silent no-op on `PATCH`/`DELETE`. The check lives in the service (single
+source of truth), not the controller.
+
 ## Doc comments
 
 Public surface (exported classes/methods, controllers, entities, scripts
@@ -188,5 +193,11 @@ not decoration.
 - No HTML/JS injection - sanitize/escape anything rendered from user input.
 - Validate every form and file upload, both client- and server-side.
 - `.env` is git-ignored; never commit a real secret. Use `.env.example`
-  for documenting required variables with placeholder values.
+  for documenting required variables with placeholder values (placeholders
+  must satisfy the `env.validation` schema so a first boot fails loudly on
+  intent, not on a malformed example).
+- Auth endpoints (`login`, registration, and later `reset-password`) are
+  rate-limited with `@nestjs/throttler` - a global ceiling plus a tight
+  per-route `@Throttle`. Password hashing uses the pinned `ARGON2_OPTIONS`
+  (ADR-0004), never the library defaults.
 - Zero console errors/warnings - browser or server - at defense time.

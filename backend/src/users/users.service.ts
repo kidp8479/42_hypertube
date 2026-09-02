@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
+import { ARGON2_OPTIONS } from '../auth/argon2.config';
+
+/** Used when a new account is created without uploading an avatar. */
+export const DEFAULT_AVATAR = '/avatars/default.png';
 
 /**
  * Data access for {@link User} rows. Wraps the TypeORM repository so the
@@ -23,10 +27,16 @@ export class UsersService {
    * and `save()` performs the INSERT.
    */
   async create(createUserDto: CreateUserDto) {
-    const hashedPassword = await argon2.hash(createUserDto.password);
+    const hashedPassword = await argon2.hash(
+      createUserDto.password,
+      ARGON2_OPTIONS,
+    );
     const user = this.usersRepository.create({
       ...createUserDto,
       password: hashedPassword,
+      // The upload flow (separate ticket) will pass a real URL here; until
+      // then every account starts with the default avatar.
+      profilePicture: DEFAULT_AVATAR,
     });
     return this.usersRepository.save(user);
   }
@@ -35,9 +45,17 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  /** Looks a user up by id; resolves to `null` when there's no match. */
-  findOne(id: number) {
-    return this.usersRepository.findOneBy({ id });
+  /**
+   * Looks a user up by id. Throws {@link NotFoundException} (404) when
+   * there is no such row - callers that need a "maybe absent" lookup
+   * (e.g. the login flow) use `findByEmail`, which returns `null`.
+   */
+  async findOne(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+    return user;
   }
 
   /**
@@ -54,13 +72,28 @@ export class UsersService {
       .getOne();
   }
 
-  /** Applies a partial update by id, then returns the refreshed row. */
+  /**
+   * Applies a partial update by id and returns the saved row. Goes
+   * through `preload` + `save` (not `repository.update`) so entity
+   * lifecycle hooks run on the change. Throws {@link NotFoundException}
+   * (404) when the id matches no row.
+   */
   async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    const user = await this.usersRepository.preload({ id, ...updateUserDto });
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+    return this.usersRepository.save(user);
   }
 
-  remove(id: number) {
-    return this.usersRepository.delete(id);
+  /**
+   * Deletes a user by id. Throws {@link NotFoundException} (404) when the
+   * id matches no row, so a DELETE never silently succeeds on nothing.
+   */
+  async remove(id: number) {
+    const result = await this.usersRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
   }
 }
