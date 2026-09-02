@@ -128,9 +128,11 @@ describe('FooService', () => {
   instance, not a constructor.
 - **Two-sided bounds use `@Length(min, max)`**, not separate `@MinLength` +
   `@MaxLength`. A one-sided cap stays a single `@MaxLength`.
-- **Email is normalised** with `@Transform((v) => v.trim().toLowerCase())`
-  before `@IsEmail()`, on every DTO that carries an email, so lookups and
-  uniqueness stay case-insensitive.
+- **Email is normalised** with `@NormalizeEmail()` (from
+  `src/common/decorators/`) before `@IsEmail()`, on every DTO that carries
+  an email, so lookups and uniqueness stay case-insensitive. Other
+  free-text fields that must not keep surrounding whitespace use `@Trim()`
+  from the same folder (case is preserved - it is display text).
 - One doc-comment on the class explaining what the payload is for; no
   per-field comments unless a rule is non-obvious (ex: why login has no
   password policy).
