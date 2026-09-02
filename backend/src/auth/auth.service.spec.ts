@@ -11,6 +11,10 @@ type UsersServiceMock = {
   findByEmail: jest.Mock;
 };
 
+type JwtServiceMock = {
+  signAsync: jest.Mock;
+};
+
 // A plausible User row. Override just the fields a given test cares about.
 const buildUser = (overrides: Partial<User> = {}): User =>
   ({
@@ -31,6 +35,7 @@ describe('AuthService', () => {
   // --- shared setup ---
   let service: AuthService;
   let users: UsersServiceMock;
+  let jwt: JwtServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -53,6 +58,7 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     users = module.get(UsersService);
+    jwt = module.get(JwtService);
   });
 
   // --- tests ---
@@ -87,6 +93,18 @@ describe('AuthService', () => {
       const result = await service.validateUser('nobody@example.com', 'x');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('login', () => {
+    it('signs a payload holding only the user id (ADR-0002)', async () => {
+      jwt.signAsync.mockResolvedValue('signed.jwt.token');
+      const user = buildUser({ id: 7, username: 'ada' });
+
+      const result = await service.login(user);
+
+      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+      expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 7 });
     });
   });
 });
