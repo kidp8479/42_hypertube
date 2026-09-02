@@ -202,4 +202,11 @@ not decoration.
   rate-limited with `@nestjs/throttler` - a global ceiling plus a tight
   per-route `@Throttle`. Password hashing uses the pinned `ARGON2_OPTIONS`
   (ADR-0004), never the library defaults.
+- Authentication is deny-by-default: a global `JwtAuthGuard` protects
+  every route, and a route is opened only with an explicit `@Public()`.
+  Never protect routes one by one - a forgotten `@UseGuards` is a hole.
+- A route that mutates a user-owned resource re-checks ownership
+  (`req.user.id` via `@CurrentUser()`) and throws `ForbiddenException`
+  (403) on a mismatch - the token proving *who* you are is not proof you
+  own *this* row.
 - Zero console errors/warnings - browser or server - at defense time.
