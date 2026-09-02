@@ -7,8 +7,11 @@ import {
   Param,
   ParseIntPipe,
   Delete,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Public } from '../auth/public.decorator';
+import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,6 +22,7 @@ export class UsersController {
 
   // Registration is rare per real user; cap it hard to blunt sign-up
   // spam and (later) reset-email flooding from a single source.
+  @Public()
   @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -37,16 +41,25 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  // A user may only edit or delete their own profile: 403 otherwise, per
+  // the subject. Reading another profile (GET :id) stays allowed.
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: AuthUser,
   ) {
+    if (user.id !== id) {
+      throw new ForbiddenException();
+    }
     return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+    if (user.id !== id) {
+      throw new ForbiddenException();
+    }
     return this.usersService.remove(id);
   }
 }
