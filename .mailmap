@@ -1,0 +1,6 @@
+# Canonical author identity for git shortlog / GitHub's contributor list.
+# Folds the Dependabot bot and the GitHub web-merge identity into the one
+# human author, without rewriting history.
+pafroidu <pafroidu@student.42.fr> <49699333+dependabot[bot]@users.noreply.github.com>
+pafroidu <pafroidu@student.42.fr> <kidp8479@gmail.com>
+pafroidu <pafroidu@student.42.fr> <noreply@github.com>
