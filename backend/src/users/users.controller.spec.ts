@@ -4,10 +4,12 @@ import { AuthUser } from '../auth/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
-type UsersServiceMock = {
-  update: jest.Mock;
-  remove: jest.Mock;
-};
+// Mirrors the methods stubbed in the test module below, so a new test can
+// reach for any of them with types intact.
+type UsersServiceMock = Record<
+  'create' | 'findAll' | 'findOne' | 'update' | 'remove',
+  jest.Mock
+>;
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -65,6 +67,18 @@ describe('UsersController', () => {
       void controller.remove(1, ada);
 
       expect(users.remove).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('findMe', () => {
+    it('looks the caller up by their own id and returns that profile', async () => {
+      const profile = { id: 1, email: 'ada@example.com' };
+      users.findOne.mockResolvedValue(profile);
+
+      const result = await controller.findMe(ada);
+
+      expect(users.findOne).toHaveBeenCalledWith(1);
+      expect(result).toBe(profile);
     });
   });
 });
