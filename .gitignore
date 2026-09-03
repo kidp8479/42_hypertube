@@ -68,7 +68,8 @@ pdf/
 
 # Generated code documentation (Compodoc, in docs/backend/) - regenerate
 # with `make doc`. Ignore everything under docs/ except hand-written docs
-# that belong in the repo (ADRs, defense packet).
+# that belong in the repo (ADRs, defense packet, diagrams).
 docs/*
 !docs/adr/
 !docs/defense/
+!docs/diagrams/
