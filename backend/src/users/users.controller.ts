@@ -34,6 +34,15 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // The caller's own profile. Declared before the ':id' route on purpose:
+  // Nest matches routes in declaration order, so with ':id' first a request
+  // to /users/me would bind ":id" = "me" and ParseIntPipe would 400 before
+  // this handler ran.
+  @Get('me')
+  findMe(@CurrentUser() user: AuthUser) {
+    return this.usersService.findOne(user.id);
+  }
+
   // ParseIntPipe rejects a non-numeric :id with 400 before the service
   // runs, so no query is ever built from `NaN`.
   @Get(':id')
