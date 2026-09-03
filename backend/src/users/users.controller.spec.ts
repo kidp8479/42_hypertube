@@ -4,11 +4,12 @@ import { AuthUser } from '../auth/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
-type UsersServiceMock = {
-  findOne: jest.Mock;
-  update: jest.Mock;
-  remove: jest.Mock;
-};
+// Mirrors the methods stubbed in the test module below, so a new test can
+// reach for any of them with types intact.
+type UsersServiceMock = Record<
+  'create' | 'findAll' | 'findOne' | 'update' | 'remove',
+  jest.Mock
+>;
 
 describe('UsersController', () => {
   let controller: UsersController;
