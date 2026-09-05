@@ -1,14 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
-import { apiFetch } from './api';
+import { apiFetch, ApiError } from './api';
+import { setAuthToken } from './token';
+
+function stubFetch(status: number, body: unknown = {}) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: status < 400,
+      status,
+      json: async () => body,
+    }),
+  );
+}
 
 describe('apiFetch', () => {
   it('returns the parsed JSON body on a 200 response', async () => {
-    const fakeResponse = {
-      ok: true,
-      status: 200,
-      json: async () => ({ id: 1, name: 'Inception' }),
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse));
+    stubFetch(200, { id: 1, name: 'Inception' });
 
     const result = await apiFetch('/movies/1');
 
@@ -29,4 +36,48 @@ describe('apiFetch', () => {
 
     expect(result).toBeUndefined();
   });
+
+  it('includes an Authorization header when a token is stored', async () => {
+    setAuthToken('fake-token');
+    stubFetch(200, { id: 1, name: 'Inception' });
+
+    await apiFetch('/movies/1');
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/movies/1',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer fake-token',
+        }),
+      }),
+    );
+  });
+
+  it('includes a Content-Type header when a body is provided', async () => {
+    stubFetch(200, { id: 1, name: 'Inception' });
+
+    await apiFetch('/movies/1', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Inception' }),
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/movies/1',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+        }),
+      }),
+    );
+  });
+
+  it.each([400, 401, 404])(
+    'throws an ApiError with status %i when the response is not ok',
+    async (status) => {
+      stubFetch(status, { message: 'error' });
+
+      await expect(apiFetch('/movies/1')).rejects.toBeInstanceOf(ApiError);
+      await expect(apiFetch('/movies/1')).rejects.toMatchObject({ status });
+    },
+  );
 });
