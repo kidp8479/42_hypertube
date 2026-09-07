@@ -1,7 +1,10 @@
+// The single fetch wrapper every API call in the app goes through.
 import { getAuthToken } from './token';
 
 const NO_CONTENT = 204;
+const API_BASE = '/api';
 
+/** A non-ok `fetch` response, surfaced with its status so callers can branch on it (401 -> logout, 403 -> ownership, ...). */
 export class ApiError extends Error {
   status: number;
 
@@ -12,12 +15,17 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch(
+/**
+ * Talks to the backend through the dev proxy (`/api` prefix injected here),
+ * attaching the stored bearer token and JSON headers automatically so call
+ * sites only ever pass a backend-relative path.
+ */
+export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
-): Promise<unknown> {
+): Promise<T | undefined> {
   const authToken = getAuthToken();
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       ...(init?.headers || {}),
@@ -33,5 +41,5 @@ export async function apiFetch(
     throw new ApiError(response.status);
   }
 
-  return await response.json();
+  return (await response.json()) as T;
 }

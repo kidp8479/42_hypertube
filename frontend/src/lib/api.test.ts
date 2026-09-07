@@ -44,7 +44,7 @@ describe('apiFetch', () => {
     await apiFetch('/movies/1');
 
     expect(fetch).toHaveBeenCalledWith(
-      '/movies/1',
+      '/api/movies/1',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer fake-token',
@@ -62,7 +62,7 @@ describe('apiFetch', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      '/movies/1',
+      '/api/movies/1',
       expect.objectContaining({
         headers: expect.objectContaining({
           'Content-Type': 'application/json',
