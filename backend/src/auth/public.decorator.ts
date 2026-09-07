@@ -1,3 +1,4 @@
+// Escape hatch from the global JwtAuthGuard for public routes.
 import { SetMetadata } from '@nestjs/common';
 
 /** Metadata key the {@link JwtAuthGuard} looks for to skip authentication. */

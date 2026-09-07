@@ -1,3 +1,4 @@
+// Validated input shape for the login endpoint.
 import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { NormalizeEmail } from '../../common/decorators/normalize-email.decorator';
 
