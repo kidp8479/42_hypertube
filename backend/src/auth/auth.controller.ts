@@ -1,3 +1,4 @@
+// HTTP entry point for the login flow.
 import {
   Controller,
   Post,

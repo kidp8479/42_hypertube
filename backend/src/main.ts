@@ -1,3 +1,4 @@
+// App bootstrap: global pipes/interceptors/filters, CORS, Swagger, listen.
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';

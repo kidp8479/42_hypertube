@@ -1,3 +1,4 @@
+// Param decorator for reading the authenticated principal off the request.
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /** The minimal authenticated principal put on the request by JwtStrategy. */

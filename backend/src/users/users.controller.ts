@@ -1,3 +1,4 @@
+// HTTP entry points for the users resource.
 import {
   Controller,
   Get,
@@ -16,6 +17,10 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+/**
+ * Account CRUD (`/users`). Registration is public; every mutating route on
+ * an existing profile requires the caller to own it (403 otherwise).
+ */
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

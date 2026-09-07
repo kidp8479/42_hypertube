@@ -1,3 +1,4 @@
+// TypeORM entity for the users table.
 import {
   Entity,
   PrimaryGeneratedColumn,

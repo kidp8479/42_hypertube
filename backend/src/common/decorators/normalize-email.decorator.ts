@@ -1,3 +1,4 @@
+// Property decorator normalizing an email before validation runs.
 import { applyDecorators } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 
