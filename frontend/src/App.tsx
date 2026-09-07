@@ -1,3 +1,4 @@
+// Vite demo scaffold, not yet replaced by the app's real routes (HYP-45).
 import { useState } from 'react';
 import heroImg from './assets/hero.png';
 import reactLogo from './assets/react.svg';
