@@ -9,21 +9,28 @@ export interface AuthState {
 }
 
 /**
- * Every event `authReducer` knows how to handle. `bootstrap-*`, `session-expired`
- * and `logout` all resolve to the same anonymous state - they're kept distinct
- * as events (not state) so a future feature (e.g. a "session expired" toast)
- * can react to the cause without changing `AuthState`'s shape.
+ * Every event `authReducer` knows how to handle. Several map to the same
+ * resulting state (`bootstrap-anonymous` / `session-expired` / `logout` all
+ * land on anonymous; `bootstrap-success` / `login-success` both on
+ * authenticated) - they're kept distinct as events so a future feature
+ * (e.g. a "session expired" toast) can react to the cause without changing
+ * `AuthState`'s shape.
  */
 export type AuthAction =
   | { type: 'bootstrap-success'; user: User }
   | { type: 'bootstrap-anonymous' }
+  | { type: 'login-success'; user: User }
   | { type: 'session-expired' }
   | { type: 'logout' };
+
+/** Starting point before the `/users/me` bootstrap check has settled. */
+export const initialState: AuthState = { status: 'loading', user: null };
 
 /** Pure state transition for `useReducer` - no side effects, no localStorage/network access (those live in auth-actions). */
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'bootstrap-success':
+    case 'login-success':
       return { status: 'authenticated', user: action.user };
     case 'bootstrap-anonymous':
       return { status: 'anonymous', user: null };
