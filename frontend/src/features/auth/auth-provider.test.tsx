@@ -9,7 +9,7 @@ import { ApiError } from '../../lib/api';
 import { getAuthToken, setAuthToken } from '../../lib/token';
 import { AuthProvider } from './auth-provider';
 import { useAuth } from './auth-context';
-import type { User } from './types';
+import type { User } from './auth-types';
 
 // Replace only `apiFetch`; keep the real `ApiError` class so `instanceof`
 // checks in the query cache handler still match.
