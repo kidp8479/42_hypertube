@@ -1,6 +1,6 @@
 // The auth state machine: the 3 states an account can be in, the events
 // that move between them, and the pure transition function itself.
-import type { User } from './types';
+import type { User } from './auth-types';
 
 /** `status` starts at `'loading'` until the `/users/me` bootstrap check settles - never assume `'anonymous'` by default. */
 export interface AuthState {

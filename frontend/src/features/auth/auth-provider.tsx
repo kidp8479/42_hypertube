@@ -14,8 +14,8 @@ import { getAuthToken, removeAuthToken } from '../../lib/token';
 import { AuthContext } from './auth-context';
 import { authReducer, initialState } from './auth-reducer';
 import { loginRequest, logoutLocal } from './auth-actions';
-import type { User } from './types';
-import { useMeQuery } from './useMeQuery';
+import type { User } from './auth-types';
+import { useMeQuery } from './auth-queries';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);

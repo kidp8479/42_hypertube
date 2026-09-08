@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { getAuthToken } from '../../lib/token';
-import type { User } from './types';
+import type { User } from './auth-types';
 
 /** Bootstrap identity check: skipped entirely (`enabled: false`) when there's no stored token, and never retried on failure. */
 export function useMeQuery() {
