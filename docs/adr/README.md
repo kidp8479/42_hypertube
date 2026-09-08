@@ -18,6 +18,7 @@ might ask us to justify.
 | [0003](0003-validate-the-environment-at-boot.md) | Validate the environment at boot | accepted |
 | [0004](0004-pin-argon2id-cost-parameters.md) | Pin argon2id cost parameters explicitly | accepted |
 | [0005](0005-lint-complexity-budget.md) | Lint complexity budget as an anti-slop net | accepted |
+| [0006](0006-frontend-architecture.md) | Frontend architecture: declarative routing, feature folders, split state | accepted |
 
 ## Planned
 
