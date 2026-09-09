@@ -1,0 +1,29 @@
+#!/bin/sh
+# Runs on every commit, after the message is written (enabled via
+# `git config core.hooksPath .githooks`, done by `make install`).
+#
+# Keeps commit-message trailers tidy. Various tools (editors, merge UIs, code
+# assistants) append their own `Co-authored-by:` bot identities, session
+# backlinks and "generated with" footers; this hook trims those so the log
+# stays consistent with CONTRIBUTING.md "Commits". It rewrites the message in
+# place, never fails the commit, and leaves human co-authors untouched.
+
+msg_file="$1"
+
+awk '
+  # lines to drop entirely
+  tolower($0) ~ /^[[:space:]]*co-authored-by:.*(claude|anthropic|cursor|copilot)/          { next }
+  tolower($0) ~ /^[[:space:]]*co-authored-by:.*@(anthropic|users\.noreply\.github)\.com/   { next }
+  tolower($0) ~ /^[[:space:]]*(claude|assistant|ai)-session:/                              { next }
+  tolower($0) ~ /(generated|co-authored) with .*(claude|cursor|copilot|codex)/             { next }
+  $0 ~ /^[[:space:]]*🤖/                                                                   { next }
+  $0 ~ /^[[:space:]]*https?:\/\/claude\.ai\/code\//                                        { next }
+  { lines[++n] = $0 }
+  END {
+    # trim trailing blank lines, then print
+    while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--
+    for (i = 1; i <= n; i++) print lines[i]
+  }
+' "$msg_file" > "$msg_file.tmp" && mv "$msg_file.tmp" "$msg_file"
+
+exit 0
