@@ -13,6 +13,11 @@ function stubFetch(status: number, body: unknown = {}) {
   );
 }
 
+/** The `Headers` instance apiFetch passed to `fetch` on its last call. */
+function sentHeaders(): Headers {
+  return vi.mocked(fetch).mock.calls.at(-1)![1]!.headers as Headers;
+}
+
 describe('apiFetch', () => {
   it('returns the parsed JSON body on a 200 response', async () => {
     stubFetch(200, { id: 1, name: 'Inception' });
@@ -42,32 +47,37 @@ describe('apiFetch', () => {
 
     await apiFetch('/movies/1');
 
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/movies/1',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: 'Bearer fake-token',
-        }),
-      }),
-    );
+    expect(fetch).toHaveBeenCalledWith('/api/movies/1', expect.anything());
+    expect(sentHeaders().get('Authorization')).toBe('Bearer fake-token');
   });
 
-  it('includes a Content-Type header when a body is provided', async () => {
-    stubFetch(200, { id: 1, name: 'Inception' });
+  it('sets a JSON Content-Type for a string body', async () => {
+    stubFetch(200, { id: 1 });
 
     await apiFetch('/movies/1', {
       method: 'POST',
       body: JSON.stringify({ name: 'Inception' }),
     });
 
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/movies/1',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-        }),
-      }),
-    );
+    expect(sentHeaders().get('Content-Type')).toBe('application/json');
+  });
+
+  it('does not force a JSON Content-Type for a FormData body', async () => {
+    stubFetch(200, { id: 1 });
+
+    await apiFetch('/movies/1', { method: 'POST', body: new FormData() });
+
+    expect(sentHeaders().get('Content-Type')).toBeNull();
+  });
+
+  it('preserves caller headers passed as a Headers instance', async () => {
+    stubFetch(200, {});
+
+    await apiFetch('/movies/1', {
+      headers: new Headers({ 'X-Trace-Id': 'abc' }),
+    });
+
+    expect(sentHeaders().get('X-Trace-Id')).toBe('abc');
   });
 
   it.each([400, 401, 404])(

@@ -24,14 +24,20 @@ export async function apiFetch<T>(
   init?: RequestInit,
 ): Promise<T | undefined> {
   const authToken = getAuthToken();
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      ...(init?.headers || {}),
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-    },
-  });
+
+  // Build on a real `Headers` so a caller passing a `Headers` instance or a
+  // tuple array is preserved (object spread would drop those). Only claim a
+  // JSON content type for a string body - a `FormData` body must keep the
+  // browser-generated multipart boundary.
+  const headers = new Headers(init?.headers);
+  if (authToken) {
+    headers.set('Authorization', `Bearer ${authToken}`);
+  }
+  if (typeof init?.body === 'string') {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
   if (!response.ok) {
     throw new ApiError(response.status);
   }
