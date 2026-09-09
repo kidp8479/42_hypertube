@@ -1,0 +1,9 @@
+/* Minimal layout only - real visual design lands in a later issue. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  max-width: 32rem;
+  margin: 4rem auto;
+}

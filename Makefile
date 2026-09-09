@@ -27,7 +27,7 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test build doc
+        test test-backend test-frontend build doc
 
 help:
 	@echo "Setup"
@@ -59,7 +59,7 @@ help:
 	@echo "  format[-check]   - Prettier, write (or check only) on backend + frontend"
 	@echo "  lint[-check]     - ESLint, --fix (or check only) on backend + frontend"
 	@echo "  typecheck        - tsc --noEmit on backend + frontend"
-	@echo "  test             - backend unit tests"
+	@echo "  test             - backend + frontend unit tests"
 	@echo "  build            - production build, backend + frontend"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
 
@@ -217,8 +217,13 @@ typecheck-frontend:
 # Test / build / docs                                                          #
 # ---------------------------------------------------------------------------- #
 
-test:
+test: test-backend test-frontend
+
+test-backend:
 	cd backend && npm run test
+
+test-frontend:
+	cd frontend && npm run test
 
 build:
 	cd backend && npm run build

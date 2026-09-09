@@ -1,3 +1,4 @@
+// Shared password-hashing parameters, used at both registration and login.
 import * as argon2 from 'argon2';
 
 /**

@@ -1,3 +1,4 @@
+// Global exception filter mapping a DB constraint violation to a clean HTTP error.
 import { ArgumentsHost, Catch, ConflictException } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { QueryFailedError } from 'typeorm';

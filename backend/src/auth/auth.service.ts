@@ -1,3 +1,4 @@
+// Credential checking and token issuance, used by AuthController.
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as argon2 from 'argon2';
