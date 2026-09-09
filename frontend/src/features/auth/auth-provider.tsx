@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { apiFetch } from '../../lib/api';
-import { setUnauthorizedHandler } from '../../lib/query-client';
+import { queryClient, setUnauthorizedHandler } from '../../lib/query-client';
 import { getAuthToken, removeAuthToken } from '../../lib/token';
 import { AuthContext } from './auth-context';
 import { authReducer, initialState } from './auth-reducer';
@@ -21,11 +21,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const meQuery = useMeQuery();
 
-  // Bootstrap: no stored token means anonymous right away; otherwise wait for
-  // the `/users/me` query to settle and let its result decide. While it is in
-  // flight the state stays 'loading' (no branch matches), so the UI can show a
-  // splash instead of flashing the login page on every reload.
+  // Bootstrap: decide the INITIAL auth state only. No stored token means
+  // anonymous right away; otherwise wait for the `/users/me` query to settle
+  // and let its result decide. While it is in flight the state stays 'loading'
+  // (no branch matches), so the UI can show a splash instead of flashing the
+  // login page on every reload.
+  // The `status === 'loading'` guard is what makes this "initial only": once
+  // login/logout/a settled bootstrap has moved us on, a later transient
+  // `/users/me` failure must not knock a live session back to anonymous.
   useEffect(() => {
+    if (state.status !== 'loading') {
+      return;
+    }
     if (!getAuthToken()) {
       dispatch({ type: 'bootstrap-anonymous' });
       return;
@@ -35,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (meQuery.isError) {
       dispatch({ type: 'bootstrap-anonymous' });
     }
-  }, [meQuery.isSuccess, meQuery.isError, meQuery.data]);
+  }, [state.status, meQuery.isSuccess, meQuery.isError, meQuery.data]);
 
   // The 401 safety net: any query/mutation that hits an expired token reaches
   // here via the singleton QueryClient's cache handler. It only clears the
@@ -60,6 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) {
       throw new Error('Signed in but /users/me returned no profile');
     }
+    // Seed the cache so the now-token-enabled useMeQuery reuses this profile
+    // instead of firing a second, identical /users/me right after login.
+    queryClient.setQueryData(['me'], user);
     dispatch({ type: 'login-success', user });
   }, []);
 
