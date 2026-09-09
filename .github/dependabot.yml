@@ -15,15 +15,12 @@ updates:
     ignore:
       # Framework / compiler / runtime-types majors are migrations, not
       # a Dependabot merge - re-enable a line here when we take one on.
+      # Status of each: docs/deps/framework-major-upgrades.md (HYP-41).
       - dependency-name: "@nestjs/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@eslint/js"
         update-types: ["version-update:semver-major"]
 
   # --- frontend npm ---
@@ -37,13 +34,10 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
     ignore:
+      # Status of each: docs/deps/framework-major-upgrades.md (HYP-41).
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@eslint/js"
         update-types: ["version-update:semver-major"]
 
   # --- GitHub Actions --- (majors kept: pinned by major tag, low blast radius)
