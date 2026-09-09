@@ -1,6 +1,11 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
+// Host dev (`make dev-frontend`) reaches the backend on localhost; inside the
+// compose network it is the `backend` service. docker-compose sets the env var.
+const apiProxyTarget =
+  process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:3000';
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -10,7 +15,7 @@ export default defineConfig({
     // the code path matches a same-origin production deploy.
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: apiProxyTarget,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
