@@ -39,6 +39,26 @@ backend process (`app.module.ts`).
   at the cache instance; the `@Throttle` limits on the routes stay as they
   are.
 
+## Failed-auth HTTP responses show up in the browser console
+
+Submitting a wrong password makes `POST /api/auth/login` return **401**, and
+the browser prints a red `POST ... 401 (Unauthorized)` line in the console.
+The same happens for every other legitimate non-2xx the API returns (403 on
+editing another user's profile, 404, 400 on invalid input).
+
+- **Why:** 401 is the correct REST status for bad credentials, and the
+  subject requires correct HTTP codes (HYP-15). The frontend handles the
+  response cleanly - `apiFetch` (`frontend/src/lib/api.ts`) throws a typed
+  `ApiError`, the caller catches it and renders a message; there is no
+  uncaught exception and no `console.error` from our code. The console line
+  is emitted by the browser's own network layer for any failed `fetch`/XHR
+  and cannot be suppressed from JavaScript.
+- **Real-world:** identical - production SPAs log the same line on a failed
+  login. Error monitoring filters by exception type, not by the network log.
+- **Cost to "fix":** would mean returning `200` + an error body for auth
+  failures, which breaks REST semantics and the subject's HTTP-code
+  requirement. Not worth it - this is correct behaviour.
+
 ## Registration still confirms whether an email is registered
 
 `POST /users` with an already-registered email returns **409** (a taken
