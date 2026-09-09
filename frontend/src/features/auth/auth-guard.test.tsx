@@ -3,20 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import type { AuthState } from './auth-reducer';
-import type { User } from './auth-types';
+import { fakeUser } from '../../test/fixtures';
 import { RequireAuth } from './auth-guard';
-
-const fakeUser: User = {
-  id: 1,
-  email: 'ada@example.com',
-  username: 'ada',
-  firstName: 'Ada',
-  lastName: 'Lovelace',
-  profilePicture: null,
-  preferredLanguage: 'en',
-  createdAt: '2020-01-01T00:00:00.000Z',
-  updatedAt: '2020-01-01T00:00:00.000Z',
-};
 
 // Render the guard inside a real router so a redirect actually changes the
 // rendered route, exactly as it would in the app. `/` is protected, `/login`

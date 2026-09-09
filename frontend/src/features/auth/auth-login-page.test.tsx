@@ -5,20 +5,8 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import type { AuthState } from './auth-reducer';
-import type { User } from './auth-types';
+import { fakeUser } from '../../test/fixtures';
 import { LoginPage } from './auth-login-page';
-
-const fakeUser: User = {
-  id: 1,
-  email: 'ada@example.com',
-  username: 'ada',
-  firstName: 'Ada',
-  lastName: 'Lovelace',
-  profilePicture: null,
-  preferredLanguage: 'en',
-  createdAt: '2020-01-01T00:00:00.000Z',
-  updatedAt: '2020-01-01T00:00:00.000Z',
-};
 
 // `/` renders a marker so "navigated home" is observable as a DOM change.
 function renderLoginPage(
