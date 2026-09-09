@@ -47,6 +47,12 @@ Every commit tied to a Linear issue includes the issue key:
 This is on top of the branch-name-based link Linear already infers - it
 reinforces the link and helps the status auto-transition on merge.
 
+**Keep trailers tidy.** Commit messages and PR descriptions stay on the
+conventions above - no tool-appended `Co-authored-by:` bot identities,
+session backlinks, or "generated with" footers. The `.githooks/commit-msg`
+hook trims these from commit messages automatically (it never blocks a
+commit); PR bodies are on the author. Human co-authors are kept.
+
 ## Before committing
 
 ```sh
