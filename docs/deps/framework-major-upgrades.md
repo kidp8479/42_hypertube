@@ -11,8 +11,8 @@ Snapshot date: 2026-09-09. Node runtime pinned to **24**
 
 | Migration | From -> To | Verdict |
 | --- | --- | --- |
-| `eslint` + `@eslint/js` (backend) | 9 -> 10 | **landed** |
-| `eslint` / `@eslint/js` (frontend) | already on 10 | n/a - ignore lines removed |
+| `eslint` + `@eslint/js` (backend) | 9 -> 10 | **landed** - ignore line kept, now blocks 10 -> 11 |
+| `eslint` / `@eslint/js` (frontend) | already on 10 | n/a - ignore line kept, blocks 10 -> 11 |
 | `@types/node` (both) | 24 -> 26 | **blocked** - runtime is Node 24 |
 | `@nestjs/*` (backend) | 11 -> 12 | **deferred** - `@nestjs/throttler` has no Nest 12 release |
 | `typescript` (backend) | 5.9 -> 7 | **deferred** - `ts-jest` + `typescript-eslint` cap below 7 |
@@ -29,8 +29,10 @@ Snapshot date: 2026-09-09. Node runtime pinned to **24**
   `eslint-plugin-sonarjs` 4, `eslint-plugin-prettier` 5), so the flat
   config surface was already proven.
 - Full backend gate green (`eslint --version` -> 10.10.0).
-- `.github/dependabot.yml`: removed the backend `eslint` + `@eslint/js`
-  major-ignore lines, and the frontend ones (dead - frontend is on 10).
+- `.github/dependabot.yml`: the `eslint` / `@eslint/js` major-ignore lines
+  stay in both ecosystems. They are version-generic - having done 9 -> 10
+  by hand, the line now guards 10 -> 11 the same way (an eslint major is
+  still a migration, not a Dependabot merge).
 
 ## @types/node 24 -> 26 - blocked (runtime, not types)
 
