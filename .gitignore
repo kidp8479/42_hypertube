@@ -72,4 +72,5 @@ pdf/
 docs/*
 !docs/adr/
 !docs/defense/
+!docs/deps/
 !docs/diagrams/
