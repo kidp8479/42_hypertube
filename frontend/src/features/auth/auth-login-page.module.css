@@ -1,0 +1,19 @@
+/* Minimal layout only - real visual design lands in HYP-46. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 20rem;
+  margin: 4rem auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.error {
+  margin: 0;
+  color: #b00020;
+}

@@ -1,5 +1,79 @@
-// Public /login route: email + password form that calls the context `login()`
-// and redirects to `/` on success. Stub for now - filled in later this issue.
+// Public /login route: an email + password form wired to the context `login()`.
+// Redirects to `/` on success (and immediately if already authenticated), and
+// shows a single generic error on failure - the backend never says which field
+// was wrong, so neither do we.
+import { useState, type SyntheticEvent } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { ApiError } from '../../lib/api';
+import { useAuth } from './auth-context';
+import styles from './auth-login-page.module.css';
+
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
+const BAD_CREDENTIALS = 'Invalid email or password.';
+
 export function LoginPage() {
-  return <p>Login Page</p>;
+  const { state, login } = useAuth();
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Someone who is already logged in has no business on /login.
+  if (state.status === 'authenticated') {
+    return <Navigate to="/" replace />;
+  }
+
+  async function handleSubmit(event: SyntheticEvent) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      navigate('/', { replace: true });
+    } catch (caught) {
+      const is401 = caught instanceof ApiError && caught.status === 401;
+      setError(is401 ? BAD_CREDENTIALS : GENERIC_ERROR);
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <h1>Log in</h1>
+
+      <label className={styles.field}>
+        Email
+        <input
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
+      </label>
+
+      <label className={styles.field}>
+        Password
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
+      </label>
+
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Logging in...' : 'Log in'}
+      </button>
+    </form>
+  );
 }
