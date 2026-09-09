@@ -133,4 +133,21 @@ describe('AuthProvider', () => {
     );
     await waitFor(() => expect(getAuthToken()).toBeNull());
   });
+
+  it('logout drops the token, clears the query cache and goes anonymous', async () => {
+    setAuthToken('live-token');
+    apiFetchMock.mockResolvedValueOnce(fakeUser);
+    queryClient.setQueryData(['stale'], { keep: 'nothing' });
+
+    const { user } = renderProvider();
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'logout' }));
+
+    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
+    expect(getAuthToken()).toBeNull();
+    expect(queryClient.getQueryData(['stale'])).toBeUndefined();
+  });
 });
