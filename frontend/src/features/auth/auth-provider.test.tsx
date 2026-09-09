@@ -7,9 +7,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../../lib/query-client';
 import { ApiError } from '../../lib/api';
 import { getAuthToken, setAuthToken } from '../../lib/token';
+import { fakeUser } from '../../test/fixtures';
 import { AuthProvider } from './auth-provider';
 import { useAuth } from './auth-context';
-import type { User } from './auth-types';
 
 // Replace only `apiFetch`; keep the real `ApiError` class so `instanceof`
 // checks in the query cache handler still match.
@@ -19,18 +19,6 @@ vi.mock('../../lib/api', async (importOriginal) => ({
 }));
 const { apiFetch } = await import('../../lib/api');
 const apiFetchMock = vi.mocked(apiFetch);
-
-const fakeUser: User = {
-  id: 1,
-  email: 'ada@example.com',
-  username: 'ada',
-  firstName: 'Ada',
-  lastName: 'Lovelace',
-  profilePicture: null,
-  preferredLanguage: 'en',
-  createdAt: '2020-01-01T00:00:00.000Z',
-  updatedAt: '2020-01-01T00:00:00.000Z',
-};
 
 function Probe() {
   const { state, login, logout } = useAuth();
@@ -118,6 +106,20 @@ describe('AuthProvider', () => {
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalled());
     expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
     expect(getAuthToken()).toBeNull();
+  });
+
+  it('rolls the token back when /users/me fails after the token was stored', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({ access_token: 'fresh-token' }) // POST /auth/login
+      .mockRejectedValueOnce(new ApiError(500)); // GET /users/me
+
+    const { user } = renderProvider();
+    await user.click(screen.getByRole('button', { name: 'login' }));
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
+    // login() must not leave a token behind that a reload would pick up.
+    expect(getAuthToken()).toBeNull();
+    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
   });
 
   it('clears an expired token and goes anonymous when /users/me 401s on load', async () => {

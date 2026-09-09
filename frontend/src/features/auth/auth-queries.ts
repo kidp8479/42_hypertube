@@ -1,8 +1,18 @@
 // TanStack Query hook wrapping the /users/me identity check.
 import { useQuery } from '@tanstack/react-query';
-import { apiFetch } from '../../lib/api';
+import { ApiError, apiFetch } from '../../lib/api';
 import { getAuthToken } from '../../lib/token';
 import type { User } from './auth-types';
+
+const MAX_BOOTSTRAP_RETRIES = 2;
+
+// A 4xx (a 401 on an expired token above all) is a real answer - retrying it
+// only delays the redirect to /login. A network drop or a 5xx is transient
+// and worth a couple of retries so a cold backend doesn't look like a logout.
+function retryBootstrap(failureCount: number, error: unknown) {
+  const transient = !(error instanceof ApiError) || error.status >= 500;
+  return transient && failureCount < MAX_BOOTSTRAP_RETRIES;
+}
 
 /**
  * Bootstrap identity check: skipped entirely (`enabled: false`) when there's
@@ -18,7 +28,7 @@ export function useMeQuery() {
     queryKey: ['me'],
     queryFn: () => apiFetch<User>('/users/me'),
     enabled: Boolean(getAuthToken()),
-    retry: false,
+    retry: retryBootstrap,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

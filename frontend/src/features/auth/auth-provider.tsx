@@ -63,14 +63,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // render and would not re-run just because localStorage changed.
   const login = useCallback(async (email: string, password: string) => {
     await loginRequest(email, password);
-    const user = await apiFetch<User>('/users/me');
-    if (!user) {
-      throw new Error('Signed in but /users/me returned no profile');
+    try {
+      const user = await apiFetch<User>('/users/me');
+      if (!user) {
+        throw new Error('Signed in but /users/me returned no profile');
+      }
+      // Seed the cache so the now-token-enabled useMeQuery reuses this profile
+      // instead of firing a second, identical /users/me right after login.
+      queryClient.setQueryData(['me'], user);
+      dispatch({ type: 'login-success', user });
+    } catch (error) {
+      // loginRequest already persisted the token; without this rollback a
+      // failure here leaves the client "logged in" on the next reload while
+      // this call reports failure to the form. Login is all-or-nothing.
+      removeAuthToken();
+      queryClient.removeQueries({ queryKey: ['me'] });
+      throw error;
     }
-    // Seed the cache so the now-token-enabled useMeQuery reuses this profile
-    // instead of firing a second, identical /users/me right after login.
-    queryClient.setQueryData(['me'], user);
-    dispatch({ type: 'login-success', user });
   }, []);
 
   const logout = useCallback(() => {
