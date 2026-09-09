@@ -8,7 +8,7 @@ function stubFetch(status: number, body: unknown = {}) {
     vi.fn().mockResolvedValue({
       ok: status < 400,
       status,
-      json: async () => body,
+      text: async () => JSON.stringify(body),
     }),
   );
 }
@@ -22,20 +22,19 @@ describe('apiFetch', () => {
     expect(result).toEqual({ id: 1, name: 'Inception' });
   });
 
-  it('returns undefined on a 204 response', async () => {
-    const fakeResponse = {
-      ok: true,
-      status: 204,
-      json: async () => {
-        throw new Error('Unexpected end of JSON input');
-      },
-    };
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse));
+  it.each([204, 200])(
+    'returns undefined on a %i response with an empty body',
+    async (status) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, status, text: async () => '' }),
+      );
 
-    const result = await apiFetch('/movies/1');
+      const result = await apiFetch('/auth/logout', { method: 'POST' });
 
-    expect(result).toBeUndefined();
-  });
+      expect(result).toBeUndefined();
+    },
+  );
 
   it('includes an Authorization header when a token is stored', async () => {
     setAuthToken('fake-token');
