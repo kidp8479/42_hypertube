@@ -11,6 +11,10 @@ against the intra before the final defense.
 
 State: **done** / **partial** / **todo**.
 
+The security rows below stay verdict-level. The mechanism-level view (every
+control, its code path, its proof, and the accepted gaps) lives in
+[`security-checklist.md`](security-checklist.md).
+
 ## Eliminatory constraints (0 non-negotiable if unmet)
 
 | Constraint | Issue | Where handled | Proof | State |
@@ -21,18 +25,18 @@ State: **done** / **partial** / **todo**.
 | All forms and uploads validated | HYP-10 | global `ValidationPipe` (`whitelist` + `forbidNonWhitelisted` + `transform`); class-validator DTOs | DTO specs; `forbidNonWhitelisted` returns 400 on unknown fields | done (uploads: HYP-38) |
 | `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks in pre-commit + CI | done |
 | No console error/warning (browser or server) during the defense | HYP-45 | clean-browser check on the auth flow; the only console line is the browser's own network log of a deliberate 401 | headless-Chromium walk in the HYP-45 PR; `docs/defense/known-limitations.md` | partial - re-check per feature |
-| Torrent downloaded "by hand" (no streaming-from-torrent library) | HYP-12 | — | — | todo |
-| Legal, rights-free sources only; >= 2 external search sources | HYP-13 | — | — | todo |
+| Torrent downloaded "by hand" (no streaming-from-torrent library) | HYP-12 | n/a | n/a | todo |
+| Legal, rights-free sources only; >= 2 external search sources | HYP-13 | n/a | n/a | todo |
 
 ## Auth
 
 | Requirement | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
 | Email + password, password hashed | HYP-10 | `POST /users` (register), `POST /auth/login` | `auth.service.spec.ts`, `users.service.spec.ts` | done |
-| OAuth "42 strategy" + >= 1 other provider | HYP-11 | — | — | todo |
-| Reset password by email | HYP-34 (needs HYP-32 mail infra) | — | — | todo |
+| OAuth "42 strategy" + >= 1 other provider | HYP-11 | n/a | n/a | todo |
+| Reset password by email | HYP-34 (needs HYP-32 mail infra) | n/a | n/a | todo |
 | One-click logout | HYP-35 (backend) / HYP-45 (frontend) | frontend `logout()` clears token + query cache -> guard redirects | `auth-provider.test.tsx` logout case | partial - server-side token invalidation is HYP-35 |
-| Language choice, default English | HYP-36 | `User.preferredLanguage` enum exists | — | partial - UI + i18n todo |
+| Language choice, default English | HYP-36 | `User.preferredLanguage` enum exists | n/a | partial - UI + i18n todo |
 | `GET /users/me` current-user shortcut | HYP-44 | `UsersController.findMe` | unit + HTTP routing test | done |
 | Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | 28 frontend tests; ADR-0006 | done |
 
@@ -40,10 +44,10 @@ State: **done** / **partial** / **todo**.
 
 | Requirement | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
-| `POST /oauth/token` (client + secret -> token) | HYP-15 | — | — | todo |
-| Imposed endpoints (`/users`, `/users/:id`, `/movies`, `/movies/:id`, `/comments`, `/comments/:id`, `/movies/:movie_id/comments`) | HYP-15 | `/users`, `/users/:id` exist | — | partial |
+| `POST /oauth/token` (client + secret -> token) | HYP-15 | n/a | n/a | todo |
+| Imposed endpoints (`/users`, `/users/:id`, `/movies`, `/movies/:id`, `/comments`, `/comments/:id`, `/movies/:movie_id/comments`) | HYP-15 | `/users`, `/users/:id` exist | n/a | partial |
 | Correct HTTP codes (403 on editing another profile, etc.) | HYP-10 | `PATCH`/`DELETE /users/:id` -> 403 when `user.id !== :id` | HTTP-level guard tests | partial - full table in `rest-proof.md` (todo) |
-| RESTful proof for the defense | HYP-40 | Swagger at `/api-docs` | — | partial - `rest-proof.md` todo |
+| RESTful proof for the defense | HYP-40 | Swagger at `/api-docs` | n/a | partial - `rest-proof.md` todo |
 
 ## Video library and player
 
