@@ -10,7 +10,7 @@ written and kept current by hand as features land.
 |----------|---------|-------|
 | [`run-guide.md`](run-guide.md) | clone -> `.env` -> `make up` -> working app, on a fresh machine | todo |
 | [`traceability.md`](traceability.md) | every subject requirement -> Linear issue -> code -> test; also where the eliminatory constraints live once `CLAUDE.md` is removed for the defense | ongoing |
-| [`security-checklist.md`](security-checklist.md) | each eliminatory security point -> where it is handled -> proof | todo |
+| [`security-checklist.md`](security-checklist.md) | mechanism-level inventory of every security control + the accepted gaps | ongoing |
 | [`rest-proof.md`](rest-proof.md) | endpoint x method x status-code table, REST constraints satisfied (subject asks for this explicitly) | todo |
 | Architecture diagram | containers + data flow (Excalidraw, exported PNG/SVG here) | todo |
 | ERD | database entities and relations | todo |
