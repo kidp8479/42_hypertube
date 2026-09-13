@@ -77,3 +77,6 @@ docs/*
 !docs/defense/
 !docs/deps/
 !docs/diagrams/
+
+# PR Lens writes its previews here. They are rebuilt on demand.
+.pr-lens/
