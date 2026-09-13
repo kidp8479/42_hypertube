@@ -9,11 +9,15 @@ export type RegisterErrors = Partial<Record<RegisterField, string>>;
 export type RegisterValues = Record<RegisterField, string>;
 
 function validateEmail(email: string): string | undefined {
-  if (email.trim() === '') {
+  const trimmedEmail = email.trim();
+  if (trimmedEmail === '') {
     return 'Email is required';
   }
+  if (trimmedEmail.length > 255) {
+    return 'Email must be at most 255 characters long';
+  }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(trimmedEmail)) {
     return 'Invalid email address';
   }
   return undefined;
@@ -37,9 +41,6 @@ function validateName(value: string, label: string): string | undefined {
   const trimmedValue = value.trim();
   if (trimmedValue === '') {
     return `${label} is required`;
-  }
-  if (trimmedValue.length < 1) {
-    return `${label} must be at least 1 character long`;
   }
   if (trimmedValue.length > 100) {
     return `${label} must be at most 100 characters long`;

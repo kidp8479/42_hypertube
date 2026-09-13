@@ -36,14 +36,18 @@ export function logoutLocal(): void {
  * fresh account to land on `/login`, not be signed in silently.
  */
 export async function registerRequest(values: RegisterValues): Promise<void> {
+  // Send exactly what validateRegister checked - untrimmed values here would
+  // let e.g. a 100-char name plus a stray space pass the client check
+  // (which trims) and then fail the backend's @Length(1, 100) (which
+  // doesn't), surfacing as a misleading generic error.
   await apiFetch('/users', {
     method: 'POST',
     body: JSON.stringify({
-      email: values.email,
+      email: values.email.trim(),
       password: values.password,
-      username: values.username,
-      lastName: values.lastName,
-      firstName: values.firstName,
+      username: values.username.trim(),
+      lastName: values.lastName.trim(),
+      firstName: values.firstName.trim(),
     }),
   });
 }

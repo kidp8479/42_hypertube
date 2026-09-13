@@ -19,9 +19,22 @@ describe('validateRegister', () => {
     ['empty', '', 'Email is required'],
     ['missing @', 'ada.example.com', 'Invalid email address'],
     ['missing domain dot', 'ada@example', 'Invalid email address'],
+    [
+      'too long',
+      `${'a'.repeat(250)}@example.com`,
+      'Email must be at most 255 characters long',
+    ],
   ])('email: %s -> error', (_label, email, expected) => {
     const errors = validateRegister({ ...validValues, email });
     expect(errors.email).toBe(expected);
+  });
+
+  it('accepts an email padded with leading/trailing whitespace', () => {
+    const errors = validateRegister({
+      ...validValues,
+      email: '  ada@example.com  ',
+    });
+    expect(errors.email).toBeUndefined();
   });
 
   it.each([
