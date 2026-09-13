@@ -71,7 +71,8 @@ jobs:
             [ "$code" != "000" ] && exit 0
             sleep 2
           done
-          echo "Backend never answered" >&2
+          echo "Backend never answered - dumping compose logs" >&2
+          docker compose logs
           exit 1
       - name: Install frontend deps
         working-directory: frontend
