@@ -18,6 +18,7 @@ written and kept current by hand as features land.
 | App bootstrap diagram | startup order: env validation -> DB -> JWT -> listen (see ADR-0003) | todo |
 | [`known-limitations.md`](known-limitations.md) | deliberate prod-vs-school gaps, owned not overlooked | ongoing |
 | [`backlog.md`](backlog.md) | work identified but not yet a Linear issue | transient |
+| Strip agent tooling (last step, see Notes) | remove `CLAUDE.md` and `.claude/` from the submitted branch | todo |
 | [ADRs](../adr/) | structural decisions and their rationale | ongoing |
 | Swagger (`/api-docs`) | live API reference | ongoing, keep annotations current |
 | Compodoc (`make doc`) | code structure reference | generated |
@@ -31,3 +32,22 @@ written and kept current by hand as features land.
 - The traceability matrix is the highest-leverage document: it lets the
   evaluator tick their grid without hunting. Fill it incrementally, one row
   per feature as it merges.
+
+## Before the defense: strip the agent tooling
+
+`CLAUDE.md` and `.claude/` (standards, skills, hooks, agents) are working
+notes and tooling for building the project, not part of what gets handed
+in. They are tracked deliberately during development so they survive a
+`git clone` between the home and school machines (see
+`.claude/standards/school-42.md` > "Portability"). Right before the
+branch that will actually be evaluated is final:
+
+```sh
+git rm -r CLAUDE.md .claude/
+git commit -m "chore: remove agent notes and tooling before defense"
+```
+
+Normal commit, not a rewrite: both stay recoverable in git history, just
+absent from the `HEAD` an evaluator sees. Do this last, after every other
+row above is filled in - `CLAUDE.md` and the eliminatory-constraints
+summary in it are useful reference material until then.
