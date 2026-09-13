@@ -10,9 +10,11 @@
 
 ## Checklist
 
+- [ ] description explains what changed (plain terms or pseudocode), not a restatement of the diff
+- [ ] mermaid diagram included if the change touches a flow, a state machine, or 3+ components
 - [ ] builds without errors or warnings
 - [ ] format / lint / typecheck / test / build green for both packages
-- [ ] tested manually (browser / API calls)
+- [ ] tested manually (browser / API calls); screenshots on the PR or tracker issue for a UI change
 - [ ] no regressions on existing features
 - [ ] new behaviour ships with at least one test
 - [ ] auth / user-data changes: `web-security-review` run, auth **and** ownership checked
