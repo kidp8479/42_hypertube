@@ -29,5 +29,8 @@ export default defineConfig({
     css: true,
     // Reset mock state between tests, matching the backend jest config.
     clearMocks: true,
+    // e2e/ holds Playwright specs, run separately via `npm run test:e2e` -
+    // vitest's default include would otherwise try (and fail) to run them.
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
 });

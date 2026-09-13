@@ -27,7 +27,7 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test test-backend test-frontend build doc
+        test test-backend test-frontend test-e2e build doc
 
 help:
 	@echo "Setup"
@@ -224,6 +224,12 @@ test-backend:
 
 test-frontend:
 	cd frontend && npm run test
+
+# Real-browser auth-flow coverage. Needs the stack already up (`make up`
+# or `make dev-backend` + `make dev-frontend` in two shells) - this target
+# does not start it, since it needs a real Postgres behind the backend.
+test-e2e:
+	cd frontend && npm run test:e2e
 
 build:
 	cd backend && npm run build
