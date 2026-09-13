@@ -6,6 +6,13 @@ WORKDIR /app
 # instead of becoming root-owned and unwritable/undeletable from outside
 # Docker.
 RUN chown node:node /app
+# Pre-create dist/ as "node" before the volume mount happens. `backend_dist`
+# in docker-compose.yml is a *named* volume with nothing at this path in the
+# image to seed it from - Docker still creates the mountpoint, but owned by
+# root, and the node user then can't write into it. Only a path that exists
+# in the image (as it does here) lets Docker copy the right ownership into a
+# freshly-created named volume on first mount.
+RUN mkdir -p /app/dist && chown node:node /app/dist
 USER node
 COPY --chown=node:node package*.json ./
 RUN npm ci
