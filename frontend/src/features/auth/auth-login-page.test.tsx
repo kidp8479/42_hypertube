@@ -9,14 +9,19 @@ import { fakeUser } from '../../test/fixtures';
 import { LoginPage } from './auth-login-page';
 
 // `/` renders a marker so "navigated home" is observable as a DOM change.
+// `initialState` lets a test arrive on /login the way RegisterPage's redirect
+// does, with router `state` attached.
 function renderLoginPage(
   state: AuthState = { status: 'anonymous', user: null },
+  initialState?: { justRegistered?: boolean },
 ) {
   const login = vi.fn<AuthContextValue['login']>();
   const value: AuthContextValue = { state, login, logout: vi.fn() };
   render(
     <AuthContext.Provider value={value}>
-      <MemoryRouter initialEntries={['/login']}>
+      <MemoryRouter
+        initialEntries={[{ pathname: '/login', state: initialState }]}
+      >
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<p>home page</p>} />
@@ -85,5 +90,26 @@ describe('LoginPage', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Log in' })).toBeEnabled(),
     );
+  });
+
+  it('shows the "account created" notice after a redirect from /register', () => {
+    renderLoginPage(
+      { status: 'anonymous', user: null },
+      {
+        justRegistered: true,
+      },
+    );
+
+    expect(
+      screen.getByText('Account created. Please sign in.'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows no notice on a plain visit to /login', () => {
+    renderLoginPage();
+
+    expect(
+      screen.queryByText('Account created. Please sign in.'),
+    ).not.toBeInTheDocument();
   });
 });
