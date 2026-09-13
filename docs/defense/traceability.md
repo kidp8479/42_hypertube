@@ -39,6 +39,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | Language choice, default English | HYP-36 | `User.preferredLanguage` enum exists | n/a | partial - UI + i18n todo |
 | `GET /users/me` current-user shortcut | HYP-44 | `UsersController.findMe` | unit + HTTP routing test | done |
 | Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | 28 frontend tests; ADR-0006 | done |
+| Frontend: login + register pages | HYP-46 | `auth-login-page.tsx`, `auth-register-page.tsx` | jsdom unit tests + `frontend/e2e/auth.spec.ts` (Playwright, real browser, register -> login, blocked as `e2e` in CI) | done |
 
 ## API (RESTful + OAuth2)
 
