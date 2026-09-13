@@ -1,4 +1,4 @@
-/* Minimal layout only - real visual design lands in HYP-46. */
+/* Minimal layout only - real visual design lands in a later issue. */
 .form {
   display: flex;
   flex-direction: column;
@@ -18,7 +18,8 @@
   color: #b00020;
 }
 
-.notice {
+.fieldError {
   margin: 0;
-  color: #1a7f37;
+  font-size: 0.85rem;
+  color: #b00020;
 }

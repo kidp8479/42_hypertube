@@ -3,6 +3,7 @@
 import { apiFetch } from '../../lib/api';
 import { setAuthToken, removeAuthToken } from '../../lib/token';
 import { queryClient } from '../../lib/query-client';
+import type { RegisterValues } from './auth-validation';
 
 interface LoginResponse {
   access_token: string;
@@ -27,4 +28,22 @@ export async function loginRequest(
 export function logoutLocal(): void {
   removeAuthToken();
   queryClient.clear();
+}
+
+/**
+ * Creates the account (`POST /users`). Deliberately does not store a
+ * token or log the user in - the subject and HYP-46 both call for a
+ * fresh account to land on `/login`, not be signed in silently.
+ */
+export async function registerRequest(values: RegisterValues): Promise<void> {
+  await apiFetch('/users', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: values.email,
+      password: values.password,
+      username: values.username,
+      lastName: values.lastName,
+      firstName: values.firstName,
+    }),
+  });
 }
