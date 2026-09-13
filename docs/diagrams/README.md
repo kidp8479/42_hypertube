@@ -54,6 +54,7 @@ merges", not every edit.
 
 ## Current diagrams
 
-- **`auth-flow`** - login (`POST /auth/login`) and the guard chain on every
-  other route (`JwtAuthGuard`, `@Public()`, ownership check). Reflects
-  HYP-10 + HYP-44. Add reset-password / logout when they are built.
+- **`auth-flow`** - create an account (`POST /users`), get a token
+  (`POST /auth/login`), and the guard chain on every other route
+  (`JwtAuthGuard`, `@Public()`, ownership check). Reflects HYP-10 + HYP-44 +
+  HYP-46. Add reset-password / logout when they are built.

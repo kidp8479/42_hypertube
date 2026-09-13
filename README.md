@@ -13,7 +13,7 @@ library) that lets a video start playing while it's still downloading.
 ## Tooling
 
 - **Language**: TypeScript everywhere (backend and frontend)
-- **Testing**: [Jest](https://jestjs.io) (backend unit + e2e)
+- **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser auth-flow e2e, `frontend/e2e/`)
 - **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
 - **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand)
 - **Manual API testing**: `api/hypertube.http` (VSCode [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension) - a plain-text, repo-tracked request collection (diffs in PRs, no account or separate app, unlike a Postman collection)
@@ -78,7 +78,8 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make format-check` | Check formatting without writing (used by the pre-commit hook and CI) |
 | `make lint` | Lint (ESLint --fix) on backend + frontend |
 | `make lint-check` | Lint without auto-fixing (used by the pre-commit hook and CI) |
-| `make test` | Run backend unit tests |
+| `make test` | Run backend + frontend unit tests |
+| `make test-e2e` | Run the Playwright auth-flow e2e suite (needs the stack already up) |
 | `make build` | Production build for backend + frontend |
 
 See `make help` for the up-to-date list.
