@@ -21,7 +21,7 @@ jobs:
       - uses: coldteadotai/pr-lens/packages/action@v0
         with:
           api-key: ${{ secrets.GEMINI_API_KEY }}
-          # gemini-3.7-flash (the action's default) 503'd twice in a row
-          # (high demand on Google's side) on the first two runs of this
-          # workflow, 2026-09-13. Pinned to the GA 2.5 model instead.
-          model: gemini-2.5-flash
+          # gemini-3.7-flash (the action's default) 503'd twice (high
+          # demand). gemini-2.5-flash then 404'd - retired for new users,
+          # Google's own error pointed at 3.6-flash instead. Pinned to that.
+          model: gemini-3.6-flash
