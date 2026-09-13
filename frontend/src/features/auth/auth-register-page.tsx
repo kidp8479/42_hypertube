@@ -76,7 +76,7 @@ export function RegisterPage() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <h1>Register</h1>
 
       <label className={styles.field}>
