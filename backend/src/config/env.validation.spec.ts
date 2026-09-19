@@ -6,6 +6,9 @@ const base = {
   DATABASE_PASSWORD: 'p',
   DATABASE_NAME: 'n',
   JWT_SECRET: 'a'.repeat(40),
+  FORTYTWO_CLIENT_ID: 'client-id',
+  FORTYTWO_CLIENT_SECRET: 'client-secret',
+  FORTYTWO_CALLBACK_URL: 'http://localhost:3000/auth/42/callback',
 };
 
 describe('envValidationSchema', () => {

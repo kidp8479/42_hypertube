@@ -45,8 +45,17 @@ export class User {
    * `@Exclude` is the second line of defence: even when the hash is
    * loaded on purpose, ClassSerializerInterceptor drops it before the
    * entity is serialised into an HTTP response.
+   *
+   * `null` for an OAuth-only account (42, GitHub, ...) - nothing was
+   * ever hashed because the user never set a password. `AuthService.
+   * validateUser` treats that case the same as an unknown email, so
+   * `POST /auth/login` can't be used to tell an OAuth-only account
+   * apart from one that doesn't exist.
+   *
+   * Explicit `type` because the `string | null` union erases the
+   * reflected column type (TypeORM would otherwise see "Object").
    */
-  @Column({ select: false, length: 255, nullable: true })
+  @Column({ type: 'varchar', select: false, length: 255, nullable: true })
   @Exclude()
   password!: string | null;
 
