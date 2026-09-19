@@ -77,7 +77,7 @@ describe('UsersService', () => {
       // argon2 hash of it, so a bug that mangles the password some other
       // way wouldn't slip past this test.
       expect(user.password).not.toBe(dto.password);
-      expect(await argon2.verify(user.password, dto.password)).toBe(true);
+      expect(await argon2.verify(user.password!, dto.password)).toBe(true);
       // The encoded hash carries its parameters; assert argon2id with the
       // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults.
       expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);

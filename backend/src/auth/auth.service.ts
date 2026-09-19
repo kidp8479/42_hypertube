@@ -38,7 +38,7 @@ export class AuthService implements OnModuleInit {
    */
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) {
+    if (!user || user.password === null) {
       // Verify against a dummy hash so a missing account costs the same
       // time as a real one; the result is irrelevant.
       await argon2.verify(this.dummyHash, password);

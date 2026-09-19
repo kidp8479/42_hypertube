@@ -46,9 +46,9 @@ export class User {
    * loaded on purpose, ClassSerializerInterceptor drops it before the
    * entity is serialised into an HTTP response.
    */
-  @Column({ select: false, length: 255 })
+  @Column({ select: false, length: 255, nullable: true })
   @Exclude()
-  password!: string;
+  password!: string | null;
 
   /**
    * Avatar URL. Nullable until the file-upload flow lands: registration
