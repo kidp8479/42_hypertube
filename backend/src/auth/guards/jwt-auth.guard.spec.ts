@@ -11,8 +11,8 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { JwtStrategy } from './jwt.strategy';
-import { Public } from './public.decorator';
+import { JwtStrategy } from '../strategies/jwt.strategy';
+import { Public } from '../decorators/public.decorator';
 
 const context = {
   getHandler: () => ({}),
