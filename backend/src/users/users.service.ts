@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
+import { randomUUID } from 'node:crypto';
 import { ARGON2_OPTIONS } from '../auth/argon2.config';
 
 /**
@@ -65,6 +66,57 @@ export class UsersService {
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .getOne();
+  }
+
+  // Caps the number of sequential "is it taken?" queries a single OAuth
+  // signup can trigger - past this, a pre-seeded run of base/base1/base2/...
+  // would otherwise make this loop run indefinitely.
+  private static readonly MAX_USERNAME_ATTEMPTS = 50;
+
+  /**
+   * Finds a username close to `base` that isn't already taken - tries
+   * `base` itself, then numeric suffixes (`base1`, `base2`, ...) on
+   * collision. See `MAX_USERNAME_ATTEMPTS` for the fallback once that
+   * search gets long.
+   */
+  private async findAvailableUsername(base: string): Promise<string> {
+    let username = base;
+    let counter = 1;
+    while (await this.usersRepository.findOneBy({ username })) {
+      if (counter > UsersService.MAX_USERNAME_ATTEMPTS) {
+        username = `${base}${randomUUID().slice(0, 8)}`;
+        break;
+      }
+      username = `${base}${counter++}`;
+    }
+    return username;
+  }
+
+  /**
+   * Creates a `User` from a verified OAuth profile - no password, no
+   * registration form. `username` is derived from the provider's suggested
+   * value with a numeric-suffix fallback on collision (see
+   * `findAvailableUsername`); email/OAuth-account uniqueness is the
+   * caller's responsibility (see `AuthService.loginWithOAuth`).
+   */
+  async createFromOAuth(profile: {
+    email: string;
+    suggestedUsername: string;
+    firstName: string;
+    lastName: string;
+  }): Promise<User> {
+    const username = await this.findAvailableUsername(
+      profile.suggestedUsername,
+    );
+    const user = this.usersRepository.create({
+      email: profile.email,
+      username,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      password: null,
+      profilePicture: null,
+    });
+    return this.usersRepository.save(user);
   }
 
   /**
