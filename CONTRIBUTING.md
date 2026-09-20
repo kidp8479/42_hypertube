@@ -101,6 +101,38 @@ monotone: it can only go down. When writing code with an agent, the
 `anti-slop` skill (`.claude/skills/anti-slop/`) is the same budget as an
 up-front checklist.
 
+## Onboarding: per-developer setup
+
+Every contributor needs their own `.env` **and** their own OAuth app
+registration for each provider - a `client_secret` is a personal
+credential (never committed, never shared), and each provider's callback
+URL is locked to one exact value with no wildcard, so nobody's app can
+be reused against another dev's `localhost`.
+
+1. Copy `.env.example` to `.env` and fill in `DATABASE_*` / `JWT_SECRET`
+   (see the comments in the file for what each expects).
+2. **42 OAuth app** - register one at
+   https://profile.intra.42.fr/oauth/applications/new:
+   - Redirect URI: `http://localhost:3000/auth/42/callback`
+   - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
+     `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
+     redirect URI above.
+3. **GitHub OAuth app** - register one at
+   https://github.com/settings/developers ("New OAuth App"):
+   - Homepage URL: `http://localhost:5173`
+   - Redirect URI: `http://localhost:3000/auth/github/callback` (leave
+     "Allow wildcard matching" off - one exact URI is enough and keeps
+     the smallest possible redirect surface)
+   - Leave "Enable Device Flow" off (that's for browser-less apps, e.g.
+     CLIs) and "Expire user access tokens" off (we exchange the code for
+     an access token once and never store or refresh it, so a
+     short-lived token + refresh flow buys nothing here)
+   - Copy the client ID/secret into `GITHUB_CLIENT_ID` /
+     `GITHUB_CLIENT_SECRET`; `GITHUB_CALLBACK_URL` is the redirect URI
+     above.
+4. `make up` to boot the stack, then see "Dev environment gotchas" below
+   for the traps that show up right after a fresh clone.
+
 ## Dev environment gotchas
 
 Recurring local-setup traps, collected here so they get fixed once
