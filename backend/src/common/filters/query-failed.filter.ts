@@ -4,7 +4,7 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import { QueryFailedError } from 'typeorm';
 
 /** Postgres error code for a unique-constraint violation. */
-const UNIQUE_VIOLATION = '23505';
+export const UNIQUE_VIOLATION = '23505';
 
 /**
  * Turns a Postgres unique-violation into a 409 instead of letting it
