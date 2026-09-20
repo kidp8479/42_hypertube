@@ -12,6 +12,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import type { StringValue } from 'ms';
 import { FortyTwoStrategy } from './strategies/fortytwo.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
 
 /**
  * Authentication module: issues JWTs on login and verifies them on every
@@ -21,10 +22,10 @@ import { FortyTwoStrategy } from './strategies/fortytwo.strategy';
  * `StringValue` cast on `JWT_EXPIRES_IN` is safe because env.validation
  * pins it to the `ms` duration format.
  *
- * Also owns the OAuth login paths (42 for now, GitHub next): each
- * provider is its own Passport strategy (e.g. {@link FortyTwoStrategy})
+ * Also owns the OAuth login paths (42, GitHub): each provider is its own
+ * Passport strategy ({@link FortyTwoStrategy}, {@link GithubStrategy})
  * plus a pair of routes on {@link AuthController}, sharing this module's
- * `OAuthAccount` repository for the eventual find-or-create/link logic.
+ * `OAuthAccount` repository via {@link AuthService.loginWithOAuth}.
  */
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { FortyTwoStrategy } from './strategies/fortytwo.strategy';
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy, FortyTwoStrategy],
+  providers: [AuthService, JwtStrategy, FortyTwoStrategy, GithubStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

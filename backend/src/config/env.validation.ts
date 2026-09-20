@@ -29,19 +29,17 @@ export const envValidationSchema = Joi.object({
   DATABASE_PASSWORD: Joi.string().required(),
   DATABASE_NAME: Joi.string().required(),
 
-  // 42 OAuth app credentials (HYP-11). No placeholder to reject here -
-  // unlike JWT_SECRET there's no "looks valid but is public" failure
-  // mode, a wrong id/secret just fails the token exchange at request
-  // time with 42's own error.
+  // OAuth app credentials, one pair per provider (HYP-11). No placeholder
+  // to reject here - unlike JWT_SECRET there's no "looks valid but is
+  // public" failure mode, a wrong id/secret just fails the token
+  // exchange at request time with the provider's own error.
   FORTYTWO_CLIENT_ID: Joi.string().required(),
   FORTYTWO_CLIENT_SECRET: Joi.string().required(),
   FORTYTWO_CALLBACK_URL: Joi.string().uri().required(),
-  // GitHub strategy lands in the next commit - required() intentionally
-  // left commented rather than added early, so the backend keeps
-  // booting without them until GithubStrategy actually reads them.
-  // GITHUB_CLIENT_ID: Joi.string().required(),
-  // GITHUB_CLIENT_SECRET: Joi.string().required(),
-  // GITHUB_CALLBACK_URL: Joi.string().uri().required(),
+
+  GITHUB_CLIENT_ID: Joi.string().required(),
+  GITHUB_CLIENT_SECRET: Joi.string().required(),
+  GITHUB_CALLBACK_URL: Joi.string().uri().required(),
 
   // Signing key for auth JWTs. 32 chars minimum, and the .env.example
   // placeholder is rejected outright - a public key must never boot.

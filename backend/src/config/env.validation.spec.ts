@@ -9,6 +9,9 @@ const base = {
   FORTYTWO_CLIENT_ID: 'client-id',
   FORTYTWO_CLIENT_SECRET: 'client-secret',
   FORTYTWO_CALLBACK_URL: 'http://localhost:3000/auth/42/callback',
+  GITHUB_CLIENT_ID: 'client-id',
+  GITHUB_CLIENT_SECRET: 'client-secret',
+  GITHUB_CALLBACK_URL: 'http://localhost:3000/auth/github/callback',
 };
 
 describe('envValidationSchema', () => {
