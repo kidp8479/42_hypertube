@@ -93,6 +93,62 @@ describe('UsersService', () => {
     });
   });
 
+  describe('createFromOAuth', () => {
+    const oauthProfile = {
+      email: 'ada@example.com',
+      suggestedUsername: 'ada',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+    };
+
+    it('creates a password-less user with the suggested username when free', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy).toHaveBeenCalledWith({ username: 'ada' });
+      expect(user).toMatchObject({
+        email: 'ada@example.com',
+        username: 'ada',
+        password: null,
+        profilePicture: null,
+      });
+    });
+
+    it('falls back to a numeric suffix when the suggested username is taken', async () => {
+      repository.findOneBy
+        .mockResolvedValueOnce({ id: 1, username: 'ada' })
+        .mockResolvedValueOnce(null);
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy).toHaveBeenNthCalledWith(1, {
+        username: 'ada',
+      });
+      expect(repository.findOneBy).toHaveBeenNthCalledWith(2, {
+        username: 'ada1',
+      });
+      expect(user.username).toBe('ada1');
+    });
+
+    it('falls back to a random suffix once the numeric attempts are exhausted', async () => {
+      // Every candidate - 'ada', 'ada1', 'ada2', ... - looks taken, so the
+      // search runs past MAX_USERNAME_ATTEMPTS and has to bail out.
+      repository.findOneBy.mockResolvedValue({ id: 1 });
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy.mock.calls.length).toBeGreaterThan(50);
+      expect(user.username).toMatch(/^ada[0-9a-f]{8}$/);
+    });
+  });
+
   describe('update', () => {
     it('preloads the merged row and saves it (so entity hooks run)', async () => {
       const merged = { id: 1, firstName: 'Grace' } as User;

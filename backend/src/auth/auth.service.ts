@@ -8,8 +8,10 @@ import { User } from '../users/entities/user.entity';
 import { ARGON2_OPTIONS } from './argon2.config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
+import { normalizeEmail } from '../common/utils/normalize-email.util';
+import { UNIQUE_VIOLATION } from '../common/filters/query-failed.filter';
 
 /**
  * Credential verification for the login flow. Sits on top of
@@ -83,10 +85,19 @@ export class AuthService implements OnModuleInit {
    * 3. Not linked and the email isn't verified - create a fresh account
    *    without matching by email (matching an unverified email to an
    *    existing account would let an attacker claim it as their own).
+   *
+   * `profile.email` is normalized here rather than trusted as-is: unlike
+   * `LoginDto`/`CreateUserDto`, it never passes through the validation
+   * pipe's `@NormalizeEmail`, so a provider returning a different casing
+   * than the one a local account was registered with would otherwise
+   * dodge the case-insensitive match in case 2 and create a duplicate
+   * account instead of linking to the existing one.
    */
   async loginWithOAuth(
     profile: OAuthProfile,
   ): Promise<{ access_token: string }> {
+    const email = normalizeEmail(profile.email);
+
     const existingAccount = await this.oauthAccountRepository.findOneBy({
       provider: profile.provider,
       providerUserId: profile.providerUserId,
@@ -98,19 +109,40 @@ export class AuthService implements OnModuleInit {
 
     let user: User | null = null;
     if (profile.emailVerified) {
-      user = await this.usersService.findByEmail(profile.email);
+      user = await this.usersService.findByEmail(email);
     }
     if (!user) {
-      user = await this.usersService.createFromOAuth(profile);
+      user = await this.usersService.createFromOAuth({ ...profile, email });
     }
 
-    await this.oauthAccountRepository.save(
-      this.oauthAccountRepository.create({
+    try {
+      await this.oauthAccountRepository.save(
+        this.oauthAccountRepository.create({
+          provider: profile.provider,
+          providerUserId: profile.providerUserId,
+          userId: user.id,
+        }),
+      );
+    } catch (err) {
+      // Lost a race against a second, concurrent callback for this same
+      // provider account (e.g. a double-click): that request's save won
+      // and already holds the link this one tried to create. From the
+      // user's side both requests are one successful login, so fetch the
+      // link that won and sign in through it instead of surfacing the
+      // unique-violation 409 the global filter would otherwise produce.
+      const code = (err as QueryFailedError & { code?: string }).code;
+      if (!(err instanceof QueryFailedError) || code !== UNIQUE_VIOLATION) {
+        throw err;
+      }
+      const account = await this.oauthAccountRepository.findOneBy({
         provider: profile.provider,
         providerUserId: profile.providerUserId,
-        userId: user.id,
-      }),
-    );
+      });
+      if (!account) {
+        throw err;
+      }
+      user = await this.usersService.findOne(account.userId);
+    }
 
     return this.login(user);
   }
