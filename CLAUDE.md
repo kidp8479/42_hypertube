@@ -87,8 +87,10 @@ ajouts propres à ce projet :
   schéma `User` bouge encore (hashing/reset en cours, puis
   `movies`/`comments` à venir) - migrations réelles avant la soutenance
   ou avant d'avoir des données réelles à préserver, pas avant.
-- Docs Compodoc sur les classes/méthodes exposées publiquement (entités,
-  services, controllers) - pas nécessaire sur le code privé/évident.
+- Docs Compodoc (JSDoc `/** */`) sur toute méthode/classe dont le WHY
+  n'est pas évident à la lecture - publique ou privée (ex. `AuthService.
+  dummyHash`, `UsersService.findAvailableUsername`). Pas de commentaire
+  quand le nom + la signature suffisent déjà à comprendre le WHY.
 
 ## Not yet decided / à trancher au démarrage de la session de travail
 
