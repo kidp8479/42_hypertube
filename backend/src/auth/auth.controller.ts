@@ -17,9 +17,9 @@ import type { Request } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
- * Public authentication routes: email/password login, plus the 42 OAuth
- * handshake (register / reset / logout / GitHub strategy to follow).
- * All credential logic lives in {@link AuthService}.
+ * Public authentication routes: email/password login, plus the 42 and
+ * GitHub OAuth handshakes (register / reset / logout to follow). All
+ * credential logic lives in {@link AuthService}.
  */
 @Controller('auth')
 export class AuthController {
@@ -65,6 +65,24 @@ export class AuthController {
   @UseGuards(AuthGuard('42'))
   @Get('42/callback')
   async fortyTwoCallback(@Req() req: Request) {
+    return this.authService.loginWithOAuth(req.user as OAuthProfile);
+  }
+
+  @Public()
+  @UseGuards(AuthGuard('github'))
+  @Get('github/login')
+  loginWithGithub() {
+    // Passport intercepts here and redirects to GitHub's authorize page -
+    // this body never runs.
+  }
+
+  // `req.user` is whatever GithubStrategy.validate() returned - see the
+  // 42 callback above for why the cast, not a type check, is what backs
+  // this.
+  @Public()
+  @UseGuards(AuthGuard('github'))
+  @Get('github/callback')
+  async githubCallback(@Req() req: Request) {
     return this.authService.loginWithOAuth(req.user as OAuthProfile);
   }
 }
