@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as argon2 from 'argon2';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
+import { OAuthAccount } from './entities/oauth-account.entity';
 import { JwtService } from '@nestjs/jwt';
 
 // Only the methods a spec actually drives need a precise type; the rest of
@@ -48,6 +50,14 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: { signAsync: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(OAuthAccount),
+          useValue: {
+            findOneBy: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+          },
         },
       ],
     }).compile();

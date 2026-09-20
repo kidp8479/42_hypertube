@@ -14,6 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
  * Public authentication routes: email/password login, plus the 42 OAuth
@@ -57,13 +58,13 @@ export class AuthController {
     // this body never runs.
   }
 
-  // Temporary: hands back the raw 42 profile so the OAuth round-trip can
-  // be verified end to end. Will become a real login (JWT issuance via
-  // the find-or-create/link logic) once that lands.
+  // `req.user` is whatever FortyTwoStrategy.validate() returned - Passport
+  // types it as the generic Express.User, so the cast trusts that guard
+  // chain rather than proving it to the compiler.
   @Public()
   @UseGuards(AuthGuard('42'))
   @Get('42/callback')
-  fortyTwoCallback(@Req() req: Request) {
-    return req.user;
+  async fortyTwoCallback(@Req() req: Request) {
+    return this.authService.loginWithOAuth(req.user as OAuthProfile);
   }
 }

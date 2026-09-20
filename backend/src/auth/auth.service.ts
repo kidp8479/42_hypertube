@@ -6,6 +6,10 @@ import { randomUUID } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entities/user.entity';
 import { ARGON2_OPTIONS } from './argon2.config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { OAuthAccount } from './entities/oauth-account.entity';
+import { Repository } from 'typeorm';
+import { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
  * Credential verification for the login flow. Sits on top of
@@ -24,6 +28,8 @@ export class AuthService implements OnModuleInit {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    @InjectRepository(OAuthAccount)
+    private readonly oauthAccountRepository: Repository<OAuthAccount>,
   ) {}
 
   async onModuleInit() {
@@ -64,5 +70,48 @@ export class AuthService implements OnModuleInit {
     const payload = { sub: user.id };
     const access_token = await this.jwtService.signAsync(payload);
     return { access_token };
+  }
+
+  /**
+   * Finds or creates the local `User` behind a verified OAuth identity,
+   * then signs them in. Three cases, checked in order:
+   * 1. This (provider, providerUserId) pair is already linked - log that
+   *    user in, nothing else to do.
+   * 2. Not linked yet, but the provider vouches the email is verified -
+   *    link to an existing local account with that email if one exists,
+   *    otherwise create a fresh one.
+   * 3. Not linked and the email isn't verified - create a fresh account
+   *    without matching by email (matching an unverified email to an
+   *    existing account would let an attacker claim it as their own).
+   */
+  async loginWithOAuth(
+    profile: OAuthProfile,
+  ): Promise<{ access_token: string }> {
+    const existingAccount = await this.oauthAccountRepository.findOneBy({
+      provider: profile.provider,
+      providerUserId: profile.providerUserId,
+    });
+    if (existingAccount) {
+      const user = await this.usersService.findOne(existingAccount.userId);
+      return this.login(user);
+    }
+
+    let user: User | null = null;
+    if (profile.emailVerified) {
+      user = await this.usersService.findByEmail(profile.email);
+    }
+    if (!user) {
+      user = await this.usersService.createFromOAuth(profile);
+    }
+
+    await this.oauthAccountRepository.save(
+      this.oauthAccountRepository.create({
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+        userId: user.id,
+      }),
+    );
+
+    return this.login(user);
   }
 }
