@@ -30,6 +30,26 @@ clean ladder. When several PRs are queued, merge one, then rebase the
 next onto the updated `main` (`@dependabot rebase` for Dependabot PRs)
 before merging it.
 
+**This is enforced, not just a convention to remember.** Branch
+protection on `main` requires every status check (`backend`, `frontend`,
+`e2e`, `scan`) to be re-run against the *current* `main` before the merge
+button is even clickable (`required_status_checks.strict`) - a stale PR
+cannot be merged, full stop. This is what actually stops divergent merges
+from recurring - not the rule by itself.
+
+**Dependabot PRs merged in a batch are the main place this bites.**
+Dependabot rebases its own PR automatically when `main` moves
+(`rebase-strategy: auto`, the default - not set explicitly in
+`dependabot.yml`), but that rebase is webhook-triggered and not
+instant: merging several Dependabot PRs back to back, before Dependabot
+has caught up on the ones still open, is exactly how `main` ended up
+with 29 merge commits with diverged parents (HYP-54, fixed with a full
+history rewrite). The branch-protection check above now blocks that merge
+outright until the
+PR shows up to date; if it's stuck, comment `@dependabot rebase` on it
+rather than waiting, or merge Dependabot PRs one at a time with a pause
+between each.
+
 ## Commits
 
 Commits are atomic: one logical change per commit, not a pile of unrelated
