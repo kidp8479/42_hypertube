@@ -23,6 +23,13 @@ don't merge `main` into the feature branch. Merge commits are reserved for
 the single moment a PR actually merges into `main`; everything before that
 stays a clean, rebased line of commits.
 
+**Rebase right before merging, every time** - a PR branched off an older
+`main` and merged with `--merge` produces a merge commit whose parents
+have diverged, which shows as crossing lines in the graph instead of a
+clean ladder. When several PRs are queued, merge one, then rebase the
+next onto the updated `main` (`@dependabot rebase` for Dependabot PRs)
+before merging it.
+
 ## Commits
 
 Commits are atomic: one logical change per commit, not a pile of unrelated
