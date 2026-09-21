@@ -65,6 +65,16 @@ re-commit. The same checks run in CI (`.github/workflows/ci.yml`) on every
 push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
+`lint:check` runs with `--max-warnings 0`. On top of the usual rules it
+enforces a complexity / size budget (function length, nesting depth,
+cyclomatic and cognitive complexity, copy-paste, repeated literals) - a
+net against AI-assistant over-code, see
+[ADR-0005](docs/adr/0005-lint-complexity-budget.md). Over budget = split
+the function or file, never disable the rule inline. The count is
+monotone: it can only go down. When writing code with an agent, the
+`anti-slop` skill (`.claude/skills/anti-slop/`) is the same budget as an
+up-front checklist.
+
 ## Dependency updates (Dependabot)
 
 Config: `.github/dependabot.yml`. Weekly, per ecosystem (npm backend, npm
