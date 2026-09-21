@@ -1,3 +1,4 @@
+// Global auth gate; registered as APP_GUARD in AppModule.
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';

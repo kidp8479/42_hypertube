@@ -1,3 +1,4 @@
+// Startup validation for every environment variable the app reads.
 import * as Joi from 'joi';
 
 /**

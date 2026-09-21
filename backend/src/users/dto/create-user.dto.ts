@@ -1,3 +1,4 @@
+// Validated input shape for registration.
 import {
   IsEmail,
   IsEnum,

@@ -1,3 +1,4 @@
+// Validated input shape for profile edits, derived from CreateUserDto.
 import { OmitType, PartialType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
 

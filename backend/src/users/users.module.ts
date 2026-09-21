@@ -1,3 +1,4 @@
+// Wires the users resource together; exports UsersService for AuthModule.
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
