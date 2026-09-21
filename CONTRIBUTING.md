@@ -38,11 +38,7 @@ later, especially on a project touching this many different areas
 Every commit tied to a Linear issue includes the issue key:
 `type(HYP-N): summary` (e.g. `feat(HYP-9): scaffold NestJS application`).
 This is on top of the branch-name-based link Linear already infers - it
-reinforces the link and helps the status auto-transition on merge. This
-repo's entire early-setup history was done directly on `main` under
-`HYP-9` and carries the prefix too, rewritten retroactively while nothing
-had been pushed yet - going forward, the prefix is added as commits are
-made, not after the fact.
+reinforces the link and helps the status auto-transition on merge.
 
 ## Before committing
 
@@ -62,6 +58,134 @@ re-commit. The same checks run in CI (`.github/workflows/ci.yml`) on every
 push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
+## Testing
+
+Ship a test with every new unit of behavior (endpoint, service method,
+script) before merging it. Auth flows (register / login / reset / logout)
+also get an e2e test.
+
+Run the suite **host-side** (`make test`), not inside the backend
+container - the container has a memory cap and Jest's workers get
+OOM-killed there. Same for `make lint` / `make typecheck` / `make format`.
+
+### Spec file layout
+
+Specs are co-located (`foo.service.ts` -> `foo.service.spec.ts`) and follow
+one shape, so any spec reads the same way:
+
+```
+type FooDeps = { bar: jest.Mock };          // only the methods the spec drives
+const buildThing = (overrides = {}) => ({ ...sensibleDefaults, ...overrides });
+
+describe('FooService', () => {
+  // shared setup
+  let service: FooService;
+  let deps: FooDeps;
+  beforeEach(async () => { /* compile TestingModule, grab service + mocks */ });
+
+  // tests, grouped by method
+  it('is defined', () => { ... });
+
+  describe('methodUnderTest', () => {
+    it('does X when Y', async () => {
+      // arrange
+      // act
+      // assert
+    });
+  });
+});
+```
+
+- **Setup lives in the hooks, tests are the `it()`s.** The `beforeEach`
+  block is the boundary: everything above it is wiring, everything below
+  is a real assertion.
+- **One `describe` per method under test**, nested in the class-level
+  `describe`. `it('...')` labels read as sentences
+  (`methodUnderTest does X when Y`).
+- **Mock only what the spec drives.** A local `type XMock = { ... }` listing
+  just those methods; the DI fake is passed via `useValue`; retrieve it
+  with `module.get<XMock>(token)` (real token, mock type - see
+  `users.service.spec.ts`).
+- **Fixtures come from a `buildX()` factory** at the top of the file.
+  A test overrides only the fields it asserts on; the rest stay defaults.
+- **Arrange / Act / Assert**, separated by blank lines, not comments.
+- `clearMocks: true` is set globally (`package.json` -> `jest`), so mock
+  call history resets between tests automatically.
+- Call `await module.init()` after `.compile()` when the service has
+  lifecycle hooks (`onModuleInit` etc.) - `.compile()` alone does not run
+  them.
+- Don't mock `argon2`; it's fast enough to hash/verify for real in a
+  unit test, and a real hash catches bugs a stub would hide.
+
+## API conventions (NestJS)
+
+### DTOs
+
+- **Every field is `readonly` and uses definite assignment (`email!: string`).**
+  A DTO models an inbound request: it is read, never mutated. `readonly`
+  encodes that and lets the compiler catch an accidental `dto.x = ...` in a
+  handler; the `!` is still needed because `class-transformer` populates the
+  instance, not a constructor.
+- **Two-sided bounds use `@Length(min, max)`**, not separate `@MinLength` +
+  `@MaxLength`. A one-sided cap stays a single `@MaxLength`.
+- **Email is normalised** with `@NormalizeEmail()` (from
+  `src/common/decorators/`) before `@IsEmail()`, on every DTO that carries
+  an email, so lookups and uniqueness stay case-insensitive. Other
+  free-text fields that must not keep surrounding whitespace use `@Trim()`
+  from the same folder (case is preserved - it is display text).
+- One doc-comment on the class explaining what the payload is for; no
+  per-field comments unless a rule is non-obvious (ex: why login has no
+  password policy).
+- Login/auth DTOs carry **no** password length or complexity rule beyond a
+  size cap - the form must accept legacy credentials, and a policy hint only
+  helps an attacker.
+- An "edit" DTO (`PartialType(OmitType(CreateDto, [...]))`) omits every
+  field that needs its own confirmed flow, not just makes them optional.
+  For `UpdateUserDto` that is `password` and `email` (login identifier +
+  reset channel) - each has a dedicated re-auth/verify endpoint.
+
+### HTTP status codes
+
+Rely on Nest's default success code for the verb (`GET`/`PATCH`/`DELETE` -> 200,
+`POST` -> 201). Add `@HttpCode(HttpStatus.OK)` **only** when the default is
+semantically wrong - a `POST` that does not create a resource
+(`POST /auth/login` returns a token, so it is 200). Use the `HttpStatus` enum,
+never a bare number. Thrown `HttpException`s carry their own status and are
+unaffected by `@HttpCode`.
+
+A handler acting on a resource id that matches no row throws
+`NotFoundException` (404) - never a 200 with an empty body, and never a
+silent no-op on `PATCH`/`DELETE`. The check lives in the service (single
+source of truth), not the controller.
+
+A Postgres unique-constraint violation (`23505`) is mapped to **409** by
+the global `QueryFailedFilter`, with a message that does not name the
+clashing value - never let it surface as a raw 500 with the SQL error in
+the body/logs.
+
+## Doc comments
+
+Public surface (exported classes/methods, controllers, entities, scripts
+called from outside) gets a doc comment; obvious private code does not.
+Comment the *why*, not the *what* - a line restating the identifier name
+earns nothing.
+
+Prose carries the intent. JSDoc tags are added **only when they state
+something the TypeScript signature does not**:
+
+- `@throws` - TS has no throws in the type system, so which exception a
+  method or route raises is real, missing information (ex: the 401 on
+  `POST /auth/login`).
+- `@param` - only for a precondition, unit, or invariant not in the type
+  (ex: "must already be authenticated"). Never `@param foo the foo`.
+- `@returns` - only when the meaning of the return is non-obvious (what a
+  `null` signals, what a shape represents), not to repeat the type.
+- `@example` - for a non-trivial call flow; Compodoc renders it.
+
+Compodoc (`make doc`) turns these into the browsable API docs used as
+defense evidence, so the tags that survive should read as documentation,
+not decoration.
+
 ## Tools in use
 
 - **Linear** - issue tracking, milestones, priorities. Labels group issues
@@ -80,5 +204,18 @@ push and pull request, alongside a secret scan
 - No HTML/JS injection - sanitize/escape anything rendered from user input.
 - Validate every form and file upload, both client- and server-side.
 - `.env` is git-ignored; never commit a real secret. Use `.env.example`
-  for documenting required variables with placeholder values.
+  for documenting required variables with placeholder values (placeholders
+  must satisfy the `env.validation` schema so a first boot fails loudly on
+  intent, not on a malformed example).
+- Auth endpoints (`login`, registration, and later `reset-password`) are
+  rate-limited with `@nestjs/throttler` - a global ceiling plus a tight
+  per-route `@Throttle`. Password hashing uses the pinned `ARGON2_OPTIONS`
+  (ADR-0004), never the library defaults.
+- Authentication is deny-by-default: a global `JwtAuthGuard` protects
+  every route, and a route is opened only with an explicit `@Public()`.
+  Never protect routes one by one - a forgotten `@UseGuards` is a hole.
+- A route that mutates a user-owned resource re-checks ownership
+  (`req.user.id` via `@CurrentUser()`) and throws `ForbiddenException`
+  (403) on a mismatch - the token proving *who* you are is not proof you
+  own *this* row.
 - Zero console errors/warnings - browser or server - at defense time.

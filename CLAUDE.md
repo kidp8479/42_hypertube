@@ -74,6 +74,67 @@ en conditions réelles sur un projet à forte valeur portfolio.
 - Deuxième stratégie OAuth (en plus de 42) : Google ? GitHub ?
 - Structure du monorepo (backend/frontend séparés vs workspace), docker-compose
 - Stratégie de transcodage (ffmpeg à la volée, cache des formats convertis)
+- Bascule `synchronize: true` → migrations TypeORM : pas encore, le schéma
+  `User` bouge encore trop vite (hashing/reset password en cours, puis
+  `movies`/`comments` à venir). À faire une fois le schéma `User` stabilisé
+  (fin HYP-10) ou avant d'avoir des données réelles à préserver — pas avant.
+
+## Standards d'ingénierie (workflow "vraie boîte")
+
+Projet volontairement traité comme un vrai projet pro, pas un rendu d'école
+jetable : sécurité, clarté du code et discipline de process sont pris au
+sérieux, pas juste "assez pour valider le sujet".
+
+**Revue de code**
+- Une issue Linear = une branche = une PR, même en solo — se relire le diff
+  avant merge (skill `/code-review`) plutôt que merger direct sur `main`.
+- CI (lint/format/typecheck/test/build) doit être verte avant merge. Ne
+  jamais bypasser le hook pre-commit ou la CI (`--no-verify` interdit sauf
+  demande explicite).
+- Chaque nouvel endpoint/service ship avec au moins un test unitaire avant
+  merge ; les flows d'auth (register/login/reset/logout) ont aussi un test
+  e2e.
+
+**Sécurité — checklist à appliquer à tout endpoint touchant à
+l'authentification ou aux données utilisateur**
+- Aucun secret en clair : mots de passe hashés (argon2id, recommandé plutôt
+  que bcrypt — standard OWASP actuel), tokens de reset password générés
+  aléatoirement, à usage unique, expiration courte, et **hashés en base**
+  (jamais stockés en clair, même logique que le mot de passe).
+- Toute route mutative (`PATCH`/`DELETE` sur une ressource utilisateur) doit
+  vérifier authentification + ownership (`req.user.id` == ressource visée)
+  → 403 si ce n'est pas le propriétaire, jamais un accès silencieux. Le
+  scaffold `nest g resource` type (`GET /users`, `PATCH /users/:id`, etc.)
+  n'a par défaut **aucun guard** — à verrouiller avant tout merge sur `main`,
+  jamais laissé "temporairement" ouvert au-delà d'une branche de travail.
+- Ne jamais faire fuiter l'existence d'un compte (login, register,
+  reset-password) : mêmes messages d'erreur, pas de différence de timing
+  exploitable.
+- Rate-limiter les endpoints d'auth (login, register, reset-password) —
+  `@nestjs/throttler` ou équivalent, protection contre le brute-force et le
+  spam d'emails de reset.
+- Validation stricte de tout input (déjà en place via le `ValidationPipe`
+  global `whitelist`/`forbidNonWhitelisted`/`transform`) — ne jamais faire
+  confiance à un ID ou un rôle fourni par le client pour une décision
+  d'autorisation.
+- `synchronize: true` (TypeORM) reste acceptable en dev mais doit être
+  remplacé par de vraies migrations avant la soutenance — état de schéma
+  reproductible, pas de risque de perte de données silencieuse.
+- Secrets uniquement via `.env` (gitignoré) — jamais dans le code, l'historique
+  git, Slack ou Linear. Gitleaks + Dependabot déjà branchés en CI : traiter
+  les PR Dependabot rapidement plutôt que les laisser s'accumuler.
+
+**Clarté du code et commentaires**
+- Commenter le POURQUOI, pas le QUOI (déjà la pratique dans `user.entity.ts`
+  / `users.service.ts` — continuer ainsi). Un commentaire qui répète ce que
+  le nom de la variable/fonction dit déjà ne sert à rien.
+- Docs Compodoc sur les classes/méthodes exposées publiquement (entités,
+  services, controllers) — pas besoin sur le code privé/évident.
+- Tout ce qui est écrit dans le repo (code, commentaires, commits, docs)
+  reste en anglais, y compris les commentaires inline — la conversation
+  avec Claude reste en français ([[feedback_docs_in_english]]). Vérifier
+  qu'aucun commentaire français ne s'est glissé dans le code avant de
+  merger.
 
 ## Ne pas oublier
 
