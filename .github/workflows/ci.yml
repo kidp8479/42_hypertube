@@ -43,3 +43,58 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+
+  # Real-browser auth-flow coverage (.claude/standards/engineering.md).
+  # Boots the actual dev stack via docker-compose - same images, same
+  # proxy setup - rather than reimplementing it as separate CI services,
+  # so this job exercises what a contributor's machine runs too.
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: hypertube_ci
+      POSTGRES_PASSWORD: hypertube_ci_password
+      POSTGRES_DB: hypertube_ci
+      JWT_SECRET: ci_only_placeholder_jwt_secret_at_least_32_chars_long_0000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # Deliberately before the stack starts: frontend/node_modules is a
+      # named Docker volume, not a bind mount, so this shouldn't interact
+      # with docker-compose either way - but installing on the pristine
+      # checkout, before anything else touches the tree, is the simpler
+      # thing to reason about.
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright's chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Start the stack
+        run: docker compose up -d --build
+      - name: Wait for the backend
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/auth/login || true)
+            [ "$code" != "000" ] && exit 0
+            sleep 2
+          done
+          echo "Backend never answered - dumping compose logs" >&2
+          docker compose logs
+          exit 1
+      - name: Run the e2e suite
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Upload the Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+      - name: Tear down the stack
+        if: always()
+        run: docker compose down -v
