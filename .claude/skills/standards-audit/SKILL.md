@@ -109,6 +109,6 @@ from the improved template.
   `/code-review` small. The user re-derives this order every repo
   otherwise.
 - Step 4 (promote to the template / CLAUDE.md / lab) is the step that
-  turns eleven one-off cleanups into one improving template, and it is
+  turns per-repo one-off cleanups into one improving template, and it is
   the one that gets skipped under time pressure.
 - Zero context cost until a repo audit triggers it.

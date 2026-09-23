@@ -6,9 +6,8 @@ description: Full PR review ritual - check out the branch, verify a recent rebas
 # pr-review
 
 The `CLAUDE.md` rule is "re-read the diff before merging, never push
-straight to `main`". This skill is the *how*: the full ritual, the one
-mined from ~90 past sessions on transcendence, generalised so it also
-fits a solo PR on any project.
+straight to `main`". This skill is the *how*: the full ritual, for a team
+PR or a solo one on any project.
 
 ## 0. Scope
 
@@ -114,7 +113,7 @@ Then split all confirmed findings (yours + the survivors from step 6):
 
 ## 8. Draft the comment
 
-Constraints (from the user, non-negotiable):
+Constraints from the user:
 
 - English, concise, factual, kind.
 - The author is the expert on their code - "you decide if any of this is
