@@ -21,7 +21,8 @@
 
 - Décidé : backend **NestJS** + **TypeORM** (PostgreSQL) ; frontend
   **React**.
-- Pas figé : lib auth, gestion torrent, transcodage.
+- Pas figé : gestion torrent, transcodage. Auth : JWT bearer (ADR-0002),
+  argon2id (ADR-0001), OAuth 42 + GitHub (ADR-0007).
 
 ## Eliminatory constraints (0 si violé)
 
@@ -99,8 +100,6 @@ ajouts propres à ce projet :
   `parse-torrent` - à vérifier au cas par cas)
 - Sources de recherche vidéo légales à utiliser (2 minimum)
 - Provider OMDb vs TMDb pour les métadonnées
-- Deuxième stratégie OAuth (en plus de 42) : Google ? GitHub ?
-- Structure du monorepo, docker-compose
 - Stratégie de transcodage (ffmpeg à la volée, cache des formats)
 
 ## Don't forget
