@@ -14,6 +14,7 @@ type RepositoryMock = {
   findOneBy: jest.Mock;
   preload: jest.Mock;
   delete: jest.Mock;
+  update: jest.Mock;
 };
 
 // A valid registration payload. Override just the fields a test cares about.
@@ -49,6 +50,7 @@ describe('UsersService', () => {
             save: jest.fn(),
             preload: jest.fn(),
             delete: jest.fn(),
+            update: jest.fn(),
           },
         },
       ],
@@ -204,6 +206,14 @@ describe('UsersService', () => {
         expect(user.firstName).toBe('F'.repeat(100));
         expect(user.lastName).toBe('L'.repeat(100));
       });
+    });
+  });
+
+  describe('clearPassword', () => {
+    it('sets the stored password hash to null for that user only', async () => {
+      await service.clearPassword(7);
+
+      expect(repository.update).toHaveBeenCalledWith(7, { password: null });
     });
   });
 

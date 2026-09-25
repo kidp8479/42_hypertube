@@ -132,6 +132,16 @@ export class UsersService {
   }
 
   /**
+   * Removes the stored password hash, leaving the account reachable only
+   * through its linked OAuth identities until a new password is set. A
+   * targeted `update` rather than `save`: `password` is excluded from
+   * default selects, so a loaded entity would not carry it anyway.
+   */
+  async clearPassword(id: number): Promise<void> {
+    await this.usersRepository.update(id, { password: null });
+  }
+
+  /**
    * Applies a partial update by id and returns the saved row. Goes
    * through `preload` + `save` (not `repository.update`) so entity
    * lifecycle hooks run on the change. Throws {@link NotFoundException}
