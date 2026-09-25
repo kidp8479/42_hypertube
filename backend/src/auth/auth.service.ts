@@ -126,6 +126,14 @@ export class AuthService implements OnModuleInit {
       user = await this.usersService.createFromOAuth({ ...profile, email });
     }
 
+    // Revoked before the link exists, not after: if a step fails between
+    // the two, the account may end up password-less and unlinked (the
+    // owner resets it, the next login links normally) but never linked
+    // with the old password still working.
+    if (passwordToRevoke !== null) {
+      await this.usersService.clearPassword(passwordToRevoke);
+    }
+
     try {
       await this.oauthAccountRepository.save(
         this.oauthAccountRepository.create({
@@ -134,9 +142,6 @@ export class AuthService implements OnModuleInit {
           userId: user.id,
         }),
       );
-      if (passwordToRevoke !== null) {
-        await this.usersService.clearPassword(passwordToRevoke);
-      }
     } catch (err) {
       user = await this.recoverFromLinkRace(profile, err);
     }
