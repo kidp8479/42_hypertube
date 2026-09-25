@@ -7,8 +7,12 @@ const buildConfig = () =>
     getOrThrow: (key: string) => `${key}-value`,
   }) as unknown as ConfigService;
 
-// Minimal Response-shaped stub - userProfile only ever calls .json().
-const jsonResponse = (body: unknown) => ({ json: () => Promise.resolve(body) });
+// Minimal Response-shaped stub - userProfile only reads .ok, .status and .json().
+const jsonResponse = (body: unknown, status = 200) => ({
+  ok: status >= 200 && status < 300,
+  status,
+  json: () => Promise.resolve(body),
+});
 
 // Structurally matches the strategy's private FortyTwoProfile - not
 // imported since the type isn't exported, but the field set is what
@@ -65,6 +69,17 @@ describe('FortyTwoStrategy', () => {
 
     it('reports a fetch failure through done() rather than throwing', async () => {
       fetchMock.mockRejectedValueOnce(new Error('network down'));
+
+      const { err, profile } = await callUserProfile('a-token');
+
+      expect(err).toBeInstanceOf(Error);
+      expect(profile).toBeUndefined();
+    });
+
+    it('reports a non-2xx answer through done() instead of using its body as a profile', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ message: 'rate limited' }, 429),
+      );
 
       const { err, profile } = await callUserProfile('a-token');
 
