@@ -5,6 +5,7 @@ import { Strategy, StrategyOptions } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { fetchJson } from './fetch-json.util';
 
 // snake_case fields mirror GitHub's /user JSON response as-is - mapped
 // to the camelCase OAuthProfile in validate() below. `email` can be null
@@ -52,8 +53,10 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
           // The GitHub API rejects any request with no User-Agent.
           'User-Agent': 'hypertube',
         };
-        const res = await fetch('https://api.github.com/user', { headers });
-        const profile = (await res.json()) as GithubProfile;
+        const profile = await fetchJson<GithubProfile>(
+          'https://api.github.com/user',
+          { headers },
+        );
 
         if (profile.email) {
           done(undefined, profile);
@@ -63,10 +66,10 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
         // profile.email is null when it's marked private - the address
         // still exists, just not on this endpoint. /user/emails needs
         // the user:email scope requested above.
-        const emailsRes = await fetch('https://api.github.com/user/emails', {
-          headers,
-        });
-        const emails = (await emailsRes.json()) as GithubEmail[];
+        const emails = await fetchJson<GithubEmail[]>(
+          'https://api.github.com/user/emails',
+          { headers },
+        );
         const primary = emails.find((e) => e.primary && e.verified);
         done(undefined, { ...profile, email: primary?.email ?? null });
       } catch (err: unknown) {

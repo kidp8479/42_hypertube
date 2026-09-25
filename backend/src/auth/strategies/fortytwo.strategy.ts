@@ -5,6 +5,7 @@ import { Strategy, StrategyOptions } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { fetchJson } from './fetch-json.util';
 
 // snake_case fields because this mirrors 42's /v2/me JSON response as-is -
 // mapped to the camelCase OAuthProfile in validate() below.
@@ -36,10 +37,10 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
     // async work stays inside this IIFE so the outer signature matches.
     void (async () => {
       try {
-        const res = await fetch('https://api.intra.42.fr/v2/me', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        const profile = (await res.json()) as FortyTwoProfile;
+        const profile = await fetchJson<FortyTwoProfile>(
+          'https://api.intra.42.fr/v2/me',
+          { headers: { Authorization: `Bearer ${accessToken}` } },
+        );
         done(undefined, profile);
       } catch (err: unknown) {
         done(err);
