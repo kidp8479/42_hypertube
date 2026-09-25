@@ -293,15 +293,31 @@ describe('AuthService', () => {
         expect(users.clearPassword).not.toHaveBeenCalled();
       });
 
-      it('does not revoke when the link was never created', async () => {
+      it('revokes the password before creating the link', async () => {
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
-        oauthAccounts.save.mockRejectedValue(new Error('connection lost'));
 
-        await expect(service.loginWithOAuth(profile)).rejects.toThrow();
+        await service.loginWithOAuth(profile);
 
-        expect(users.clearPassword).not.toHaveBeenCalled();
+        // A failure between the two steps must never leave an identity
+        // linked to an account whose old password still works.
+        expect(users.clearPassword.mock.invocationCallOrder[0]).toBeLessThan(
+          oauthAccounts.save.mock.invocationCallOrder[0],
+        );
+      });
+
+      it('does not link the identity when revoking the password fails', async () => {
+        users.findByEmail.mockResolvedValue(
+          buildUser({ id: 9, password: 'argon2-hash' }),
+        );
+        users.clearPassword.mockRejectedValue(new Error('connection lost'));
+
+        await expect(service.loginWithOAuth(profile)).rejects.toThrow(
+          'connection lost',
+        );
+
+        expect(oauthAccounts.save).not.toHaveBeenCalled();
       });
     });
   });
