@@ -39,6 +39,11 @@ Branches here get rebased onto `main` often. Before reviewing content:
 
 ## 3. Schema review - judge the approach before the lines
 
+For an architecturally non-trivial change (multiple services, a new
+data flow), generate a pr-lens diagram first (`docs/pr-lens-setup.md` -
+local, on demand, not for every PR) to see the shape of the change
+before reading it cold.
+
 Before any line-by-line review, step back to the goal (linked Linear
 issue / subject constraint) and judge the approach itself:
 
