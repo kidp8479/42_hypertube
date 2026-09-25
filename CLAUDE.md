@@ -21,7 +21,8 @@
 
 - Décidé : backend **NestJS** + **TypeORM** (PostgreSQL) ; frontend
   **React**.
-- Pas figé : lib auth, gestion torrent, transcodage.
+- Pas figé : gestion torrent, transcodage. Auth : JWT bearer (ADR-0002),
+  argon2id (ADR-0001), OAuth 42 + GitHub (ADR-0007).
 
 ## Eliminatory constraints (0 si violé)
 
@@ -87,8 +88,10 @@ ajouts propres à ce projet :
   schéma `User` bouge encore (hashing/reset en cours, puis
   `movies`/`comments` à venir) - migrations réelles avant la soutenance
   ou avant d'avoir des données réelles à préserver, pas avant.
-- Docs Compodoc sur les classes/méthodes exposées publiquement (entités,
-  services, controllers) - pas nécessaire sur le code privé/évident.
+- Docs Compodoc (JSDoc `/** */`) sur toute méthode/classe dont le WHY
+  n'est pas évident à la lecture - publique ou privée (ex. `AuthService.
+  dummyHash`, `UsersService.findAvailableUsername`). Pas de commentaire
+  quand le nom + la signature suffisent déjà à comprendre le WHY.
 
 ## Not yet decided / à trancher au démarrage de la session de travail
 
@@ -97,8 +100,6 @@ ajouts propres à ce projet :
   `parse-torrent` - à vérifier au cas par cas)
 - Sources de recherche vidéo légales à utiliser (2 minimum)
 - Provider OMDb vs TMDb pour les métadonnées
-- Deuxième stratégie OAuth (en plus de 42) : Google ? GitHub ?
-- Structure du monorepo, docker-compose
 - Stratégie de transcodage (ffmpeg à la volée, cache des formats)
 
 ## Don't forget

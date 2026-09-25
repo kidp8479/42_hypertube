@@ -11,8 +11,11 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { Public } from '../auth/public.decorator';
-import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../auth/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';

@@ -33,8 +33,14 @@ services:
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID}
+      FORTYTWO_CLIENT_SECRET: ${FORTYTWO_CLIENT_SECRET}
+      FORTYTWO_CALLBACK_URL: ${FORTYTWO_CALLBACK_URL}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${HYPERTUBE_BACKEND_PORT:-3000}:3000"
     volumes:
       - ./backend:/app
       # Everything the container writes lives in named volumes, never on the
@@ -58,7 +64,7 @@ services:
       context: ./frontend
       target: dev
     ports:
-      - "127.0.0.1:5173:5173"
+      - "127.0.0.1:${HYPERTUBE_FRONTEND_PORT:-5173}:5173"
     environment:
       # The Vite dev proxy runs inside this container, where the backend is
       # the `backend` service, not localhost (that default is for host dev).

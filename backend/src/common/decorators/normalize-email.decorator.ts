@@ -1,6 +1,7 @@
 // Property decorator normalizing an email before validation runs.
 import { applyDecorators } from '@nestjs/common';
 import { Transform } from 'class-transformer';
+import { normalizeEmail } from '../utils/normalize-email.util';
 
 /**
  * Trims and lower-cases an incoming email string so lookups and the
@@ -13,7 +14,7 @@ import { Transform } from 'class-transformer';
 export function NormalizeEmail() {
   return applyDecorators(
     Transform(({ value }: { value: unknown }) =>
-      typeof value === 'string' ? value.trim().toLowerCase() : value,
+      typeof value === 'string' ? normalizeEmail(value) : value,
     ),
   );
 }

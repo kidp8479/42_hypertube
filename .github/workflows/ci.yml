@@ -55,6 +55,14 @@ jobs:
       POSTGRES_PASSWORD: hypertube_ci_password
       POSTGRES_DB: hypertube_ci
       JWT_SECRET: ci_only_placeholder_jwt_secret_at_least_32_chars_long_0000
+      # The backend refuses to boot without its OAuth settings. The e2e suite
+      # never goes through a provider, so these are inert placeholders.
+      FORTYTWO_CLIENT_ID: ci_placeholder
+      FORTYTWO_CLIENT_SECRET: ci_placeholder
+      FORTYTWO_CALLBACK_URL: http://localhost:3000/auth/42/callback
+      GITHUB_CLIENT_ID: ci_placeholder
+      GITHUB_CLIENT_SECRET: ci_placeholder
+      GITHUB_CALLBACK_URL: http://localhost:3000/auth/github/callback
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

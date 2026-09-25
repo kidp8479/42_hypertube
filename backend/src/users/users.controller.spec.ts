@@ -1,6 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthUser } from '../auth/current-user.decorator';
+import { AuthUser } from '../auth/decorators/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
