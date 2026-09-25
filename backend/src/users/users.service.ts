@@ -73,6 +73,18 @@ export class UsersService {
   // would otherwise make this loop run indefinitely.
   private static readonly MAX_USERNAME_ATTEMPTS = 50;
 
+  // Mirror the `User` column lengths: an OAuth profile bypasses the DTO
+  // limits, and a value past the column makes Postgres reject the insert.
+  private static readonly USERNAME_MAX_LENGTH = 30;
+  private static readonly NAME_MAX_LENGTH = 100;
+
+  /** Appends `suffix` to `base`, shortening `base` so the result still fits the column. */
+  private static withSuffix(base: string, suffix: string): string {
+    return (
+      base.slice(0, UsersService.USERNAME_MAX_LENGTH - suffix.length) + suffix
+    );
+  }
+
   /**
    * Finds a username close to `base` that isn't already taken - tries
    * `base` itself, then numeric suffixes (`base1`, `base2`, ...) on
@@ -80,14 +92,14 @@ export class UsersService {
    * search gets long.
    */
   private async findAvailableUsername(base: string): Promise<string> {
-    let username = base;
+    let username = base.slice(0, UsersService.USERNAME_MAX_LENGTH);
     let counter = 1;
     while (await this.usersRepository.findOneBy({ username })) {
       if (counter > UsersService.MAX_USERNAME_ATTEMPTS) {
-        username = `${base}${randomUUID().slice(0, 8)}`;
+        username = UsersService.withSuffix(base, randomUUID().slice(0, 8));
         break;
       }
-      username = `${base}${counter++}`;
+      username = UsersService.withSuffix(base, String(counter++));
     }
     return username;
   }
@@ -111,8 +123,8 @@ export class UsersService {
     const user = this.usersRepository.create({
       email: profile.email,
       username,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
+      firstName: profile.firstName.slice(0, UsersService.NAME_MAX_LENGTH),
+      lastName: profile.lastName.slice(0, UsersService.NAME_MAX_LENGTH),
       password: null,
       profilePicture: null,
     });
