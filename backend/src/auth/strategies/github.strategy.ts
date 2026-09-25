@@ -8,9 +8,9 @@ import { OAuthProvider } from '../entities/oauth-account.entity';
 import { fetchJson } from './fetch-json.util';
 
 // snake_case fields mirror GitHub's /user JSON response as-is - mapped
-// to the camelCase OAuthProfile in validate() below. `email` can be null
-// when the user keeps their primary address private, in which case
-// userProfile() below falls back to /user/emails.
+// to the camelCase OAuthProfile in validate() below. `email` is replaced
+// in userProfile() by the primary+verified address from /user/emails (null
+// when there is none), because /user's own value is not proven verified.
 interface GithubProfile {
   id: number;
   login: string;
@@ -58,14 +58,10 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
           { headers },
         );
 
-        if (profile.email) {
-          done(undefined, profile);
-          return;
-        }
-
-        // profile.email is null when it's marked private - the address
-        // still exists, just not on this endpoint. /user/emails needs
-        // the user:email scope requested above.
+        // Always resolved from /user/emails, never taken from /user: its
+        // `email` is only the profile's public address and carries no
+        // "verified" flag, while this list does. Needs the user:email scope
+        // requested above.
         const emails = await fetchJson<GithubEmail[]>(
           'https://api.github.com/user/emails',
           { headers },
@@ -102,9 +98,9 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       provider: OAuthProvider.GITHUB,
       providerUserId: String(profile.id),
       email: profile.email,
-      // Only ever reached with a verified address: either /user's own
-      // email (GitHub only exposes a confirmed one there) or the
-      // primary+verified row picked out of /user/emails above.
+      // Only ever reached with a verified address: userProfile() keeps
+      // only the primary+verified row of /user/emails, and validate()
+      // refuses a profile without one.
       emailVerified: true,
       suggestedUsername: profile.login,
       firstName,

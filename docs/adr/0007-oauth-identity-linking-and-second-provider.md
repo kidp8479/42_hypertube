@@ -22,10 +22,10 @@ provider vouches that email is verified.
   (already used for 42 - no maintained provider-specific package exists
   for either) handles it the same way.
 - **Auto-link only on a verified email.** 42 always verifies the account's
-  email at signup on the intra. GitHub's `/user` can return a `null`
-  email when it's kept private - resolved by falling back to the
-  primary+verified row from `/user/emails` - and an email that isn't
-  verified is never used to attach a new OAuth identity to an existing
+  email at signup on the intra. GitHub's `/user` only exposes the
+  profile's public address, with no verified flag, so the email always
+  comes from the primary+verified row of `/user/emails` - and an email
+  that isn't verified is never used to attach a new OAuth identity to an existing
   account: doing so would let an attacker who controls an unverified
   address on one provider claim someone else's account on another.
 - **A shared `OAuthProfile` shape** (`provider`, `providerUserId`,
