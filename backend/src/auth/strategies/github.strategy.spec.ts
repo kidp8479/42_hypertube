@@ -45,30 +45,69 @@ describe('GithubStrategy', () => {
     });
 
   describe('userProfile', () => {
-    it('resolves straight from /user when its email is public', async () => {
-      fetchMock.mockResolvedValueOnce(
-        jsonResponse({
-          id: 1,
-          login: 'ada',
-          name: 'Ada Lovelace',
-          email: 'ada@example.com',
-        }),
-      );
+    it('ignores the public email on /user and uses the primary verified one from /user/emails', async () => {
+      // /user's email is only the profile's public address: GitHub gives no
+      // "verified" flag there, so it is never trusted for account linking.
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({
+            id: 1,
+            login: 'ada',
+            name: 'Ada Lovelace',
+            email: 'public@example.com',
+          }),
+        )
+        .mockResolvedValueOnce(
+          jsonResponse([
+            { email: 'public@example.com', primary: false, verified: false },
+            { email: 'ada@example.com', primary: true, verified: true },
+          ]),
+        );
 
       const { err, profile } = await callUserProfile('a-token');
 
       expect(err).toBeUndefined();
       expect(profile?.email).toBe('ada@example.com');
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith('https://api.github.com/user', {
-        headers: {
-          Authorization: 'Bearer a-token',
-          'User-Agent': 'hypertube',
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        'https://api.github.com/user',
+        {
+          headers: {
+            Authorization: 'Bearer a-token',
+            'User-Agent': 'hypertube',
+          },
         },
-      });
+      );
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        'https://api.github.com/user/emails',
+        expect.anything(),
+      );
     });
 
-    it('falls back to the primary verified address from /user/emails when /user hides it', async () => {
+    it('resolves a null email when only the public /user email exists and it is not primary and verified', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({
+            id: 1,
+            login: 'ada',
+            name: null,
+            email: 'public@example.com',
+          }),
+        )
+        .mockResolvedValueOnce(
+          jsonResponse([
+            { email: 'public@example.com', primary: false, verified: true },
+          ]),
+        );
+
+      const { profile } = await callUserProfile('a-token');
+
+      expect(profile?.email).toBeNull();
+    });
+
+    it('uses the primary verified address from /user/emails when /user hides its email', async () => {
       fetchMock
         .mockResolvedValueOnce(
           jsonResponse({ id: 1, login: 'ada', name: null, email: null }),
