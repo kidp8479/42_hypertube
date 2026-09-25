@@ -147,6 +147,64 @@ describe('UsersService', () => {
       expect(repository.findOneBy.mock.calls.length).toBeGreaterThan(50);
       expect(user.username).toMatch(/^ada[0-9a-f]{8}$/);
     });
+
+    describe('column length limits', () => {
+      // A GitHub login can reach 39 characters; the username column is 30.
+      const longLogin = 'a'.repeat(39);
+
+      beforeEach(() => {
+        repository.create.mockImplementation((data: Partial<User>) => data);
+        repository.save.mockImplementation((data: Partial<User>) => data);
+      });
+
+      it('truncates a suggested username to the column length', async () => {
+        repository.findOneBy.mockResolvedValue(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toBe('a'.repeat(30));
+      });
+
+      it('keeps a numeric suffix within the column length on collision', async () => {
+        repository.findOneBy
+          .mockResolvedValueOnce({ id: 1 })
+          .mockResolvedValueOnce(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toBe(`${'a'.repeat(29)}1`);
+      });
+
+      it('keeps the random fallback suffix within the column length', async () => {
+        repository.findOneBy.mockResolvedValue({ id: 1 });
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toMatch(/^a{22}[0-9a-f]{8}$/);
+      });
+
+      it('truncates first and last name to the column length', async () => {
+        repository.findOneBy.mockResolvedValue(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          firstName: 'F'.repeat(255),
+          lastName: 'L'.repeat(255),
+        });
+
+        expect(user.firstName).toBe('F'.repeat(100));
+        expect(user.lastName).toBe('L'.repeat(100));
+      });
+    });
   });
 
   describe('update', () => {
