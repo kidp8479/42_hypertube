@@ -41,6 +41,18 @@ provider vouches that email is verified.
   different casing than a locally-registered account would otherwise
   dodge the case-insensitive match and create a duplicate account. Missed
   on the first pass, fixed once noticed.
+- **Linking revokes the local password.** The verified-email rule covers
+  the provider side only: local registration does not verify the email,
+  so an attacker can pre-register a victim's address with a password of
+  their own. When the real owner later signs in through a provider and is
+  auto-linked to that account, the attacker would keep working
+  credentials on it (account pre-hijacking). Linking to an account that
+  has a password therefore sets that password to null, and the owner sets
+  a new one through the reset flow (HYP-34). Tradeoff: a user who
+  registered locally and then signs in through a provider loses the
+  password they chose. Acceptable until email verification exists
+  (HYP-32); once registration verifies the address, this revocation can
+  be dropped.
 - Two concurrent callbacks for a never-before-seen provider account can
   both pass the "not linked yet" check and race to create the same
   `(provider, providerUserId)` row. The database's unique constraint is

@@ -16,6 +16,7 @@ type UsersServiceMock = {
   findByEmail: jest.Mock;
   findOne: jest.Mock;
   createFromOAuth: jest.Mock;
+  clearPassword: jest.Mock;
 };
 
 type JwtServiceMock = {
@@ -70,6 +71,7 @@ describe('AuthService', () => {
             findByEmail: jest.fn(),
             findOne: jest.fn(),
             createFromOAuth: jest.fn(),
+            clearPassword: jest.fn(),
           },
         },
         {
@@ -251,6 +253,56 @@ describe('AuthService', () => {
       await expect(service.loginWithOAuth(profile)).rejects.toThrow(
         'connection lost',
       );
+    });
+
+    describe('linking to an existing local account', () => {
+      // Local registration does not verify the email, so whoever registered
+      // it may not own the address. Once the real owner signs in through a
+      // provider and gets linked, the password that account was created
+      // with must stop working (account pre-hijacking).
+      beforeEach(() => {
+        oauthAccounts.findOneBy.mockResolvedValue(null);
+      });
+
+      it('revokes the local password of the account it links to', async () => {
+        users.findByEmail.mockResolvedValue(
+          buildUser({ id: 9, password: 'argon2-hash' }),
+        );
+
+        await service.loginWithOAuth(profile);
+
+        expect(users.clearPassword).toHaveBeenCalledWith(9);
+      });
+
+      it('leaves a password-less account alone', async () => {
+        users.findByEmail.mockResolvedValue(
+          buildUser({ id: 9, password: null }),
+        );
+
+        await service.loginWithOAuth(profile);
+
+        expect(users.clearPassword).not.toHaveBeenCalled();
+      });
+
+      it('does not revoke anything for a freshly created account', async () => {
+        users.findByEmail.mockResolvedValue(null);
+        users.createFromOAuth.mockResolvedValue(buildUser({ id: 11 }));
+
+        await service.loginWithOAuth(profile);
+
+        expect(users.clearPassword).not.toHaveBeenCalled();
+      });
+
+      it('does not revoke when the link was never created', async () => {
+        users.findByEmail.mockResolvedValue(
+          buildUser({ id: 9, password: 'argon2-hash' }),
+        );
+        oauthAccounts.save.mockRejectedValue(new Error('connection lost'));
+
+        await expect(service.loginWithOAuth(profile)).rejects.toThrow();
+
+        expect(users.clearPassword).not.toHaveBeenCalled();
+      });
     });
   });
 });

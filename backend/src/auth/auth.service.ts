@@ -80,11 +80,18 @@ export class AuthService implements OnModuleInit {
    * 1. This (provider, providerUserId) pair is already linked - log that
    *    user in, nothing else to do.
    * 2. Not linked yet, but the provider vouches the email is verified -
-   *    link to an existing local account with that email if one exists,
-   *    otherwise create a fresh one.
+   *    link to an existing local account with that email if one exists
+   *    (revoking that account's password, see below), otherwise create a
+   *    fresh one.
    * 3. Not linked and the email isn't verified - create a fresh account
    *    without matching by email (matching an unverified email to an
    *    existing account would let an attacker claim it as their own).
+   *
+   * Revoking the password on link: local registration does not verify the
+   * email, so an attacker could pre-register a victim's address with a
+   * password of their own. When the real owner later signs in through a
+   * provider and is linked to that account, the attacker's password must
+   * stop working - the owner sets a new one through the reset flow.
    *
    * `profile.email` is normalized here rather than trusted as-is: unlike
    * `LoginDto`/`CreateUserDto`, it never passes through the validation
@@ -111,6 +118,10 @@ export class AuthService implements OnModuleInit {
     if (profile.emailVerified) {
       user = await this.usersService.findByEmail(email);
     }
+    // Set only when linking to an account registered locally with a
+    // password: registration never verifies the email, so that password
+    // may belong to someone who does not own the address.
+    const passwordToRevoke = user?.password ? user.id : null;
     if (!user) {
       user = await this.usersService.createFromOAuth({ ...profile, email });
     }
@@ -123,27 +134,40 @@ export class AuthService implements OnModuleInit {
           userId: user.id,
         }),
       );
+      if (passwordToRevoke !== null) {
+        await this.usersService.clearPassword(passwordToRevoke);
+      }
     } catch (err) {
-      // Lost a race against a second, concurrent callback for this same
-      // provider account (e.g. a double-click): that request's save won
-      // and already holds the link this one tried to create. From the
-      // user's side both requests are one successful login, so fetch the
-      // link that won and sign in through it instead of surfacing the
-      // unique-violation 409 the global filter would otherwise produce.
-      const code = (err as QueryFailedError & { code?: string }).code;
-      if (!(err instanceof QueryFailedError) || code !== UNIQUE_VIOLATION) {
-        throw err;
-      }
-      const account = await this.oauthAccountRepository.findOneBy({
-        provider: profile.provider,
-        providerUserId: profile.providerUserId,
-      });
-      if (!account) {
-        throw err;
-      }
-      user = await this.usersService.findOne(account.userId);
+      user = await this.recoverFromLinkRace(profile, err);
     }
 
     return this.login(user);
+  }
+
+  /**
+   * Handles a lost race on the `oauth_account` insert: a second,
+   * concurrent callback for this same provider account (e.g. a
+   * double-click) won and already holds the link this one tried to
+   * create. From the user's side both requests are one successful login,
+   * so return the winner's user and sign in through it instead of
+   * surfacing the unique-violation 409 the global filter would otherwise
+   * produce. Anything else is rethrown untouched.
+   */
+  private async recoverFromLinkRace(
+    profile: OAuthProfile,
+    err: unknown,
+  ): Promise<User> {
+    const code = (err as QueryFailedError & { code?: string }).code;
+    if (!(err instanceof QueryFailedError) || code !== UNIQUE_VIOLATION) {
+      throw err;
+    }
+    const account = await this.oauthAccountRepository.findOneBy({
+      provider: profile.provider,
+      providerUserId: profile.providerUserId,
+    });
+    if (!account) {
+      throw err;
+    }
+    return this.usersService.findOne(account.userId);
   }
 }
