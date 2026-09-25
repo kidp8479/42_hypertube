@@ -10,9 +10,6 @@ project's daily-log channel and keep its tracker "Session Handoff" doc
 current (Linear on the current projects) - these two artifacts are what
 survive between the home and school machines. This skill produces both.
 
-(`log-session` in this repo is the stripped learning example. This is the
-real one.)
-
 ## Steps
 
 1. **Identify the project** from cwd + `CLAUDE.md`.

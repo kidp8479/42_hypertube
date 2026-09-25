@@ -12,8 +12,7 @@ projects). This skill reads them back.
 
 ## Steps
 
-1. **Identify the project** from the cwd (`Hypertube/`, `ravito/`, etc.) and its
-   `CLAUDE.md`.
+1. **Identify the project** from the cwd and its `CLAUDE.md`.
 2. **Slack**: read the last few posts in `#<project>-daily-log`
    (slack MCP / `slack:summarize-channel`).
 3. **Linear**: fetch the project's "Session Handoff" doc if it exists,
@@ -27,8 +26,8 @@ projects). This skill reads them back.
    - Unpushed work: `git log <branch> ^origin/<branch>`.
 5. **Output** a short brief:
    - Where we left off (1 to 3 lines)
-   - Open threads (PRs, review findings, undecided items from the
-     project `CLAUDE.md` "pas encore decide" section)
+   - Open threads (PRs, review findings, undecided items listed in the
+     project `CLAUDE.md`)
    - Proposed next step
 6. Stop. Let the user confirm or redirect before doing any work.
 

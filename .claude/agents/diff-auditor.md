@@ -25,5 +25,4 @@ You audit a git diff. Isolated context, deliberately restricted tools
 - The large diff stays in ITS context, not the main session's.
 - Restricted `tools` means it cannot "fix" things in passing: a clean split
   between auditing and fixing.
-- `model: haiku`: mechanical task, no need for a large model. Measure the
-  saving in step 5.
+- `model: haiku`: mechanical task, no need for a large model.
