@@ -60,6 +60,9 @@ pids
 # Local overrides (Vite convention)
 *.local
 
+# Personal Compose overrides (e.g. exposing a port for a local DB client)
+docker-compose.override.yml
+
 # Diagnostic reports (Node.js)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

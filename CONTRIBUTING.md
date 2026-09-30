@@ -101,6 +101,72 @@ monotone: it can only go down. When writing code with an agent, the
 `anti-slop` skill (`.claude/skills/anti-slop/`) is the same budget as an
 up-front checklist.
 
+## Onboarding: per-developer setup
+
+Every contributor needs their own `.env` **and** their own OAuth app
+registration for each provider - a `client_secret` is a personal
+credential (never committed, never shared), and each provider's callback
+URL is locked to one exact value with no wildcard, so nobody's app can
+be reused against another dev's `localhost`.
+
+1. Copy `.env.example` to `.env` and fill in `DATABASE_*` / `JWT_SECRET`
+   (see the comments in the file for what each expects).
+2. **42 OAuth app** - register one at
+   https://profile.intra.42.fr/oauth/applications/new:
+   - Redirect URI: `http://localhost:3000/auth/42/callback`
+   - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
+     `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
+     redirect URI above.
+3. **GitHub OAuth app** - register one at
+   https://github.com/settings/developers ("New OAuth App"):
+   - Homepage URL: `http://localhost:5173`
+   - Redirect URI: `http://localhost:3000/auth/github/callback` (leave
+     "Allow wildcard matching" off - one exact URI is enough and keeps
+     the smallest possible redirect surface)
+   - Leave "Enable Device Flow" off (that's for browser-less apps, e.g.
+     CLIs) and "Expire user access tokens" off (we exchange the code for
+     an access token once and never store or refresh it, so a
+     short-lived token + refresh flow buys nothing here)
+   - Copy the client ID/secret into `GITHUB_CLIENT_ID` /
+     `GITHUB_CLIENT_SECRET`; `GITHUB_CALLBACK_URL` is the redirect URI
+     above.
+4. `make up` to boot the stack, then see "Dev environment gotchas" below
+   for the traps that show up right after a fresh clone.
+
+## Dev environment gotchas
+
+Recurring local-setup traps, collected here so they get fixed once
+instead of rediscovered every few sessions (they used to live only in
+Slack `#hypertube-daily-log` recaps).
+
+- **The backend container's `node_modules` is a separate named volume**
+  (`backend_node_modules:/app/node_modules` in `docker-compose.yml`),
+  not the bind-mounted `./backend`. Installing a package on the host
+  (`cd backend && npm install ...`) updates `package.json` (bind-mounted,
+  shared) but **not** what the running container sees. Install inside
+  the container instead: `make be CMD="npm install <pkg>"` (add `-D` as
+  needed). Same reasoning applies to `frontend`/`make fe`.
+- **VSCode may silently ignore `.vscode/settings.json`'s
+  `typescript.tsdk`.** The setting only takes effect once you explicitly
+  accept it: Command Palette -> "TypeScript: Select TypeScript Version..."
+  -> "Use Workspace Version" (once per workspace/clone). Symptom before
+  that: false-positive "Cannot find namespace 'jest'" / "Cannot find
+  name 'describe'" errors in the Problems panel, even though `npm run
+  typecheck` on the command line is green. The correct key is
+  `typescript.tsdk` - **never** `js/ts.tsdk.path`, which looks
+  plausible but is a no-op typo that has reappeared more than once.
+- **`backend_dist` (the other named volume, `/app/dist`) can come up
+  root-owned** on a fresh `docker compose up`, breaking `tsc --watch`
+  with `EACCES`. Fix: `docker compose exec -u root backend chown -R
+  node:node /app/dist`, then restart the `backend` service.
+- **Prettier's config isn't visible from inside either container** (the
+  root `.prettierrc` isn't in the build context) - running `npm run
+  lint`/`format` via `make sh-backend`/`sh-frontend` reformats every
+  file to the tool's own defaults (e.g. double quotes) instead of
+  respecting the repo's style. Always run `format`/`lint`/`typecheck`/
+  `test` **host-side** (plain `make format`, `make lint`, etc.), never
+  inside a container shell. Tracked for a real fix in `HYP-47`.
+
 ## Dependency updates (Dependabot)
 
 Config: `.github/dependabot.yml`. Weekly, per ecosystem (npm backend, npm

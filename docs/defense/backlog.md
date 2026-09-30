@@ -8,6 +8,7 @@ _Currently empty - everything surfaced so far is ticketed:_
 - HTTP security headers (helmet) -> HYP-28
 - Structured logging (pino) -> HYP-29
 - Validated config layout -> template (added to HYP-26)
+- `main`'s non-linear history (29 diverged merge commits) -> HYP-54
 
 ## Not yet ticketed
 

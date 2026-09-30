@@ -14,6 +14,7 @@ type RepositoryMock = {
   findOneBy: jest.Mock;
   preload: jest.Mock;
   delete: jest.Mock;
+  update: jest.Mock;
 };
 
 // A valid registration payload. Override just the fields a test cares about.
@@ -49,6 +50,7 @@ describe('UsersService', () => {
             save: jest.fn(),
             preload: jest.fn(),
             delete: jest.fn(),
+            update: jest.fn(),
           },
         },
       ],
@@ -77,7 +79,7 @@ describe('UsersService', () => {
       // argon2 hash of it, so a bug that mangles the password some other
       // way wouldn't slip past this test.
       expect(user.password).not.toBe(dto.password);
-      expect(await argon2.verify(user.password, dto.password)).toBe(true);
+      expect(await argon2.verify(user.password!, dto.password)).toBe(true);
       // The encoded hash carries its parameters; assert argon2id with the
       // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults.
       expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
@@ -90,6 +92,128 @@ describe('UsersService', () => {
       const user = await service.create(buildCreateUserDto());
 
       expect(user.profilePicture).toBeUndefined();
+    });
+  });
+
+  describe('createFromOAuth', () => {
+    const oauthProfile = {
+      email: 'ada@example.com',
+      suggestedUsername: 'ada',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+    };
+
+    it('creates a password-less user with the suggested username when free', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy).toHaveBeenCalledWith({ username: 'ada' });
+      expect(user).toMatchObject({
+        email: 'ada@example.com',
+        username: 'ada',
+        password: null,
+        profilePicture: null,
+      });
+    });
+
+    it('falls back to a numeric suffix when the suggested username is taken', async () => {
+      repository.findOneBy
+        .mockResolvedValueOnce({ id: 1, username: 'ada' })
+        .mockResolvedValueOnce(null);
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy).toHaveBeenNthCalledWith(1, {
+        username: 'ada',
+      });
+      expect(repository.findOneBy).toHaveBeenNthCalledWith(2, {
+        username: 'ada1',
+      });
+      expect(user.username).toBe('ada1');
+    });
+
+    it('falls back to a random suffix once the numeric attempts are exhausted', async () => {
+      // Every candidate - 'ada', 'ada1', 'ada2', ... - looks taken, so the
+      // search runs past MAX_USERNAME_ATTEMPTS and has to bail out.
+      repository.findOneBy.mockResolvedValue({ id: 1 });
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      const user = await service.createFromOAuth(oauthProfile);
+
+      expect(repository.findOneBy.mock.calls.length).toBeGreaterThan(50);
+      expect(user.username).toMatch(/^ada[0-9a-f]{8}$/);
+    });
+
+    describe('column length limits', () => {
+      // A GitHub login can reach 39 characters; the username column is 30.
+      const longLogin = 'a'.repeat(39);
+
+      beforeEach(() => {
+        repository.create.mockImplementation((data: Partial<User>) => data);
+        repository.save.mockImplementation((data: Partial<User>) => data);
+      });
+
+      it('truncates a suggested username to the column length', async () => {
+        repository.findOneBy.mockResolvedValue(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toBe('a'.repeat(30));
+      });
+
+      it('keeps a numeric suffix within the column length on collision', async () => {
+        repository.findOneBy
+          .mockResolvedValueOnce({ id: 1 })
+          .mockResolvedValueOnce(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toBe(`${'a'.repeat(29)}1`);
+      });
+
+      it('keeps the random fallback suffix within the column length', async () => {
+        repository.findOneBy.mockResolvedValue({ id: 1 });
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          suggestedUsername: longLogin,
+        });
+
+        expect(user.username).toMatch(/^a{22}[0-9a-f]{8}$/);
+      });
+
+      it('truncates first and last name to the column length', async () => {
+        repository.findOneBy.mockResolvedValue(null);
+
+        const user = await service.createFromOAuth({
+          ...oauthProfile,
+          firstName: 'F'.repeat(255),
+          lastName: 'L'.repeat(255),
+        });
+
+        expect(user.firstName).toBe('F'.repeat(100));
+        expect(user.lastName).toBe('L'.repeat(100));
+      });
+    });
+  });
+
+  describe('clearPassword', () => {
+    it('sets the stored password hash to null for that user only', async () => {
+      await service.clearPassword(7);
+
+      expect(repository.update).toHaveBeenCalledWith(7, { password: null });
     });
   });
 
