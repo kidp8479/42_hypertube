@@ -69,8 +69,8 @@
 
 <!-- instancié depuis .claude/standards/school-42.md -->
 
-- Repo visibility: private (par défaut, pas de contrainte "public" sur
-  ce sujet - à confirmer sur l'intra)
+- Repo visibility: public, choix délibéré (portfolio) - aucun secret ne
+  doit passer dans l'historique git
 - Login in repo name: n/a
 - Imposed directory structure: n/a (monorepo backend/frontend, structure
   libre)
