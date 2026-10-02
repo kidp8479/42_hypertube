@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
+import { scaledThrottleLimit } from '../config/throttle';
 import {
   CurrentUser,
   type AuthUser,
@@ -31,7 +32,7 @@ export class UsersController {
   // Registration is rare per real user; cap it hard to blunt sign-up
   // spam and (later) reset-email flooding from a single source.
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 3_600_000 } })
+  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 3_600_000 } })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
