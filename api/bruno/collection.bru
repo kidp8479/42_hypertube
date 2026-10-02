@@ -1,0 +1,18 @@
+docs {
+  Hypertube API - request collection with assertions.
+
+  Run it top to bottom (`make test-api` or the Bruno runner): the requests
+  are numbered and share runtime variables (runId, adaId, token). Every run
+  registers a fresh user, so re-running never hits the 409 on its own data.
+
+  Rate limits: POST /users is capped at 10 per hour per IP and a run uses 3.
+  The dev stack multiplies every limit by THROTTLE_LIMIT_MULTIPLIER (set in
+  .env, see .env.example) so repeated runs don't hit 429. With the default of
+  1, wait or restart the backend after 3 runs.
+
+  The `local` environment builds baseUrl from HYPERTUBE_BACKEND_PORT, read from
+  the repo .env through api/bruno/.env (a gitignored symlink: `make test-api`
+  creates it, or run `ln -s ../../.env api/bruno/.env` once).
+
+  Full endpoint reference: /api-docs on the backend (Swagger UI)
+}

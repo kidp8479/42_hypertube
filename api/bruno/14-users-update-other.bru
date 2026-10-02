@@ -1,0 +1,30 @@
+meta {
+  name: 14 Update another profile -> 403
+  type: http
+  seq: 14
+}
+
+patch {
+  url: {{baseUrl}}/users/999999
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "firstName": "Mallory"
+  }
+}
+
+docs {
+  The ownership check runs before any lookup, so the id does not need to
+  exist: any id other than the caller's answers 403 (subject requirement).
+}
+
+assert {
+  res.status: eq 403
+}

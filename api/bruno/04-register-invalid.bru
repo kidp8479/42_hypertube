@@ -1,0 +1,25 @@
+meta {
+  name: 04 Register invalid payload -> 400
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "not-an-email",
+    "username": "x",
+    "firstName": "",
+    "lastName": "Lovelace",
+    "password": "short"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
