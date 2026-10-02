@@ -1,0 +1,26 @@
+meta {
+  name: 08 List users (protected)
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}
+
+tests {
+  test("no user in the list exposes a password hash", function () {
+    res.body.forEach((u) => expect(u).to.not.have.property("password"));
+  });
+}

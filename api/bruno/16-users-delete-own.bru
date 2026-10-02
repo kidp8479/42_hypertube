@@ -1,0 +1,23 @@
+meta {
+  name: 16 Delete own account (cleanup)
+  type: http
+  seq: 16
+}
+
+delete {
+  url: {{baseUrl}}/users/{{adaId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Last request on purpose: removes the user this run created.
+}
+
+assert {
+  res.status: eq 200
+}

@@ -1,0 +1,26 @@
+meta {
+  name: 13 Update own profile (protected)
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/users/{{adaId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "firstName": "Ada K."
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.firstName: eq Ada K.
+}

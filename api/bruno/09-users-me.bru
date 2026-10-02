@@ -1,0 +1,20 @@
+meta {
+  name: 09 Get own profile (protected)
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{adaId}}
+}
