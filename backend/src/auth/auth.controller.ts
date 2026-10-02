@@ -10,6 +10,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
+import { scaledThrottleLimit } from '../config/throttle';
 import { LoginDto } from './dto/login.dto';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -36,7 +37,7 @@ export class AuthController {
   // Brute-force ceiling: 5 attempts per minute per IP, well below what a
   // human login needs and far under an automated guessing rate.
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: scaledThrottleLimit(5), ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
