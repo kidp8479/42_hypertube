@@ -70,3 +70,71 @@ provider vouches that email is verified.
 - `GET /auth/<provider>/login` and `.../callback` are unauthenticated by
   necessity (`@Public()`) - they are the entry and exit of the handshake
   itself, not a protected resource.
+
+## Amendment 2026-10-02: login CSRF (`state`) and the exchange code (HYP-53)
+
+### `state`: bind it to the browser, not just sign it
+
+Neither strategy sets `state` or `pkce`, so the callback verifies nothing
+about who started the flow. Login CSRF: an attacker starts the flow
+themselves, authenticates at the provider, and sends the victim the
+callback URL (`?code=...`); the victim's browser completes it and is
+logged into the attacker's account.
+
+`state: true` in `passport-oauth2` needs a server-side session, and the
+project is stateless (JWT). The obvious stateless answer, a signed
+`state` value, is **not enough on its own**: the attacker can obtain a
+validly signed `state` from our own `/login` and replay it in the
+victim's callback URL. The signature proves we issued it, not that this
+browser did. The value has to be tied to the user agent that started the
+flow, which means a cookie.
+
+Options considered:
+
+- **Nonce cookie + matching `state`** (chosen). `/login` generates a
+  random nonce, sets it in a short-lived cookie and sends the same value as
+  `state`. The callback accepts only if cookie and `state` match, then
+  clears the cookie. Stateless on the server, no session store. The
+  attacker cannot set a cookie in the victim's browser, so a replayed
+  callback URL fails.
+- **PKCE (`pkce: true`).** Binds the code to the client that started the
+  flow, but the `code_verifier` must live somewhere between `/login` and
+  `/callback`: a cookie again (or a store). Same cookie cost for a
+  smaller win here, since `state` is what closes login CSRF. Can be added
+  later on top without redoing this.
+- **Signed `state` without a cookie.** Rejected, see above.
+
+Cookie attributes: `HttpOnly`, `SameSite=Lax` (the callback is a
+top-level GET navigation from the provider, which Lax sends), `Secure`
+outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
+callback whether it succeeds or not. Implemented as a custom `store`
+option on both strategies (to confirm against the `passport-oauth2`
+source when coding: the `store` / `verify` callback signatures), so
+`state` handling stays out of the controller. Needs cookie parsing
+(`cookie-parser`, or reading the `Cookie` header by hand).
+
+### Exchange code
+
+Replaces the JWT-in-the-body response, as decided above:
+
+- The callback (after the `state` check) mints a random single-use code
+  (32 bytes, base64url) and redirects to
+  `FRONTEND_ORIGIN/oauth/callback?code=...`. The JWT never appears in a
+  URL.
+- Codes live in an in-memory `Map<code, { userId, expiresAt }>`: single
+  instance, same reasoning as the rate limiter, no Redis. It holds the
+  user id, not a JWT, so the real token is minted only at exchange time.
+- TTL: 60 seconds. Deleted on first use, and expired entries are swept
+  on access.
+- `POST /auth/oauth/exchange` with `{ code }`, `@Public()` and throttled
+  like `/auth/login`, answers `{ access_token }` or 401 for an unknown,
+  used or expired code (same answer for all three).
+
+### Consequences
+
+- Restarting the backend invalidates in-flight codes: the user retries
+  the login. Acceptable at this scale, to revisit with the first
+  multi-instance deploy.
+- A cookie now exists in the auth flow even though sessions are JWT in
+  `localStorage`. It carries no identity, only a one-shot nonce, and
+  should not be mistaken for session state.
