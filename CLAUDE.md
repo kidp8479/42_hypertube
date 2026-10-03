@@ -88,6 +88,10 @@ ajouts propres à ce projet :
   schéma `User` bouge encore (hashing/reset en cours, puis
   `movies`/`comments` à venir) - migrations réelles avant la soutenance
   ou avant d'avoir des données réelles à préserver, pas avant.
+- File naming: backend files are `<kebab-name>.<role>.ts` (`cookie-state.store.ts`,
+  `fortytwo.strategy.ts`), frontend files are kebab-case `<feature>-<descriptor>`.
+  Reuse an existing role suffix before inventing one. Full rule in
+  `CONTRIBUTING.md` > File naming.
 - Docs Compodoc (JSDoc `/** */`) sur toute méthode/classe dont le WHY
   n'est pas évident à la lecture - publique ou privée (ex. `AuthService.
   dummyHash`, `UsersService.findAvailableUsername`). Pas de commentaire
