@@ -3,6 +3,13 @@ import type { Request } from 'express';
 
 export const OAUTH_STATE_COOKIE = 'oauth_state';
 
+type StoreCallback = (err: Error | null, state?: string) => void;
+type VerifyCallback = (
+  err: Error | null,
+  ok: boolean,
+  info?: { message: string },
+) => void;
+
 const STATE_COOKIE_PATH = '/auth';
 const STATE_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -28,7 +35,17 @@ const sameValue = (a: string, b: string) =>
  * could fetch one from our own `/login` and replay it.
  */
 export class CookieStateStore {
-  store(req: Request, callback: (err: Error | null, state?: string) => void) {
+  // The two overloads mirror passport-oauth2's `StateStore` type. At runtime
+  // Passport picks ONE call shape from `store.length` (3 here, so it passes
+  // `meta`); the form without `meta` only exists to satisfy the type.
+  store(req: Request, callback: StoreCallback): void;
+  store(req: Request, meta: unknown, callback: StoreCallback): void;
+  store(
+    req: Request,
+    metaOrCallback: unknown,
+    maybeCallback?: StoreCallback,
+  ): void {
+    const callback = (maybeCallback ?? metaOrCallback) as StoreCallback;
     if (!req.res) {
       callback(new Error('OAuth state store needs the Express response'));
       return;
@@ -50,18 +67,28 @@ export class CookieStateStore {
    * Accepts the callback only when its `state` equals the nonce cookie set
    * by `store()`. The cookie is cleared on every call, pass or fail: a
    * nonce is single-use, and a failed attempt must not leave a live one.
-   * Passport turns a `false` here into a 403, so a rejected callback never
-   * reaches `validate()`.
+   * A `false` here makes Passport fail the request (it reports 403, but
+   * Nest's AuthGuard turns any failure into a 401), so a rejected callback
+   * never reaches `validate()`.
    */
   verify(
     req: Request,
     providedState: string | undefined,
-    callback: (
-      err: Error | null,
-      ok?: boolean,
-      info?: { message: string },
-    ) => void,
-  ) {
+    callback: VerifyCallback,
+  ): void;
+  verify(
+    req: Request,
+    providedState: string | undefined,
+    meta: unknown,
+    callback: VerifyCallback,
+  ): void;
+  verify(
+    req: Request,
+    providedState: string | undefined,
+    metaOrCallback: unknown,
+    maybeCallback?: VerifyCallback,
+  ): void {
+    const callback = (maybeCallback ?? metaOrCallback) as VerifyCallback;
     const expected = readCookie(req.headers.cookie, OAUTH_STATE_COOKIE);
     // Same Path as at creation, or the browser keeps the cookie.
     req.res?.clearCookie(OAUTH_STATE_COOKIE, { path: STATE_COOKIE_PATH });
