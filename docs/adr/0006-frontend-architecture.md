@@ -80,7 +80,9 @@ it is public.
   fuzzy-finder readable. `.tsx` means "contains a component", `.ts` means
   "logic only" (types, reducers, hooks, context) - enforced in spirit by
   `react-refresh/only-export-components`, which forbids a `.tsx` file from
-  exporting non-components.
+  exporting non-components. The backend counterpart
+  (`<name>.<role>.ts`) is documented in `CONTRIBUTING.md` > File naming;
+  `App.tsx` and `main.tsx` keep the Vite scaffold names.
 - The 401-anywhere path is centralised: the singleton `QueryClient`'s cache
   `onError` routes a 401 to a handler `AuthProvider` registers, which clears
   the token and flags the session expired; `RequireAuth` then redirects.

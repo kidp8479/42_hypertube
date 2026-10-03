@@ -261,6 +261,27 @@ describe('FooService', () => {
 - Don't mock `argon2`; it's fast enough to hash/verify for real in a
   unit test, and a real hash catches bugs a stub would hide.
 
+## File naming
+
+Backend (`backend/src`): `<kebab-case-name>.<role>.ts`.
+
+- The **hyphen** separates the words of the name: `cookie-state`,
+  `normalize-email`, `oauth-account`.
+- The **dot** separates the role: `.service`, `.controller`, `.module`,
+  `.entity`, `.dto`, `.strategy`, `.guard`, `.decorator`, `.filter`,
+  `.util`, `.interface`, `.store`, `.config`, `.validation`. The role is
+  visible in the file tree and greppable (`*.strategy.ts`), and it is what
+  the Nest CLI generates.
+- A spec adds `.spec` after the role: `foo.service.spec.ts`.
+- A new role is fine when no existing one fits, but reuse one first. The
+  only file without a role is `main.ts`, Nest's bootstrap entry point.
+
+Frontend (`frontend/src`): kebab-case, `<feature>-<descriptor>` inside a
+feature folder, see
+[ADR-0006](docs/adr/0006-frontend-architecture.md). Tests are `.test.ts(x)`
+and styles `.module.css`. `App.tsx` and `main.tsx` keep the Vite scaffold
+names.
+
 ## API conventions (NestJS)
 
 ### DTOs

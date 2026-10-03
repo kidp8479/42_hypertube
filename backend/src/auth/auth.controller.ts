@@ -10,7 +10,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
-import { scaledThrottleLimit } from '../config/throttle';
+import { scaledThrottleLimit } from '../config/throttle.config';
 import { LoginDto } from './dto/login.dto';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
