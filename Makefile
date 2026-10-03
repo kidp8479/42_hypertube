@@ -27,7 +27,7 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test test-backend test-frontend test-e2e build doc
+        test test-backend test-frontend test-e2e build doc verify
 
 help:
 	@echo "Setup"
@@ -62,6 +62,9 @@ help:
 	@echo "  test             - backend + frontend unit tests"
 	@echo "  build            - production build, backend + frontend"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
+	@echo ""
+	@echo "Full local gate"
+	@echo "  verify           - format-check, lint-check, typecheck, test, build (one command, read the result)"
 
 # ---------------------------------------------------------------------------- #
 # Setup                                                                        #
@@ -234,6 +237,8 @@ test-e2e:
 build:
 	cd backend && npm run build
 	cd frontend && npm run build
+
+verify: format-check lint-check typecheck test build
 
 doc:
 	cd backend && npm run doc
