@@ -1,10 +1,16 @@
 import type { Request } from 'express';
 import { CookieStateStore, OAUTH_STATE_COOKIE } from './cookie-state.store';
 
-// Only what the store touches: req.res.cookie(). No Nest module needed.
-const buildReq = () => {
+// Only what the store touches: req.headers.cookie and req.res.cookie() /
+// clearCookie(). No Nest module needed.
+const buildReq = (cookieHeader?: string) => {
   const cookie = jest.fn();
-  return { req: { res: { cookie } } as unknown as Request, cookie };
+  const clearCookie = jest.fn();
+  const req = {
+    headers: { cookie: cookieHeader },
+    res: { cookie, clearCookie },
+  } as unknown as Request;
+  return { req, cookie, clearCookie };
 };
 
 describe('CookieStateStore', () => {
@@ -39,6 +45,61 @@ describe('CookieStateStore', () => {
       store.store({} as unknown as Request, callback);
 
       expect(callback).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('verify', () => {
+    it('accepts when the cookie and the state match', () => {
+      const { req } = buildReq(`other=1; ${OAUTH_STATE_COOKIE}=abc123; x=y`);
+      const callback = jest.fn();
+
+      store.verify(req, 'abc123', callback);
+
+      expect(callback).toHaveBeenCalledWith(null, true);
+    });
+
+    it.each([
+      ['there is no cookie header', undefined, 'abc123'],
+      ['the state cookie is missing', 'other=1', 'abc123'],
+      [
+        'the cookie and the state differ',
+        `${OAUTH_STATE_COOKIE}=abc123`,
+        'zzz999',
+      ],
+      [
+        'the state has a different length',
+        `${OAUTH_STATE_COOKIE}=abc123`,
+        'abc',
+      ],
+      [
+        'the callback carries no state',
+        `${OAUTH_STATE_COOKIE}=abc123`,
+        undefined,
+      ],
+    ])('rejects when %s', (_case, cookieHeader, providedState) => {
+      const { req } = buildReq(cookieHeader);
+      const callback = jest.fn();
+
+      store.verify(req, providedState, callback);
+
+      expect(callback).toHaveBeenCalledWith(null, false, {
+        message: expect.any(String) as string,
+      });
+    });
+
+    it('clears the cookie whether the check passes or fails', () => {
+      const passing = buildReq(`${OAUTH_STATE_COOKIE}=abc123`);
+      const failing = buildReq(`${OAUTH_STATE_COOKIE}=abc123`);
+
+      store.verify(passing.req, 'abc123', jest.fn());
+      store.verify(failing.req, 'nope', jest.fn());
+
+      const cleared = [passing.clearCookie, failing.clearCookie];
+      cleared.forEach((clearCookie) =>
+        expect(clearCookie).toHaveBeenCalledWith(OAUTH_STATE_COOKIE, {
+          path: '/auth',
+        }),
+      );
     });
   });
 });
