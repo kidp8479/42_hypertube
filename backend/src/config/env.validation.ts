@@ -54,7 +54,7 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(s|m|h|d)$/)
     .default('15m'),
 
-  // Dev-only knob: multiplies every rate limit (see config/throttle.ts).
+  // Dev-only knob: multiplies every rate limit (see config/throttle.config.ts).
   // Pinned to 1 in production so a stray value can never loosen the limits.
   THROTTLE_LIMIT_MULTIPLIER: Joi.number()
     .integer()

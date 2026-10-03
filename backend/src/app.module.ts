@@ -11,7 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { envValidationSchema } from './config/env.validation';
-import { scaledThrottleLimit } from './config/throttle';
+import { scaledThrottleLimit } from './config/throttle.config';
 
 @Module({
   imports: [

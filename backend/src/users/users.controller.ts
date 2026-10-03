@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
-import { scaledThrottleLimit } from '../config/throttle';
+import { scaledThrottleLimit } from '../config/throttle.config';
 import {
   CurrentUser,
   type AuthUser,
