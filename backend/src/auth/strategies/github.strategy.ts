@@ -5,6 +5,7 @@ import { Strategy, StrategyOptions } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { CookieStateStore } from './cookie-state.store';
 import { fetchJson } from './fetch-json.util';
 
 // snake_case fields mirror GitHub's /user JSON response as-is - mapped
@@ -37,6 +38,8 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       // Read-only access to the account's email addresses - without it,
       // /user/emails below returns an empty list, silently.
       scope: ['user:email'],
+      // Login-CSRF protection without a session, see CookieStateStore.
+      store: new CookieStateStore(),
     } satisfies StrategyOptions);
   }
 
