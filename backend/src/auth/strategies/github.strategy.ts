@@ -84,7 +84,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   ): OAuthProfile {
     if (!profile.email) {
       // Nothing verified to link or create an account with - see
-      // AuthService.loginWithOAuth case 3, which never trusts an absent
+      // AuthService.resolveOAuthUser case 3, which never trusts an absent
       // or unverified email for account matching.
       throw new UnauthorizedException('GitHub account has no verified email');
     }

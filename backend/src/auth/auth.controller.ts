@@ -6,9 +6,12 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
+  Redirect,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { OAuthExchangeService } from './oauth-exchange.service';
 import { Public } from './decorators/public.decorator';
 import { scaledThrottleLimit } from '../config/throttle.config';
 import { LoginDto } from './dto/login.dto';
@@ -24,7 +27,11 @@ import type { OAuthProfile } from './strategies/oauth-profile.interface';
  */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly oauthExchange: OAuthExchangeService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * Exchanges email + password for a JWT access token. Answers 200 (not
@@ -64,9 +71,10 @@ export class AuthController {
   // chain rather than proving it to the compiler.
   @Public()
   @UseGuards(AuthGuard('42'))
+  @Redirect()
   @Get('42/callback')
   async fortyTwoCallback(@Req() req: Request) {
-    return this.authService.loginWithOAuth(req.user as OAuthProfile);
+    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
   }
 
   @Public()
@@ -82,8 +90,25 @@ export class AuthController {
   // this.
   @Public()
   @UseGuards(AuthGuard('github'))
+  @Redirect()
   @Get('github/callback')
   async githubCallback(@Req() req: Request) {
-    return this.authService.loginWithOAuth(req.user as OAuthProfile);
+    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
+  }
+
+  /**
+   * Where the browser goes after a successful OAuth callback: the SPA's
+   * `/oauth/callback` page with a single-use exchange code, never the JWT
+   * (it would land in browser history and access logs, ADR-0007). The SPA
+   * trades the code for the token with a normal fetch.
+   */
+  private async spaHandoffUrl(profile: OAuthProfile): Promise<string> {
+    const user = await this.authService.resolveOAuthUser(profile);
+    const url = new URL(
+      '/oauth/callback',
+      this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
+    );
+    url.searchParams.set('code', this.oauthExchange.issue(user.id));
+    return url.toString();
   }
 }

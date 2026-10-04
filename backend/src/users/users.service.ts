@@ -109,7 +109,7 @@ export class UsersService {
    * registration form. `username` is derived from the provider's suggested
    * value with a numeric-suffix fallback on collision (see
    * `findAvailableUsername`); email/OAuth-account uniqueness is the
-   * caller's responsibility (see `AuthService.loginWithOAuth`).
+   * caller's responsibility (see `AuthService.resolveOAuthUser`).
    */
   async createFromOAuth(profile: {
     email: string;
