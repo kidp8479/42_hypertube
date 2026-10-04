@@ -67,8 +67,8 @@
 
 <!-- instantiated from .claude/standards/school-42.md -->
 
-- Repo visibility: public, choix délibéré (portfolio) - aucun secret ne
-  doit passer dans l'historique git
+- Repo visibility: public, deliberate choice (portfolio) - no secret may
+  ever land in the git history
 - Login in repo name: n/a
 - Imposed directory structure: n/a (monorepo backend/frontend, free
   structure)
