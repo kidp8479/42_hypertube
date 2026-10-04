@@ -182,8 +182,8 @@ d.text_box(
     60,
     1250,
     "login route sends the nonce as `state` and sets it in a cookie\n"
-    "(HttpOnly, SameSite=Lax, Path=/auth, 10 min, cleared on every\n"
-    "callback). It binds the callback to the browser that started\n"
+    "(HttpOnly, SameSite=Lax, Path=/auth, 10 min, cleared when the\n"
+    "callback is checked). It binds the callback to the browser that started\n"
     "the flow (login CSRF, ADR-0007).",
     font_size=13,
     color="gray",

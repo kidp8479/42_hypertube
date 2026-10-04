@@ -106,7 +106,10 @@ Options considered:
 Cookie attributes: `HttpOnly`, `SameSite=Lax` (the callback is a
 top-level GET navigation from the provider, which Lax sends), `Secure`
 outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
-callback whether it succeeds or not. Implemented as `CookieStateStore`,
+callback that carries a `code`, whether the check passes or not. When the
+provider redirects back with `?error=...` (consent denied), Passport stops
+before checking the state, so the cookie is left to expire on its own after
+10 minutes. Implemented as `CookieStateStore`,
 passed as the `store` option of both strategies, so `state` handling
 stays out of the controller. The cookie is read from the `Cookie` header
 by hand: one cookie, so no `cookie-parser` dependency or middleware. The
