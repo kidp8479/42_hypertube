@@ -60,13 +60,12 @@ provider vouches that email is verified.
   winner created and signs in through it, rather than surfacing the
   unique-violation 409 to what is, from the user's side, a successful
   login.
-- **Token handoff after an OAuth callback is decided but not built yet:**
-  a single-use exchange code, not a JWT placed directly in a redirect
-  URL (which would leak it into browser history and server logs). Both
-  callback routes currently return the JWT as the response body, which
-  is enough to verify the round-trip by hand but not what a real browser
-  redirect back to the SPA needs. Needs its own ticket before an OAuth
-  login button is wired into the frontend.
+- **Token handoff after an OAuth callback:** a single-use exchange code,
+  not a JWT placed directly in a redirect URL (which would leak it into
+  browser history and server logs). Built in HYP-53, see the amendment
+  below. The first version of both callbacks returned the JWT as the
+  response body, enough to verify the round-trip by hand but not what a
+  real browser redirect back to the SPA needs.
 - `GET /auth/<provider>/login` and `.../callback` are unauthenticated by
   necessity (`@Public()`) - they are the entry and exit of the handshake
   itself, not a protected resource.
@@ -107,11 +106,13 @@ Options considered:
 Cookie attributes: `HttpOnly`, `SameSite=Lax` (the callback is a
 top-level GET navigation from the provider, which Lax sends), `Secure`
 outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
-callback whether it succeeds or not. Implemented as a custom `store`
-option on both strategies (to confirm against the `passport-oauth2`
-source when coding: the `store` / `verify` callback signatures), so
-`state` handling stays out of the controller. Needs cookie parsing
-(`cookie-parser`, or reading the `Cookie` header by hand).
+callback whether it succeeds or not. Implemented as `CookieStateStore`,
+passed as the `store` option of both strategies, so `state` handling
+stays out of the controller. The cookie is read from the `Cookie` header
+by hand: one cookie, so no `cookie-parser` dependency or middleware. The
+store carries the overloads `passport-oauth2`'s `StateStore` type
+requires; at runtime Passport picks one call shape from the method's
+arity.
 
 ### Exchange code
 
@@ -135,6 +136,10 @@ Replaces the JWT-in-the-body response, as decided above:
 - Restarting the backend invalidates in-flight codes: the user retries
   the login. Acceptable at this scale, to revisit with the first
   multi-instance deploy.
+- A rejected callback (missing or mismatched `state`) answers a plain 401
+  JSON body: Passport reports 403 but Nest's `AuthGuard` turns any failure
+  into 401. The browser lands on that JSON page; redirecting failures to a
+  SPA error page belongs with the frontend login buttons.
 - A cookie now exists in the auth flow even though sessions are JWT in
   `localStorage`. It carries no identity, only a one-shot nonce, and
   should not be mistaken for session state.
