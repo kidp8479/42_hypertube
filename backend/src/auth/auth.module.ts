@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { AuthService } from './auth.service';
+import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
@@ -25,7 +26,7 @@ import { GithubStrategy } from './strategies/github.strategy';
  * Also owns the OAuth login paths (42, GitHub): each provider is its own
  * Passport strategy ({@link FortyTwoStrategy}, {@link GithubStrategy})
  * plus a pair of routes on {@link AuthController}, sharing this module's
- * `OAuthAccount` repository via {@link AuthService.loginWithOAuth}.
+ * `OAuthAccount` repository via {@link AuthService.resolveOAuthUser}.
  */
 @Module({
   imports: [
@@ -42,7 +43,13 @@ import { GithubStrategy } from './strategies/github.strategy';
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy, FortyTwoStrategy, GithubStrategy],
+  providers: [
+    AuthService,
+    OAuthExchangeService,
+    JwtStrategy,
+    FortyTwoStrategy,
+    GithubStrategy,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}

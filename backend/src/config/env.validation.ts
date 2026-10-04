@@ -62,7 +62,7 @@ export const envValidationSchema = Joi.object({
     .default(1)
     .when('NODE_ENV', { is: 'production', then: Joi.valid(1) }),
 
-  // Optional - CORS allowed origin for the SPA. main.ts falls back to the
-  // local Vite dev server when unset.
-  FRONTEND_ORIGIN: Joi.string().uri().optional(),
+  // Optional - the SPA's origin: the CORS allowed origin, and where the OAuth
+  // callbacks redirect the browser. Defaults to the local Vite dev server.
+  FRONTEND_ORIGIN: Joi.string().uri().default('http://localhost:5173'),
 });

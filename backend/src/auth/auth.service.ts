@@ -75,10 +75,12 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Finds or creates the local `User` behind a verified OAuth identity,
-   * then signs them in. Three cases, checked in order:
-   * 1. This (provider, providerUserId) pair is already linked - log that
-   *    user in, nothing else to do.
+   * Finds or creates the local `User` behind a verified OAuth identity.
+   * It does not sign anyone in: the caller hands the user over through a
+   * single-use exchange code, and the JWT is minted when that code is
+   * redeemed (ADR-0007). Three cases, checked in order:
+   * 1. This (provider, providerUserId) pair is already linked - that user,
+   *    nothing else to do.
    * 2. Not linked yet, but the provider vouches the email is verified -
    *    link to an existing local account with that email if one exists
    *    (revoking that account's password, see below), otherwise create a
@@ -100,9 +102,7 @@ export class AuthService implements OnModuleInit {
    * dodge the case-insensitive match in case 2 and create a duplicate
    * account instead of linking to the existing one.
    */
-  async loginWithOAuth(
-    profile: OAuthProfile,
-  ): Promise<{ access_token: string }> {
+  async resolveOAuthUser(profile: OAuthProfile): Promise<User> {
     const email = normalizeEmail(profile.email);
 
     const existingAccount = await this.oauthAccountRepository.findOneBy({
@@ -110,8 +110,7 @@ export class AuthService implements OnModuleInit {
       providerUserId: profile.providerUserId,
     });
     if (existingAccount) {
-      const user = await this.usersService.findOne(existingAccount.userId);
-      return this.login(user);
+      return this.usersService.findOne(existingAccount.userId);
     }
 
     let user: User | null = null;
@@ -146,7 +145,7 @@ export class AuthService implements OnModuleInit {
       user = await this.recoverFromLinkRace(profile, err);
     }
 
-    return this.login(user);
+    return user;
   }
 
   /**

@@ -1,11 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { OAuthExchangeService } from './oauth-exchange.service';
 
 // The @Throttle limit on POST /auth/login only takes effect over HTTP
 // through ThrottlerGuard, so this drives a real request pipeline with a
@@ -19,6 +21,9 @@ describe('POST /auth/login throttling', () => {
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: { validateUser: jest.fn() } },
+        // Only the OAuth callbacks use these; login never touches them.
+        { provide: OAuthExchangeService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],
     }).compile();

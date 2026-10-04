@@ -31,7 +31,7 @@ provider vouches that email is verified.
 - **A shared `OAuthProfile` shape** (`provider`, `providerUserId`,
   `email`, `emailVerified`, `suggestedUsername`, `firstName`,
   `lastName`) that every strategy's `validate()` maps into, so
-  `AuthService.loginWithOAuth` stays provider-agnostic. A third provider
+  `AuthService.resolveOAuthUser` stays provider-agnostic. A third provider
   costs one new strategy file, not a change to the linking logic.
 
 ## Consequences
