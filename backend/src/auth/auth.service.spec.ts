@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { QueryFailedError } from 'typeorm';
@@ -156,6 +157,15 @@ describe('AuthService', () => {
       expect(users.findOne).toHaveBeenCalledWith(7);
       expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 7 });
       expect(result).toEqual({ access_token: 'signed.jwt.token' });
+    });
+
+    it('answers 401, not 404, when the user was deleted since the code was issued', async () => {
+      users.findOne.mockRejectedValue(new NotFoundException());
+
+      await expect(service.loginById(7)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(jwt.signAsync).not.toHaveBeenCalled();
     });
   });
 
