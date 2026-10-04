@@ -33,7 +33,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: config.get<string>('FRONTEND_ORIGIN') ?? 'http://localhost:5173',
+    origin: config.getOrThrow<string>('FRONTEND_ORIGIN'),
     credentials: true, // needed later for cookies / the Authorization header
   });
 

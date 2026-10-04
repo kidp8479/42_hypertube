@@ -1,5 +1,10 @@
 // Credential checking and token issuance, used by AuthController.
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
@@ -75,10 +80,33 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Finds or creates the local `User` behind a verified OAuth identity,
-   * then signs them in. Three cases, checked in order:
-   * 1. This (provider, providerUserId) pair is already linked - log that
-   *    user in, nothing else to do.
+   * Signs a token for a user known only by id, i.e. one resolved earlier
+   * by the OAuth handshake and carried here through an exchange code.
+   * Loads the user first rather than signing the bare id, so a user
+   * deleted since the code was issued gets no token.
+   *
+   * @throws {UnauthorizedException} 401 when the user no longer exists:
+   * the exchange answers the same for every bad code, and a 404 would
+   * reveal that this id once existed.
+   */
+  async loginById(userId: number): Promise<{ access_token: string }> {
+    try {
+      return this.login(await this.usersService.findOne(userId));
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw new UnauthorizedException();
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Finds or creates the local `User` behind a verified OAuth identity.
+   * It does not sign anyone in: the caller hands the user over through a
+   * single-use exchange code, and the JWT is minted when that code is
+   * redeemed (ADR-0007). Three cases, checked in order:
+   * 1. This (provider, providerUserId) pair is already linked - that user,
+   *    nothing else to do.
    * 2. Not linked yet, but the provider vouches the email is verified -
    *    link to an existing local account with that email if one exists
    *    (revoking that account's password, see below), otherwise create a
@@ -100,9 +128,7 @@ export class AuthService implements OnModuleInit {
    * dodge the case-insensitive match in case 2 and create a duplicate
    * account instead of linking to the existing one.
    */
-  async loginWithOAuth(
-    profile: OAuthProfile,
-  ): Promise<{ access_token: string }> {
+  async resolveOAuthUser(profile: OAuthProfile): Promise<User> {
     const email = normalizeEmail(profile.email);
 
     const existingAccount = await this.oauthAccountRepository.findOneBy({
@@ -110,8 +136,7 @@ export class AuthService implements OnModuleInit {
       providerUserId: profile.providerUserId,
     });
     if (existingAccount) {
-      const user = await this.usersService.findOne(existingAccount.userId);
-      return this.login(user);
+      return this.usersService.findOne(existingAccount.userId);
     }
 
     let user: User | null = null;
@@ -146,7 +171,7 @@ export class AuthService implements OnModuleInit {
       user = await this.recoverFromLinkRace(profile, err);
     }
 
-    return this.login(user);
+    return user;
   }
 
   /**

@@ -6,10 +6,15 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
+  Redirect,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { OAuthExchangeService } from './oauth-exchange.service';
 import { Public } from './decorators/public.decorator';
+import { scaledThrottleLimit } from '../config/throttle.config';
+import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,7 +28,11 @@ import type { OAuthProfile } from './strategies/oauth-profile.interface';
  */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly oauthExchange: OAuthExchangeService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * Exchanges email + password for a JWT access token. Answers 200 (not
@@ -36,7 +45,7 @@ export class AuthController {
   // Brute-force ceiling: 5 attempts per minute per IP, well below what a
   // human login needs and far under an automated guessing rate.
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: scaledThrottleLimit(5), ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
@@ -63,9 +72,10 @@ export class AuthController {
   // chain rather than proving it to the compiler.
   @Public()
   @UseGuards(AuthGuard('42'))
+  @Redirect()
   @Get('42/callback')
   async fortyTwoCallback(@Req() req: Request) {
-    return this.authService.loginWithOAuth(req.user as OAuthProfile);
+    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
   }
 
   @Public()
@@ -81,8 +91,45 @@ export class AuthController {
   // this.
   @Public()
   @UseGuards(AuthGuard('github'))
+  @Redirect()
   @Get('github/callback')
   async githubCallback(@Req() req: Request) {
-    return this.authService.loginWithOAuth(req.user as OAuthProfile);
+    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
+  }
+
+  /**
+   * Trades the single-use code from the OAuth callback redirect for the
+   * access token, from a normal SPA fetch (ADR-0007). Answers 200 (nothing
+   * is created).
+   *
+   * @throws {UnauthorizedException} 401 for an unknown, already used or
+   * expired code, without saying which.
+   */
+  @Public()
+  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
+  @Post('oauth/exchange')
+  @HttpCode(HttpStatus.OK)
+  async exchange(@Body() dto: ExchangeCodeDto) {
+    const userId = this.oauthExchange.redeem(dto.code);
+    if (userId === undefined) {
+      throw new UnauthorizedException();
+    }
+    return this.authService.loginById(userId);
+  }
+
+  /**
+   * Where the browser goes after a successful OAuth callback: the SPA's
+   * `/oauth/callback` page with a single-use exchange code, never the JWT
+   * (it would land in browser history and access logs, ADR-0007). The SPA
+   * trades the code for the token with a normal fetch.
+   */
+  private async spaHandoffUrl(profile: OAuthProfile): Promise<string> {
+    const user = await this.authService.resolveOAuthUser(profile);
+    const url = new URL(
+      '/oauth/callback',
+      this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
+    );
+    url.searchParams.set('code', this.oauthExchange.issue(user.id));
+    return url.toString();
   }
 }

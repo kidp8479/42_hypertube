@@ -5,6 +5,7 @@ import { Strategy, StrategyOptions } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { CookieStateStore } from './cookie-state.store';
 import { fetchJson } from './fetch-json.util';
 
 // snake_case fields because this mirrors 42's /v2/me JSON response as-is -
@@ -26,6 +27,8 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
       clientID: configService.getOrThrow<string>('FORTYTWO_CLIENT_ID'),
       clientSecret: configService.getOrThrow<string>('FORTYTWO_CLIENT_SECRET'),
       callbackURL: configService.getOrThrow<string>('FORTYTWO_CALLBACK_URL'),
+      // Login-CSRF protection without a session, see CookieStateStore.
+      store: new CookieStateStore(),
     } satisfies StrategyOptions);
   }
 

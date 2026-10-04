@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { QueryFailedError } from 'typeorm';
@@ -146,7 +147,29 @@ describe('AuthService', () => {
     });
   });
 
-  describe('loginWithOAuth', () => {
+  describe('loginById', () => {
+    it('loads the user and signs a token for them', async () => {
+      users.findOne.mockResolvedValue(buildUser({ id: 7 }));
+      jwt.signAsync.mockResolvedValue('signed.jwt.token');
+
+      const result = await service.loginById(7);
+
+      expect(users.findOne).toHaveBeenCalledWith(7);
+      expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 7 });
+      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+    });
+
+    it('answers 401, not 404, when the user was deleted since the code was issued', async () => {
+      users.findOne.mockRejectedValue(new NotFoundException());
+
+      await expect(service.loginById(7)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(jwt.signAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resolveOAuthUser', () => {
     // Deliberately mixed-case: exercises the normalization the fix added.
     const profile: OAuthProfile = {
       provider: OAuthProvider.FORTYTWO,
@@ -159,30 +182,30 @@ describe('AuthService', () => {
     };
 
     beforeEach(() => {
-      jwt.signAsync.mockResolvedValue('signed.jwt.token');
       oauthAccounts.create.mockImplementation(
         (data: Partial<OAuthAccount>) => data,
       );
     });
 
-    it('logs in through an already-linked account without touching email lookup or creation', async () => {
+    it('resolves an already-linked account without touching email lookup or creation', async () => {
+      const linkedUser = buildUser({ id: 5 });
       oauthAccounts.findOneBy.mockResolvedValue({ userId: 5 });
-      users.findOne.mockResolvedValue(buildUser({ id: 5 }));
+      users.findOne.mockResolvedValue(linkedUser);
 
-      const result = await service.loginWithOAuth(profile);
+      const result = await service.resolveOAuthUser(profile);
 
       expect(users.findOne).toHaveBeenCalledWith(5);
       expect(users.findByEmail).not.toHaveBeenCalled();
       expect(users.createFromOAuth).not.toHaveBeenCalled();
       expect(oauthAccounts.save).not.toHaveBeenCalled();
-      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+      expect(result).toBe(linkedUser);
     });
 
     it('links to an existing account by normalized email when the provider vouches it', async () => {
       oauthAccounts.findOneBy.mockResolvedValue(null);
       users.findByEmail.mockResolvedValue(buildUser({ id: 9 }));
 
-      await service.loginWithOAuth(profile);
+      await service.resolveOAuthUser(profile);
 
       // Not the raw 'Ada@Example.com' the profile carried - the fix this
       // locks in: findByEmail must see the same casing a local account
@@ -203,7 +226,7 @@ describe('AuthService', () => {
       users.findByEmail.mockResolvedValue(null);
       users.createFromOAuth.mockResolvedValue(buildUser({ id: 11 }));
 
-      await service.loginWithOAuth(profile);
+      await service.resolveOAuthUser(profile);
 
       expect(users.createFromOAuth).toHaveBeenCalledWith({
         ...profile,
@@ -218,7 +241,7 @@ describe('AuthService', () => {
       oauthAccounts.findOneBy.mockResolvedValue(null);
       users.createFromOAuth.mockResolvedValue(buildUser({ id: 12 }));
 
-      await service.loginWithOAuth({ ...profile, emailVerified: false });
+      await service.resolveOAuthUser({ ...profile, emailVerified: false });
 
       expect(users.findByEmail).not.toHaveBeenCalled();
       expect(users.createFromOAuth).toHaveBeenCalled();
@@ -234,14 +257,15 @@ describe('AuthService', () => {
       users.findByEmail.mockResolvedValue(null);
       users.createFromOAuth.mockResolvedValue(buildUser({ id: 30 }));
       oauthAccounts.save.mockRejectedValue(buildUniqueViolation());
-      users.findOne.mockResolvedValue(buildUser({ id: 20 }));
+      const winner = buildUser({ id: 20 });
+      users.findOne.mockResolvedValue(winner);
 
-      const result = await service.loginWithOAuth(profile);
+      const result = await service.resolveOAuthUser(profile);
 
-      // Signs in as the winner's user (20), not the one this call tried
+      // Resolves to the winner's user (20), not the one this call tried
       // to create (30).
       expect(users.findOne).toHaveBeenCalledWith(20);
-      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+      expect(result).toBe(winner);
     });
 
     it('rethrows a save failure that is not a unique violation', async () => {
@@ -250,7 +274,7 @@ describe('AuthService', () => {
       users.createFromOAuth.mockResolvedValue(buildUser({ id: 40 }));
       oauthAccounts.save.mockRejectedValue(new Error('connection lost'));
 
-      await expect(service.loginWithOAuth(profile)).rejects.toThrow(
+      await expect(service.resolveOAuthUser(profile)).rejects.toThrow(
         'connection lost',
       );
     });
@@ -269,7 +293,7 @@ describe('AuthService', () => {
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
 
-        await service.loginWithOAuth(profile);
+        await service.resolveOAuthUser(profile);
 
         expect(users.clearPassword).toHaveBeenCalledWith(9);
       });
@@ -279,7 +303,7 @@ describe('AuthService', () => {
           buildUser({ id: 9, password: null }),
         );
 
-        await service.loginWithOAuth(profile);
+        await service.resolveOAuthUser(profile);
 
         expect(users.clearPassword).not.toHaveBeenCalled();
       });
@@ -288,7 +312,7 @@ describe('AuthService', () => {
         users.findByEmail.mockResolvedValue(null);
         users.createFromOAuth.mockResolvedValue(buildUser({ id: 11 }));
 
-        await service.loginWithOAuth(profile);
+        await service.resolveOAuthUser(profile);
 
         expect(users.clearPassword).not.toHaveBeenCalled();
       });
@@ -298,7 +322,7 @@ describe('AuthService', () => {
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
 
-        await service.loginWithOAuth(profile);
+        await service.resolveOAuthUser(profile);
 
         // A failure between the two steps must never leave an identity
         // linked to an account whose old password still works.
@@ -313,7 +337,7 @@ describe('AuthService', () => {
         );
         users.clearPassword.mockRejectedValue(new Error('connection lost'));
 
-        await expect(service.loginWithOAuth(profile)).rejects.toThrow(
+        await expect(service.resolveOAuthUser(profile)).rejects.toThrow(
           'connection lost',
         );
 

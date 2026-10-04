@@ -1,0 +1,31 @@
+meta {
+  name: 03 Register same email -> 409
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ada-{{runId}}@example.com",
+    "username": "ada-again-{{runId}}",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("generic message, does not echo the email", function () {
+    expect(JSON.stringify(res.body)).to.not.contain("@example.com");
+  });
+}

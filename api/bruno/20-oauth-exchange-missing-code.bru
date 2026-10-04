@@ -1,0 +1,19 @@
+meta {
+  name: 20 OAuth code exchange without a code -> 400
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/auth/oauth/exchange
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}
+
+assert {
+  res.status: eq 400
+}
