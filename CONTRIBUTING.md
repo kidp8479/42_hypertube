@@ -91,6 +91,10 @@ re-commit. The same checks run in CI (`.github/workflows/ci.yml`) on every
 push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
+`make verify` runs the whole local gate in one go (format-check, lint-check,
+typecheck, test, build) and is the command to run before declaring a change
+ready - it mirrors what CI checks, minus the e2e job.
+
 `lint:check` runs with `--max-warnings 0`. On top of the usual rules it
 enforces a complexity / size budget (function length, nesting depth,
 cyclomatic and cognitive complexity, copy-paste, repeated literals) - a
