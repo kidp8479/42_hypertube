@@ -56,5 +56,7 @@ merges", not every edit.
 
 - **`auth-flow`** - create an account (`POST /users`), get a token
   (`POST /auth/login`), and the guard chain on every other route
-  (`JwtAuthGuard`, `@Public()`, ownership check). Reflects HYP-10 + HYP-44 +
-  HYP-46. Add reset-password / logout when they are built.
+  (`JwtAuthGuard`, `@Public()`, ownership check), and sign-in with 42 or
+  GitHub (state cookie, callback, single-use exchange code, token).
+  Reflects HYP-10 + HYP-44 + HYP-46 + HYP-11 + HYP-53. Add reset-password
+  / logout when they are built.

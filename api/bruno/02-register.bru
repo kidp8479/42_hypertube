@@ -1,0 +1,41 @@
+meta {
+  name: 02 Register (public)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ada-{{runId}}@example.com",
+    "username": "ada-{{runId}}",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+script:pre-request {
+  // Fresh identity per run, so the collection is re-runnable.
+  bru.setVar("runId", Date.now().toString(36));
+}
+
+script:post-response {
+  bru.setVar("adaId", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+  res.body.id: isNumber
+}
+
+tests {
+  test("never leaks the password hash", function () {
+    expect(res.body).to.not.have.property("password");
+  });
+}

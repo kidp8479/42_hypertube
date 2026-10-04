@@ -1,5 +1,5 @@
 // Common shape every OAuth strategy's validate() normalises its
-// provider-specific profile into, so AuthService.loginWithOAuth stays
+// provider-specific profile into, so AuthService.resolveOAuthUser stays
 // provider-agnostic.
 import { OAuthProvider } from '../entities/oauth-account.entity';
 

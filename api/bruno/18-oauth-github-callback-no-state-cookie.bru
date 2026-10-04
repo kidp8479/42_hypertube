@@ -1,0 +1,19 @@
+meta {
+  name: 18 GitHub OAuth callback without the state cookie -> 401
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/auth/github/callback?code=any-code&state=forged
+  body: none
+  auth: none
+}
+
+docs {
+  Same login CSRF guard as request 17, on the GitHub strategy.
+}
+
+assert {
+  res.status: eq 401
+}

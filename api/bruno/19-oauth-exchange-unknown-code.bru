@@ -1,0 +1,28 @@
+meta {
+  name: 19 OAuth code exchange with an unknown code -> 401
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/auth/oauth/exchange
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "code": "never-issued-code"
+  }
+}
+
+docs {
+  The code a browser receives after the OAuth callback is single-use and
+  lives 60 s (ADR-0007). An unknown, used or expired code all answer the same
+  401. The happy path needs a real provider login, so it is covered by the
+  unit tests instead.
+}
+
+assert {
+  res.status: eq 401
+}

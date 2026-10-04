@@ -27,7 +27,7 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test test-backend test-frontend test-e2e build doc verify
+        test test-backend test-frontend test-e2e test-api build doc verify
 
 help:
 	@echo "Setup"
@@ -60,6 +60,7 @@ help:
 	@echo "  lint[-check]     - ESLint, --fix (or check only) on backend + frontend"
 	@echo "  typecheck        - tsc --noEmit on backend + frontend"
 	@echo "  test             - backend + frontend unit tests"
+	@echo "  test-api         - run the Bruno request collection (api/bruno) against a running backend"
 	@echo "  build            - production build, backend + frontend"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
 	@echo ""
@@ -233,6 +234,17 @@ test-frontend:
 # does not start it, since it needs a real Postgres behind the backend.
 test-e2e:
 	cd frontend && npm run test:e2e
+
+# Runs the Bruno collection (assertions included) against the running
+# backend. The collection reads HYPERTUBE_BACKEND_PORT from the repo .env
+# through api/bruno/.env, a gitignored symlink created here (the Bruno app
+# needs the same link, so running this once also sets up the GUI). Needs the
+# stack up (`make up`); npx fetches the CLI on first use, so it is not a
+# project dependency. POST /users is rate-limited (10/h), a run uses 3: raise
+# THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
+test-api:
+	ln -sf ../../.env api/bruno/.env
+	cd api/bruno && npx --yes @usebruno/cli run --env local
 
 build:
 	cd backend && npm run build

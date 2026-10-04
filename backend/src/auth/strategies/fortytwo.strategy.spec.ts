@@ -1,4 +1,6 @@
 import { ConfigService } from '@nestjs/config';
+import type { Request } from 'express';
+import { OAUTH_STATE_COOKIE } from './cookie-state.store';
 import { FortyTwoStrategy } from './fortytwo.strategy';
 import { OAuthProvider } from '../entities/oauth-account.entity';
 
@@ -107,6 +109,43 @@ describe('FortyTwoStrategy', () => {
         firstName: 'Ada',
         lastName: 'Lovelace',
       });
+    });
+  });
+
+  describe('OAuth state', () => {
+    const callbackURL = 'http://localhost:3000/auth/42/callback';
+
+    // Passport adds redirect() / fail() to the strategy at runtime.
+    const spyOnOutcome = () => {
+      const redirect = jest.fn();
+      const fail = jest.fn();
+      Object.assign(strategy, { redirect, fail });
+      return { redirect, fail };
+    };
+
+    it('sends the nonce set in the cookie as the state of the authorize redirect', () => {
+      const cookie = jest.fn();
+      const { redirect } = spyOnOutcome();
+      const req = { headers: {}, query: {}, res: { cookie } };
+
+      strategy.authenticate(req as unknown as Request, { callbackURL });
+
+      const nonce = (cookie.mock.calls[0] as [string, string])[1];
+      const location = new URL((redirect.mock.calls[0] as [string])[0]);
+      expect(location.searchParams.get('state')).toBe(nonce);
+    });
+
+    it('refuses a callback whose state does not match the cookie', () => {
+      const { fail } = spyOnOutcome();
+      const req = {
+        headers: { cookie: `${OAUTH_STATE_COOKIE}=genuine` },
+        query: { code: 'any-code', state: 'forged' },
+        res: { clearCookie: jest.fn() },
+      };
+
+      strategy.authenticate(req as unknown as Request, { callbackURL });
+
+      expect(fail).toHaveBeenCalledWith(expect.anything(), 403);
     });
   });
 });

@@ -54,7 +54,15 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(s|m|h|d)$/)
     .default('15m'),
 
-  // Optional - CORS allowed origin for the SPA. main.ts falls back to the
-  // local Vite dev server when unset.
-  FRONTEND_ORIGIN: Joi.string().uri().optional(),
+  // Dev-only knob: multiplies every rate limit (see config/throttle.config.ts).
+  // Pinned to 1 in production so a stray value can never loosen the limits.
+  THROTTLE_LIMIT_MULTIPLIER: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .when('NODE_ENV', { is: 'production', then: Joi.valid(1) }),
+
+  // Optional - the SPA's origin: the CORS allowed origin, and where the OAuth
+  // callbacks redirect the browser. Defaults to the local Vite dev server.
+  FRONTEND_ORIGIN: Joi.string().uri().default('http://localhost:5173'),
 });

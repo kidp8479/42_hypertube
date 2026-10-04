@@ -1,0 +1,27 @@
+meta {
+  name: 06 Login (public)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "ada-{{runId}}@example.com",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+script:post-response {
+  bru.setVar("token", res.body.access_token);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access_token: isString
+}

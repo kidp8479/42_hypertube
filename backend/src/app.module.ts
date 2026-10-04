@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { envValidationSchema } from './config/env.validation';
+import { scaledThrottleLimit } from './config/throttle.config';
 
 @Module({
   imports: [
@@ -43,7 +44,9 @@ import { envValidationSchema } from './config/env.validation';
     // counter). Auth endpoints tighten this further with @Throttle.
     // A shared Redis store is a nice-to-have once there is more than one
     // backend instance - not needed for a single-instance deploy.
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
+    ThrottlerModule.forRoot([
+      { name: 'default', ttl: 60_000, limit: scaledThrottleLimit(100) },
+    ]),
     UsersModule,
     AuthModule,
   ],

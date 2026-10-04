@@ -117,15 +117,21 @@ be reused against another dev's `localhost`.
    (see the comments in the file for what each expects).
 2. **42 OAuth app** - register one at
    https://profile.intra.42.fr/oauth/applications/new:
-   - Redirect URI: `http://localhost:3000/auth/42/callback`
+   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/42/callback`
+     (`3000` unless you changed it in `.env`). It must match
+     `FORTYTWO_CALLBACK_URL` exactly: if you change the port later, add
+     the new URI here too, or 42 answers "The redirect uri included is
+     not valid".
    - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
      `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
      redirect URI above.
 3. **GitHub OAuth app** - register one at
    https://github.com/settings/developers ("New OAuth App"):
-   - Homepage URL: `http://localhost:5173`
-   - Redirect URI: `http://localhost:3000/auth/github/callback` (leave
-     "Allow wildcard matching" off - one exact URI is enough and keeps
+   - Homepage URL: `http://localhost:<HYPERTUBE_FRONTEND_PORT>` (`5173`
+     by default)
+   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/github/callback`
+     (GitHub keeps a single URI per app, so edit it when the port
+     changes; leave "Allow wildcard matching" off - one exact URI is enough and keeps
      the smallest possible redirect surface)
    - Leave "Enable Device Flow" off (that's for browser-less apps, e.g.
      CLIs) and "Expire user access tokens" off (we exchange the code for
@@ -200,6 +206,18 @@ Run the suite **host-side** (`make test`), not inside the backend
 container - the container has a memory cap and Jest's workers get
 OOM-killed there. Same for `make lint` / `make typecheck` / `make format`.
 
+### API request collection
+
+`api/bruno/` is a [Bruno](https://www.usebruno.com) collection: numbered
+`.bru` files that share runtime variables, so the order matters. Add a
+request (with its `assert` block for the status code) alongside each new
+endpoint. `make test-api` runs it headless against a running backend;
+The collection takes the backend port from `.env` via a gitignored
+symlink `api/bruno/.env` (created by `make test-api`; in the Bruno app,
+run that target once first). `POST /users` is capped at 10 per hour per
+IP and one run uses 3, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
+`.env` for dev; it is forced to 1 when `NODE_ENV=production`.
+
 ### Spec file layout
 
 Specs are co-located (`foo.service.ts` -> `foo.service.spec.ts`) and follow
@@ -248,6 +266,27 @@ describe('FooService', () => {
   them.
 - Don't mock `argon2`; it's fast enough to hash/verify for real in a
   unit test, and a real hash catches bugs a stub would hide.
+
+## File naming
+
+Backend (`backend/src`): `<kebab-case-name>.<role>.ts`.
+
+- The **hyphen** separates the words of the name: `cookie-state`,
+  `normalize-email`, `oauth-account`.
+- The **dot** separates the role: `.service`, `.controller`, `.module`,
+  `.entity`, `.dto`, `.strategy`, `.guard`, `.decorator`, `.filter`,
+  `.util`, `.interface`, `.store`, `.config`, `.validation`. The role is
+  visible in the file tree and greppable (`*.strategy.ts`), and it is what
+  the Nest CLI generates.
+- A spec adds `.spec` after the role: `foo.service.spec.ts`.
+- A new role is fine when no existing one fits, but reuse one first. The
+  only file without a role is `main.ts`, Nest's bootstrap entry point.
+
+Frontend (`frontend/src`): kebab-case, `<feature>-<descriptor>` inside a
+feature folder, see
+[ADR-0006](docs/adr/0006-frontend-architecture.md). Tests are `.test.ts(x)`
+and styles `.module.css`. `App.tsx` and `main.tsx` keep the Vite scaffold
+names.
 
 ## API conventions (NestJS)
 

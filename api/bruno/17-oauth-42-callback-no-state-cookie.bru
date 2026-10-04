@@ -1,0 +1,22 @@
+meta {
+  name: 17 42 OAuth callback without the state cookie -> 401
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/auth/42/callback?code=any-code&state=forged
+  body: none
+  auth: none
+}
+
+docs {
+  Login CSRF guard (ADR-0007): the callback is accepted only when `state`
+  equals the nonce cookie set by /auth/42/login. This request has no cookie,
+  so it is rejected before any call to 42. Passport reports 403 internally,
+  Nest's AuthGuard answers 401.
+}
+
+assert {
+  res.status: eq 401
+}

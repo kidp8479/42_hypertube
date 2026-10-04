@@ -31,7 +31,7 @@ provider vouches that email is verified.
 - **A shared `OAuthProfile` shape** (`provider`, `providerUserId`,
   `email`, `emailVerified`, `suggestedUsername`, `firstName`,
   `lastName`) that every strategy's `validate()` maps into, so
-  `AuthService.loginWithOAuth` stays provider-agnostic. A third provider
+  `AuthService.resolveOAuthUser` stays provider-agnostic. A third provider
   costs one new strategy file, not a change to the linking logic.
 
 ## Consequences
@@ -60,13 +60,89 @@ provider vouches that email is verified.
   winner created and signs in through it, rather than surfacing the
   unique-violation 409 to what is, from the user's side, a successful
   login.
-- **Token handoff after an OAuth callback is decided but not built yet:**
-  a single-use exchange code, not a JWT placed directly in a redirect
-  URL (which would leak it into browser history and server logs). Both
-  callback routes currently return the JWT as the response body, which
-  is enough to verify the round-trip by hand but not what a real browser
-  redirect back to the SPA needs. Needs its own ticket before an OAuth
-  login button is wired into the frontend.
+- **Token handoff after an OAuth callback:** a single-use exchange code,
+  not a JWT placed directly in a redirect URL (which would leak it into
+  browser history and server logs). Built in HYP-53, see the amendment
+  below. The first version of both callbacks returned the JWT as the
+  response body, enough to verify the round-trip by hand but not what a
+  real browser redirect back to the SPA needs.
 - `GET /auth/<provider>/login` and `.../callback` are unauthenticated by
   necessity (`@Public()`) - they are the entry and exit of the handshake
   itself, not a protected resource.
+
+## Amendment 2026-10-02: login CSRF (`state`) and the exchange code (HYP-53)
+
+### `state`: bind it to the browser, not just sign it
+
+Neither strategy sets `state` or `pkce`, so the callback verifies nothing
+about who started the flow. Login CSRF: an attacker starts the flow
+themselves, authenticates at the provider, and sends the victim the
+callback URL (`?code=...`); the victim's browser completes it and is
+logged into the attacker's account.
+
+`state: true` in `passport-oauth2` needs a server-side session, and the
+project is stateless (JWT). The obvious stateless answer, a signed
+`state` value, is **not enough on its own**: the attacker can obtain a
+validly signed `state` from our own `/login` and replay it in the
+victim's callback URL. The signature proves we issued it, not that this
+browser did. The value has to be tied to the user agent that started the
+flow, which means a cookie.
+
+Options considered:
+
+- **Nonce cookie + matching `state`** (chosen). `/login` generates a
+  random nonce, sets it in a short-lived cookie and sends the same value as
+  `state`. The callback accepts only if cookie and `state` match, then
+  clears the cookie. Stateless on the server, no session store. The
+  attacker cannot set a cookie in the victim's browser, so a replayed
+  callback URL fails.
+- **PKCE (`pkce: true`).** Binds the code to the client that started the
+  flow, but the `code_verifier` must live somewhere between `/login` and
+  `/callback`: a cookie again (or a store). Same cookie cost for a
+  smaller win here, since `state` is what closes login CSRF. Can be added
+  later on top without redoing this.
+- **Signed `state` without a cookie.** Rejected, see above.
+
+Cookie attributes: `HttpOnly`, `SameSite=Lax` (the callback is a
+top-level GET navigation from the provider, which Lax sends), `Secure`
+outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
+callback that carries a `code`, whether the check passes or not. When the
+provider redirects back with `?error=...` (consent denied), Passport stops
+before checking the state, so the cookie is left to expire on its own after
+10 minutes. Implemented as `CookieStateStore`,
+passed as the `store` option of both strategies, so `state` handling
+stays out of the controller. The cookie is read from the `Cookie` header
+by hand: one cookie, so no `cookie-parser` dependency or middleware. The
+store carries the overloads `passport-oauth2`'s `StateStore` type
+requires; at runtime Passport picks one call shape from the method's
+arity.
+
+### Exchange code
+
+Replaces the JWT-in-the-body response, as decided above:
+
+- The callback (after the `state` check) mints a random single-use code
+  (32 bytes, base64url) and redirects to
+  `FRONTEND_ORIGIN/oauth/callback?code=...`. The JWT never appears in a
+  URL.
+- Codes live in an in-memory `Map<code, { userId, expiresAt }>`: single
+  instance, same reasoning as the rate limiter, no Redis. It holds the
+  user id, not a JWT, so the real token is minted only at exchange time.
+- TTL: 60 seconds. Deleted on first use, and expired entries are swept
+  on access.
+- `POST /auth/oauth/exchange` with `{ code }`, `@Public()` and throttled
+  like `/auth/login`, answers `{ access_token }` or 401 for an unknown,
+  used or expired code (same answer for all three).
+
+### Consequences
+
+- Restarting the backend invalidates in-flight codes: the user retries
+  the login. Acceptable at this scale, to revisit with the first
+  multi-instance deploy.
+- A rejected callback (missing or mismatched `state`) answers a plain 401
+  JSON body: Passport reports 403 but Nest's `AuthGuard` turns any failure
+  into 401. The browser lands on that JSON page; redirecting failures to a
+  SPA error page belongs with the frontend login buttons.
+- A cookie now exists in the auth flow even though sessions are JWT in
+  `localStorage`. It carries no identity, only a one-shot nonce, and
+  should not be mistaken for session state.
