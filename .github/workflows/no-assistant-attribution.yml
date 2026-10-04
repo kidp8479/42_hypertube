@@ -1,0 +1,39 @@
+name: No assistant attribution
+
+# A commit-msg hook trims assistant attribution locally, but only where
+# core.hooksPath is set (a fresh machine can miss it). This check cannot be
+# skipped: it fails a PR whose commit messages or description carry it.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # base..head needs both commits
+      - name: Self-test the detector
+        run: .github/scripts/test-no-assistant-attribution.sh
+      - name: Commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          status=0
+          for sha in $(git rev-list "$BASE_SHA..$HEAD_SHA"); do
+            git log -1 --format=%B "$sha" \
+              | .github/scripts/no-assistant-attribution.sh "commit $(git rev-parse --short "$sha")" || status=1
+          done
+          exit $status
+      # Dependabot descriptions quote upstream release notes, which can name
+      # an assistant as a contributor; that text is not ours.
+      - name: PR description
+        if: github.actor != 'dependabot[bot]'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s\n' "$PR_BODY" | .github/scripts/no-assistant-attribution.sh "the PR description"
