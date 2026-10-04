@@ -9,9 +9,12 @@ import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
 import { registerRequest } from './auth-actions';
 import {
+  describeValidationError,
   validateRegister,
+  type RegisterField,
   type RegisterValues,
   type RegisterErrors,
+  type ValidationError,
 } from './auth-validation';
 import styles from './auth-register-page.module.css';
 
@@ -19,11 +22,19 @@ const CONFLICT_ERROR = 'An account with this email or username already exists.';
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
 
 /** One field's validation message, or nothing when the field is valid. */
-function FieldError({ message }: { message?: string }) {
-  if (!message) {
+function FieldError({
+  field,
+  error,
+}: {
+  field: RegisterField;
+  error?: ValidationError;
+}) {
+  if (!error) {
     return null;
   }
-  return <p className={styles.fieldError}>{message}</p>;
+  return (
+    <p className={styles.fieldError}>{describeValidationError(field, error)}</p>
+  );
 }
 
 export function RegisterPage() {
@@ -88,7 +99,7 @@ export function RegisterPage() {
           autoComplete="email"
         />
       </label>
-      <FieldError message={errors.email} />
+      <FieldError field="email" error={errors.email} />
 
       <label className={styles.field}>
         Username
@@ -99,7 +110,7 @@ export function RegisterPage() {
           autoComplete="username"
         />
       </label>
-      <FieldError message={errors.username} />
+      <FieldError field="username" error={errors.username} />
 
       <label className={styles.field}>
         First name
@@ -110,7 +121,7 @@ export function RegisterPage() {
           autoComplete="given-name"
         />
       </label>
-      <FieldError message={errors.firstName} />
+      <FieldError field="firstName" error={errors.firstName} />
 
       <label className={styles.field}>
         Last name
@@ -121,7 +132,7 @@ export function RegisterPage() {
           autoComplete="family-name"
         />
       </label>
-      <FieldError message={errors.lastName} />
+      <FieldError field="lastName" error={errors.lastName} />
 
       <label className={styles.field}>
         Password
@@ -132,7 +143,7 @@ export function RegisterPage() {
           autoComplete="new-password"
         />
       </label>
-      <FieldError message={errors.password} />
+      <FieldError field="password" error={errors.password} />
 
       <label className={styles.field}>
         Confirm password
@@ -143,7 +154,7 @@ export function RegisterPage() {
           autoComplete="new-password"
         />
       </label>
-      <FieldError message={errors.confirmPassword} />
+      <FieldError field="confirmPassword" error={errors.confirmPassword} />
 
       {formError && (
         <p className={styles.error} role="alert">
