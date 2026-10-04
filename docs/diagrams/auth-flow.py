@@ -21,7 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 d = Diagram()
 
-d.text_box(60, 20, "Hypertube - authentication flow (HYP-10 / HYP-44 / HYP-46)", font_size=24)
+d.text_box(60, 20, "Hypertube - authentication flow (HYP-10 / HYP-44 / HYP-46 / HYP-11 / HYP-53)", font_size=24)
 
 # ================= Column A: create an account =================
 d.text_box(60, 90, "1. Create an account   POST /users", font_size=18, color="violet")
@@ -129,6 +129,72 @@ d.text_box(
     1590,
     960,
     "Reset password and logout: not built yet (HYP-10 follow-ups).",
+    font_size=13,
+    color="gray",
+)
+
+# ================= Row 4: sign in with 42 / GitHub =================
+d.text_box(
+    60,
+    1040,
+    "4. Sign in with 42 or GitHub   GET /auth/<provider>/login",
+    font_size=18,
+    color="violet",
+)
+
+W, H = 220, 60
+XS = [60, 340, 620, 900, 1180, 1460, 1740, 2020]
+YA = 1120
+
+browser = d.box(XS[0], YA, "Browser", color="gray", width=W, height=H)
+login_r = d.box(XS[1], YA, "login route\nsets nonce cookie", color="violet", width=W, height=H)
+prov = d.box(XS[2], YA, "42 / GitHub\nuser consents", color="gray", width=W, height=H)
+cb = d.box(XS[3], YA, "callback route\ncode + state", color="violet", width=W, height=H)
+dec_state = d.box(XS[4], YA - 25, "state equals\ncookie?", color="yellow", shape="diamond", width=W, height=110)
+resolve = d.box(XS[5], YA, "resolveOAuthUser\nfind / link / create", color="blue", width=W, height=H)
+issue = d.box(XS[6], YA, "issue code\nsingle-use, 60 s", color="green", width=W, height=H)
+spa = d.box(XS[7], YA, "302 to the SPA\n?code=...", color="green", width=W, height=H)
+r401a = d.box(XS[4], 1310, "401\n(cookie cleared)", color="red", width=W, height=H)
+
+d.arrow_between(browser, login_r, from_side="right", to_side="left")
+d.arrow_between(login_r, prov, from_side="right", to_side="left")
+d.arrow_between(prov, cb, from_side="right", to_side="left")
+d.arrow_between(cb, dec_state, from_side="right", to_side="left")
+d.arrow_between(dec_state, resolve, "yes", from_side="right", to_side="left")
+d.arrow_between(dec_state, r401a, "no", from_side="bottom", to_side="top")
+d.arrow_between(resolve, issue, from_side="right", to_side="left")
+d.arrow_between(issue, spa, from_side="right", to_side="left")
+
+YB = 1500
+exch = d.box(XS[7], YB, "POST oauth/exchange\n{ code }", color="violet", width=W, height=H)
+dec_code = d.box(XS[6], YB - 30, "code valid?\n(unused, < 60 s)", color="yellow", shape="diamond", width=W, height=120)
+sign2 = d.box(XS[5], YB, "loginById\nsign JWT (sub: id)", color="green", width=W, height=H)
+tok2 = d.box(XS[4], YB, "access_token\nto the SPA", color="green", width=W, height=H)
+r401b = d.box(XS[6], 1690, "401 Unauthorized", color="red", width=W, height=H)
+
+d.arrow_between(spa, exch, "SPA loads", from_side="bottom", to_side="top")
+d.arrow_between(exch, dec_code, from_side="left", to_side="right")
+d.arrow_between(dec_code, sign2, "yes", from_side="left", to_side="right")
+d.arrow_between(sign2, tok2, from_side="left", to_side="right")
+d.arrow_between(dec_code, r401b, "no", from_side="bottom", to_side="top")
+
+d.text_box(
+    60,
+    1250,
+    "login route sends the nonce as `state` and sets it in a cookie\n"
+    "(HttpOnly, SameSite=Lax, Path=/auth, 10 min, cleared on every\n"
+    "callback). It binds the callback to the browser that started\n"
+    "the flow (login CSRF, ADR-0007).",
+    font_size=13,
+    color="gray",
+)
+d.text_box(
+    60,
+    1480,
+    "Linking by email only when the provider vouches it is verified;\n"
+    "linking revokes the local password (ADR-0007). The JWT never\n"
+    "appears in a URL: the code does, single-use and 60 s.\n"
+    "Unknown, used and expired codes all answer the same 401.",
     font_size=13,
     color="gray",
 )
