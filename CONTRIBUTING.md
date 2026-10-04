@@ -117,15 +117,21 @@ be reused against another dev's `localhost`.
    (see the comments in the file for what each expects).
 2. **42 OAuth app** - register one at
    https://profile.intra.42.fr/oauth/applications/new:
-   - Redirect URI: `http://localhost:3000/auth/42/callback`
+   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/42/callback`
+     (`3000` unless you changed it in `.env`). It must match
+     `FORTYTWO_CALLBACK_URL` exactly: if you change the port later, add
+     the new URI here too, or 42 answers "The redirect uri included is
+     not valid".
    - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
      `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
      redirect URI above.
 3. **GitHub OAuth app** - register one at
    https://github.com/settings/developers ("New OAuth App"):
-   - Homepage URL: `http://localhost:5173`
-   - Redirect URI: `http://localhost:3000/auth/github/callback` (leave
-     "Allow wildcard matching" off - one exact URI is enough and keeps
+   - Homepage URL: `http://localhost:<HYPERTUBE_FRONTEND_PORT>` (`5173`
+     by default)
+   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/github/callback`
+     (GitHub keeps a single URI per app, so edit it when the port
+     changes; leave "Allow wildcard matching" off - one exact URI is enough and keeps
      the smallest possible redirect surface)
    - Leave "Enable Device Flow" off (that's for browser-less apps, e.g.
      CLIs) and "Expire user access tokens" off (we exchange the code for
