@@ -75,6 +75,16 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
+   * Signs a token for a user known only by id, i.e. one resolved earlier
+   * by the OAuth handshake and carried here through an exchange code.
+   * Loads the user first rather than signing the bare id, so a user
+   * deleted since the code was issued gets no token.
+   */
+  async loginById(userId: number): Promise<{ access_token: string }> {
+    return this.login(await this.usersService.findOne(userId));
+  }
+
+  /**
    * Finds or creates the local `User` behind a verified OAuth identity.
    * It does not sign anyone in: the caller hands the user over through a
    * single-use exchange code, and the JWT is minted when that code is

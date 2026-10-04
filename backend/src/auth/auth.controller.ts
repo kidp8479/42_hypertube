@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { Public } from './decorators/public.decorator';
 import { scaledThrottleLimit } from '../config/throttle.config';
+import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -94,6 +95,26 @@ export class AuthController {
   @Get('github/callback')
   async githubCallback(@Req() req: Request) {
     return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
+  }
+
+  /**
+   * Trades the single-use code from the OAuth callback redirect for the
+   * access token, from a normal SPA fetch (ADR-0007). Answers 200 (nothing
+   * is created).
+   *
+   * @throws {UnauthorizedException} 401 for an unknown, already used or
+   * expired code, without saying which.
+   */
+  @Public()
+  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
+  @Post('oauth/exchange')
+  @HttpCode(HttpStatus.OK)
+  async exchange(@Body() dto: ExchangeCodeDto) {
+    const userId = this.oauthExchange.redeem(dto.code);
+    if (userId === undefined) {
+      throw new UnauthorizedException();
+    }
+    return this.authService.loginById(userId);
   }
 
   /**

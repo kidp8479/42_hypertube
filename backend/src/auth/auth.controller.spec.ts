@@ -15,6 +15,7 @@ type AuthServiceMock = {
   validateUser: jest.Mock;
   login: jest.Mock;
   resolveOAuthUser: jest.Mock;
+  loginById: jest.Mock;
 };
 
 const buildUser = (overrides: Partial<User> = {}): User =>
@@ -28,7 +29,7 @@ const loginDto: LoginDto = {
 describe('AuthController', () => {
   let controller: AuthController;
   let auth: AuthServiceMock;
-  let exchange: { issue: jest.Mock };
+  let exchange: { issue: jest.Mock; redeem: jest.Mock };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -40,9 +41,13 @@ describe('AuthController', () => {
             validateUser: jest.fn(),
             login: jest.fn(),
             resolveOAuthUser: jest.fn(),
+            loginById: jest.fn(),
           },
         },
-        { provide: OAuthExchangeService, useValue: { issue: jest.fn() } },
+        {
+          provide: OAuthExchangeService,
+          useValue: { issue: jest.fn(), redeem: jest.fn() },
+        },
         {
           provide: ConfigService,
           useValue: {
@@ -117,4 +122,26 @@ describe('AuthController', () => {
       });
     },
   );
+
+  describe('exchange', () => {
+    it('trades a valid code for an access token', async () => {
+      exchange.redeem.mockReturnValue(7);
+      auth.loginById.mockResolvedValue({ access_token: 'signed.jwt.token' });
+
+      const result = await controller.exchange({ code: 'the-code' });
+
+      expect(exchange.redeem).toHaveBeenCalledWith('the-code');
+      expect(auth.loginById).toHaveBeenCalledWith(7);
+      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+    });
+
+    it('throws 401 and never mints a token for an unknown, used or expired code', async () => {
+      exchange.redeem.mockReturnValue(undefined);
+
+      await expect(
+        controller.exchange({ code: 'bad-code' }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(auth.loginById).not.toHaveBeenCalled();
+    });
+  });
 });
