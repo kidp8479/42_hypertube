@@ -146,6 +146,19 @@ describe('AuthService', () => {
     });
   });
 
+  describe('loginById', () => {
+    it('loads the user and signs a token for them', async () => {
+      users.findOne.mockResolvedValue(buildUser({ id: 7 }));
+      jwt.signAsync.mockResolvedValue('signed.jwt.token');
+
+      const result = await service.loginById(7);
+
+      expect(users.findOne).toHaveBeenCalledWith(7);
+      expect(jwt.signAsync).toHaveBeenCalledWith({ sub: 7 });
+      expect(result).toEqual({ access_token: 'signed.jwt.token' });
+    });
+  });
+
   describe('resolveOAuthUser', () => {
     // Deliberately mixed-case: exercises the normalization the fix added.
     const profile: OAuthProfile = {
