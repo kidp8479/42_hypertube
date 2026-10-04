@@ -1,5 +1,10 @@
 // Credential checking and token issuance, used by AuthController.
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
@@ -79,9 +84,20 @@ export class AuthService implements OnModuleInit {
    * by the OAuth handshake and carried here through an exchange code.
    * Loads the user first rather than signing the bare id, so a user
    * deleted since the code was issued gets no token.
+   *
+   * @throws {UnauthorizedException} 401 when the user no longer exists:
+   * the exchange answers the same for every bad code, and a 404 would
+   * reveal that this id once existed.
    */
   async loginById(userId: number): Promise<{ access_token: string }> {
-    return this.login(await this.usersService.findOne(userId));
+    try {
+      return this.login(await this.usersService.findOne(userId));
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw new UnauthorizedException();
+      }
+      throw err;
+    }
   }
 
   /**
