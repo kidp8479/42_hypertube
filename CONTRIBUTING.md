@@ -71,7 +71,11 @@ reinforces the link and helps the status auto-transition on merge.
 conventions above - no tool-appended `Co-authored-by:` bot identities,
 session backlinks, or "generated with" footers. The `.githooks/commit-msg`
 hook trims these from commit messages automatically (it never blocks a
-commit); PR bodies are on the author. Human co-authors are kept.
+commit), but only where `core.hooksPath` is set: on a new machine run
+`make hooks-install` and check `git config core.hooksPath` prints
+`.githooks`. The `No assistant attribution` workflow is the check that
+cannot be skipped: it fails a PR whose commit messages or description carry
+such a trailer or footer. Human co-authors are kept.
 
 ## Before committing
 
