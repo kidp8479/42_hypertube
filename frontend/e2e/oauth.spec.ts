@@ -1,7 +1,8 @@
 // The parts of the OAuth handshake that can be checked without a real login
 // at the provider (which needs a real 42 / GitHub account and cannot be
 // automated): what the login route sends to the provider, and that a
-// callback without the matching state cookie is refused. Goes through the
+// callback without the matching state cookie is refused (sent back to the
+// SPA's error page, since the callback is a browser navigation). Goes through the
 // SPA origin's `/api` proxy like the rest of the suite, with redirects off so
 // the 302 itself can be read.
 import { test, expect } from '@playwright/test';
@@ -31,7 +32,7 @@ for (const { name, host } of providers) {
       expect(cookie).toMatch(/SameSite=Lax/i);
     });
 
-    test('callback without the state cookie is rejected', async ({
+    test('callback without the state cookie is sent to the SPA error page', async ({
       request,
     }) => {
       const res = await request.get(
@@ -39,7 +40,11 @@ for (const { name, host } of providers) {
         { maxRedirects: 0 },
       );
 
-      expect(res.status()).toBe(401);
+      expect(res.status()).toBe(302);
+      const location = new URL(res.headers()['location']);
+      expect(location.pathname).toBe('/oauth/callback');
+      expect(location.searchParams.get('error')).toBe('failed');
+      expect(res.headers()['referrer-policy']).toBe('no-referrer');
     });
   });
 }

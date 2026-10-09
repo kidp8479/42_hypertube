@@ -279,9 +279,9 @@ Backend (`backend/src`): `<kebab-case-name>.<role>.ts`.
   `normalize-email`, `oauth-account`.
 - The **dot** separates the role: `.service`, `.controller`, `.module`,
   `.entity`, `.dto`, `.strategy`, `.guard`, `.decorator`, `.filter`,
-  `.util`, `.interface`, `.store`, `.config`, `.validation`. The role is
-  visible in the file tree and greppable (`*.strategy.ts`), and it is what
-  the Nest CLI generates.
+  `.util`, `.interface`, `.store`, `.config`, `.validation`, `.exception`.
+  The role is visible in the file tree and greppable (`*.strategy.ts`), and
+  it is what the Nest CLI generates.
 - A spec adds `.spec` after the role: `foo.service.spec.ts`.
 - A new role is fine when no existing one fits, but reuse one first. The
   only file without a role is `main.ts`, Nest's bootstrap entry point.

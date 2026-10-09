@@ -1,9 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
 import { OAUTH_STATE_COOKIE } from './cookie-state.store';
 import { GithubStrategy } from './github.strategy';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 const buildConfig = () =>
   ({
@@ -234,7 +234,7 @@ describe('GithubStrategy', () => {
           name: 'Ada',
           email: null,
         }),
-      ).toThrow(UnauthorizedException);
+      ).toThrow(UnverifiedEmailException);
     });
   });
 
