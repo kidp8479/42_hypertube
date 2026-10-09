@@ -6,15 +6,15 @@ state of each one. Re-run the attempt with the full CI gate
 (`format:check`, `lint:check`, `typecheck`, `test`, `build`) in the
 affected package before changing a verdict.
 
-Snapshot date: 2026-09-09. Node runtime pinned to **24**
-(`*/Dockerfile`, `.github/workflows/ci.yml`, `docker-compose.yml`).
+Snapshot date: 2026-09-09, peer ranges rechecked 2026-10-09. Node runtime
+pinned to **24** (`*/Dockerfile`, `.github/workflows/ci.yml`, `docker-compose.yml`).
 
 | Migration | From -> To | Verdict |
 | --- | --- | --- |
 | `eslint` + `@eslint/js` (backend) | 9 -> 10 | **landed** - ignore line kept, now blocks 10 -> 11 |
 | `eslint` / `@eslint/js` (frontend) | already on 10 | n/a - ignore line kept, blocks 10 -> 11 |
 | `@types/node` (both) | 24 -> 26 | **blocked** - runtime is Node 24 |
-| `@nestjs/*` (backend) | 11 -> 12 | **deferred** - `@nestjs/throttler` has no Nest 12 release |
+| `@nestjs/*` (backend) | 11 -> 12 | **unblocked, not done** - `@nestjs/throttler` 6.7.1 peers `^12`; `config` + `passport` already on 12 |
 | `typescript` (backend) | 5.9 -> 7 | **deferred** - `ts-jest` + `typescript-eslint` cap below 7 |
 | `typescript` (frontend) | 6 -> 7 | **deferred** - `typescript-eslint` caps at `<6.1.0` |
 
@@ -46,7 +46,7 @@ not have.
 Dockerfiles + CI + compose, with `@types/node` moved in the same PR.
 Kept in the `ignore:` block until then.
 
-## @nestjs/* 11 -> 12 (backend) - deferred
+## @nestjs/* 11 -> 12 (backend) - unblocked, not done
 
 Attempted the coordinated bump of every `@nestjs/*` package to 12.
 
@@ -71,20 +71,27 @@ at 6.5.0), for reference only - reverted:
   carries `@nestjs/(config|passport)`), or move the jest config to ESM,
   or Node >= 24.9 `require(esm)`.
 
-**Retry trigger:** `@nestjs/throttler` publishes a release with a `^12`
-peer. Then: bump all `@nestjs/*` together, widen `transformIgnorePatterns`
-for the ESM subpackages, re-run the full gate. Kept in the `ignore:` block.
+**Update 2026-10-09: the retry trigger has fired.** `@nestjs/throttler`
+6.7.1 (installed since the 2026-10-08 Dependabot batch) peers
+`@nestjs/common` / `@nestjs/core` `^12`. `@nestjs/config` 12 and
+`@nestjs/passport` 12 are already installed (their peers accept 11 or 12,
+hence the existing `transformIgnorePatterns` entry). The migration has not
+been re-attempted yet.
+
+**Retry trigger (met):** `@nestjs/throttler` publishes a release with a
+`^12` peer. Next: bump the remaining `@nestjs/*` together, widen
+`transformIgnorePatterns` for the ESM subpackages, re-run the full gate. Kept in the `ignore:` block.
 
 ## typescript 5.9 -> 7 (backend) / 6 -> 7 (frontend) - deferred
 
 TS 7 is the native-compiler rewrite. Toolchain support is not there:
 
-- `ts-jest` latest `29.4.12` peers `typescript: '>=4.3 <7'` - no TS 7.
-- `typescript-eslint` latest `8.70.0` peers `typescript: '>=4.8.4 <6.1.0'`
+- `ts-jest` `29.4.14` peers `typescript: '>=4.3 <7'` - no TS 7.
+- `typescript-eslint` `8.71.0` peers `typescript: '>=4.8.4 <6.1.0'`
   - no TS 7, and nothing past 6.0.x either.
 
 Frontend is already on `typescript@~6.0.3` - that is the ceiling its
-`typescript-eslint@8.68` allows, so the frontend `ignore:` line on
+`typescript-eslint@8.71` allows, so the frontend `ignore:` line on
 `typescript` majors stays until typescript-eslint moves.
 
 **Backend to TS 6.0** (intermediate, matching the frontend) was probed and
