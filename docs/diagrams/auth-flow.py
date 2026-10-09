@@ -1,27 +1,26 @@
 """Regenerate auth-flow.excalidraw / auth-flow.png.
 
-This script drives the personal `excalidraw-diagrams` skill
-(~/.claude/skills/excalidraw-diagrams). It is committed so the diagram
+This script drives the repo's `excalidraw-diagrams` skill
+(.claude/skills/excalidraw-diagrams). It is committed so the diagram
 can be regenerated deterministically, but the portable source of truth
 for anyone without the skill is `auth-flow.excalidraw` - open it at
 excalidraw.com or with the VS Code Excalidraw extension.
 
     python3 docs/diagrams/auth-flow.py
-    node ~/.claude/skills/excalidraw-diagrams/scripts/export_playwright.js \
+    node .claude/skills/excalidraw-diagrams/scripts/export_playwright.js \
         docs/diagrams/auth-flow.excalidraw docs/diagrams/auth-flow.png
 """
 
 import os
 import sys
 
-sys.path.insert(0, os.path.expanduser("~/.claude/skills/excalidraw-diagrams/scripts"))
-from excalidraw_generator import Diagram  # noqa: E402
-
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".claude", "skills", "excalidraw-diagrams", "scripts"))
+from excalidraw_generator import Diagram  # noqa: E402
 
 d = Diagram()
 
-d.text_box(60, 20, "Hypertube - authentication flow (HYP-10 / HYP-44 / HYP-46 / HYP-11 / HYP-53)", font_size=24)
+d.text_box(60, 20, "Hypertube - authentication flow (HYP-10 / HYP-44 / HYP-46 / HYP-11 / HYP-53 / HYP-57)", font_size=24)
 
 # ================= Column A: create an account =================
 d.text_box(60, 90, "1. Create an account   POST /users", font_size=18, color="violet")
@@ -154,7 +153,7 @@ dec_state = d.box(XS[4], YA - 25, "state equals\ncookie?", color="yellow", shape
 resolve = d.box(XS[5], YA, "resolveOAuthUser\nfind / link / create", color="blue", width=W, height=H)
 issue = d.box(XS[6], YA, "issue code\nsingle-use, 60 s", color="green", width=W, height=H)
 spa = d.box(XS[7], YA, "302 to the SPA\n?code=...", color="green", width=W, height=H)
-r401a = d.box(XS[4], 1310, "401\n(cookie cleared)", color="red", width=W, height=H)
+r401a = d.box(XS[4], 1310, "302 to the SPA\n?error=failed", color="red", width=W, height=H)
 
 d.arrow_between(browser, login_r, from_side="right", to_side="left")
 d.arrow_between(login_r, prov, from_side="right", to_side="left")
@@ -195,6 +194,17 @@ d.text_box(
     "linking revokes the local password (ADR-0007). The JWT never\n"
     "appears in a URL: the code does, single-use and 60 s.\n"
     "Unknown, used and expired codes all answer the same 401.",
+    font_size=13,
+    color="gray",
+)
+
+d.text_box(
+    1430,
+    1300,
+    "Any callback failure is a 302 to the SPA, never JSON:\n"
+    "?error=cancelled (consent declined), email_unverified\n"
+    "(no verified email), failed (bad state, anything else).\n"
+    "Referrer-Policy: no-referrer on every callback redirect.",
     font_size=13,
     color="gray",
 )
