@@ -23,7 +23,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | No SQL injection possible | HYP-10 | TypeORM repository + parameterised query builders only; `:id` via `ParseIntPipe` | code review; no string concatenation with input anywhere | done |
 | No HTML/JS injection | HYP-10 / HYP-45 | backend returns JSON only; React auto-escapes; no `dangerouslySetInnerHTML` | `web-security-review` (HYP-10, HYP-45) | partial - CSP still todo (HYP-49) |
 | All forms and uploads validated | HYP-10 | global `ValidationPipe` (`whitelist` + `forbidNonWhitelisted` + `transform`); class-validator DTOs | DTO specs; `forbidNonWhitelisted` returns 400 on unknown fields | done (uploads: HYP-38) |
-| `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks in pre-commit + CI | done |
+| `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks secret scan in CI (`scan`, a required check on `main`) | done |
 | No console error/warning (browser or server) during the defense | HYP-45 | clean-browser check on the auth flow; the only console line is the browser's own network log of a deliberate 401 | headless-Chromium walk in the HYP-45 PR; `docs/defense/known-limitations.md` | partial - re-check per feature |
 | Torrent downloaded "by hand" (no streaming-from-torrent library) | HYP-12 | n/a | n/a | todo |
 | Legal, rights-free sources only; >= 2 external search sources | HYP-13 | n/a | n/a | todo |
@@ -36,10 +36,10 @@ control, its code path, its proof, and the accepted gaps) lives in
 | OAuth "42 strategy" + >= 1 other provider | HYP-11 / HYP-53 / HYP-57 | `FortyTwoStrategy` + `GithubStrategy` (`auth/strategies/`), identity linking in `AuthService.resolveOAuthUser` (ADR-0007); callback -> single-use exchange code -> `POST /auth/oauth/exchange` | `fortytwo.strategy.spec.ts`, `github.strategy.spec.ts`, `auth.service.spec.ts`, `oauth-exchange.service.spec.ts`; Bruno 17-20; `frontend/e2e/oauth.spec.ts` | partial - backend done; SPA buttons + `/oauth/callback` page are HYP-57 |
 | Reset password by email | HYP-34 (needs HYP-32 mail infra) | n/a | n/a | todo |
 | One-click logout | HYP-35 (backend) / HYP-45 (frontend) | frontend `logout()` clears token + query cache -> guard redirects | `auth-provider.test.tsx` logout case | partial - server-side token invalidation is HYP-35 |
-| Language choice, default English | HYP-36 | `User.preferredLanguage` enum exists | n/a | partial - UI + i18n todo |
+| Language choice, default English | HYP-36 / HYP-56 | `User.preferredLanguage` enum exists; register validation returns error codes, not English strings (HYP-56, i18n-ready) | n/a | partial - react-i18next + language switcher in progress (HYP-56) |
 | `GET /users/me` current-user shortcut | HYP-44 | `UsersController.findMe` | unit + HTTP routing test | done |
-| Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | 28 frontend tests; ADR-0006 | done |
-| Frontend: login + register pages | HYP-46 | `auth-login-page.tsx`, `auth-register-page.tsx` | jsdom unit tests + `frontend/e2e/auth.spec.ts` (Playwright, real browser, register -> login, blocked as `e2e` in CI) | done |
+| Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | Vitest specs under `frontend/src/`; ADR-0006 | done |
+| Frontend: login + register pages | HYP-46 | `auth-login-page.tsx`, `auth-register-page.tsx` | jsdom unit tests + `frontend/e2e/auth.spec.ts` (Playwright, real browser, register -> login, a required `e2e` check in CI) | done |
 
 ## API (RESTful + OAuth2)
 

@@ -67,8 +67,8 @@ the id checked for ownership comes from the verified token
 
 | Control | Where | Proof |
 |---|---|---|
-| Every route requires a valid Bearer token unless explicitly `@Public()` | global `JwtAuthGuard` (`APP_GUARD` in `app.module.ts`) | `auth/jwt-auth.guard.spec.ts` |
-| Token signature + expiry verified on every request; `ignoreExpiration: false` | `auth/jwt.strategy.ts` | `auth/jwt.strategy.spec.ts` |
+| Every route requires a valid Bearer token unless explicitly `@Public()` | global `JwtAuthGuard` (`APP_GUARD` in `app.module.ts`) | `auth/guards/jwt-auth.guard.spec.ts` |
+| Token signature + expiry verified on every request; `ignoreExpiration: false` | `auth/strategies/jwt.strategy.ts` | `auth/strategies/jwt.strategy.spec.ts` |
 | Token payload carries only `sub` (user id); profile / roles fetched per request, never trusted from the token | `auth.service.ts` `login()`, `jwt.strategy.ts` `validate()` | ADR-0002 |
 | `JWT_SECRET` >= 32 chars, and the `.env.example` placeholder is rejected at boot | `config/env.validation.ts` | `config/env.validation.spec.ts` |
 | Signing key asserted present at startup, not lazily | `jwt.strategy.ts` `config.getOrThrow('JWT_SECRET')` | |
@@ -104,6 +104,7 @@ the id checked for ownership comes from the verified token
 | `POST /auth/login` | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
 | `POST /users` (register) | 10 / 3600 s | `@Throttle` on `users.controller.ts` |
 | `POST /auth/oauth/exchange` | 10 / 60 s | `@Throttle` on `auth.controller.ts` |
+| Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts`, `config/env.validation.ts` |
 | Proof | | `auth/auth.throttle.spec.ts` |
 
 Guard order in `app.module.ts` is deliberate: `ThrottlerGuard` is
@@ -136,7 +137,7 @@ store is only needed once more than one backend instance runs (noted in
 | `.env` git-ignored; `.env.example` ships placeholders only | `.gitignore`, `.env.example` |
 | Placeholder secrets rejected at boot | `config/env.validation.ts` `ENV_EXAMPLE_PLACEHOLDERS` |
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
-| gitleaks secret scan | pre-commit hook + CI |
+| gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
 | CORS locked to a single configured origin, `credentials: true` | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 
