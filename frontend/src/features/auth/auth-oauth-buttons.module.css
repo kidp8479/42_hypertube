@@ -1,0 +1,6 @@
+/* Minimal layout only - real visual design lands in a later issue. */
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

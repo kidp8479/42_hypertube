@@ -16,6 +16,7 @@ import {
   type RegisterErrors,
   type ValidationError,
 } from './auth-validation';
+import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
 const CONFLICT_ERROR = 'An account with this email or username already exists.';
@@ -165,6 +166,8 @@ export function RegisterPage() {
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Registering...' : 'Register'}
       </button>
+
+      <OAuthButtons />
 
       <p>
         Already have an account? <Link to="/login">Log in</Link>
