@@ -33,7 +33,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | Requirement | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
 | Email + password, password hashed | HYP-10 | `POST /users` (register), `POST /auth/login` | `auth.service.spec.ts`, `users.service.spec.ts` | done |
-| OAuth "42 strategy" + >= 1 other provider | HYP-11 | n/a | n/a | todo |
+| OAuth "42 strategy" + >= 1 other provider | HYP-11 / HYP-53 / HYP-57 | `FortyTwoStrategy` + `GithubStrategy` (`auth/strategies/`), identity linking in `AuthService.resolveOAuthUser` (ADR-0007); callback -> single-use exchange code -> `POST /auth/oauth/exchange` | `fortytwo.strategy.spec.ts`, `github.strategy.spec.ts`, `auth.service.spec.ts`, `oauth-exchange.service.spec.ts`; Bruno 17-20; `frontend/e2e/oauth.spec.ts` | partial - backend done; SPA buttons + `/oauth/callback` page are HYP-57 |
 | Reset password by email | HYP-34 (needs HYP-32 mail infra) | n/a | n/a | todo |
 | One-click logout | HYP-35 (backend) / HYP-45 (frontend) | frontend `logout()` clears token + query cache -> guard redirects | `auth-provider.test.tsx` logout case | partial - server-side token invalidation is HYP-35 |
 | Language choice, default English | HYP-36 | `User.preferredLanguage` enum exists | n/a | partial - UI + i18n todo |
