@@ -67,10 +67,11 @@ lets someone probe which emails have an account.
 
 - **Why (for now):** a fully enumeration-safe registration returns the
   same response either way and tells the real owner by email instead -
-  which needs the transactional-email infra. That is **HYP-32**; until it
-  lands, a generic 409 (no SQL leak, no hint at which value clashed) is
-  the interim, and login / password-reset are already uniform.
+  which needs the transactional-email infra (**HYP-32**). The
+  uniform-response change itself is **HYP-50**; until both land, a
+  generic 409 (no SQL leak, no hint at which value clashed) is the
+  interim, and login / password-reset are already uniform.
 - **Real-world:** the 201-vs-409 timing/status oracle is the enumeration
   vector; the fix is the uniform-response + email side-channel above.
-- **Cost to fix later:** medium - it is HYP-32 + the register handler
-  change, already scoped.
+- **Cost to fix later:** medium - HYP-32 (mail infra) + HYP-50 (the
+  register handler change), both already scoped.

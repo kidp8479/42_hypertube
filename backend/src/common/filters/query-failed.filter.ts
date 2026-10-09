@@ -12,9 +12,9 @@ export const UNIQUE_VIOLATION = '23505';
  * (hit today on a duplicate email/username at registration).
  *
  * The message stays generic - it must not reveal which value clashed
- * (account enumeration). HYP-32 replaces this with a uniform-response
- * flow on registration specifically; this filter is the safety net for
- * every other unique constraint.
+ * (account enumeration). HYP-50 replaces this with a uniform-response
+ * flow on registration specifically (it needs the HYP-32 mail infra);
+ * this filter is the safety net for every other unique constraint.
  */
 @Catch(QueryFailedError)
 export class QueryFailedFilter extends BaseExceptionFilter {

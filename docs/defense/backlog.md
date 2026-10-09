@@ -5,7 +5,8 @@ then delete the entry here.
 
 _Currently empty - everything surfaced so far is ticketed:_
 
-- HTTP security headers (helmet) -> HYP-28
+- HTTP security headers (helmet + CSP) -> HYP-49 (HYP-28 is an older
+  duplicate)
 - Structured logging (pino) -> HYP-29
 - Validated config layout -> template (added to HYP-26)
 - `main`'s non-linear history (29 diverged merge commits) -> HYP-54
