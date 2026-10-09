@@ -110,6 +110,10 @@ and additions specific to this project:
 - Auth is default-deny: `JwtAuthGuard` is global (`APP_GUARD`), so every
   route is protected unless it carries `@Public()` explicitly (e.g. the
   OAuth login/callback routes).
+- Diagrams: on top of the standard's PR mermaid diagram, the same
+  diagram is committed to its domain page `docs/diagrams/<domain>.md`
+  (Mermaid overview of the domain first, then one section per flow), in
+  the same PR. Mandatory - `docs/diagrams/README.md`.
 - DTO rules, HTTP status codes and spec layout are in `CONTRIBUTING.md`
   (API conventions, Testing). Read them before adding an endpoint or a
   spec.

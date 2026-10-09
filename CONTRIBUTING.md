@@ -50,6 +50,13 @@ PR shows up to date; if it's stuck, comment `@dependabot rebase` on it
 rather than waiting, or merge Dependabot PRs one at a time with a pause
 between each.
 
+### Diagrams
+
+A PR that touches a flow, a state machine or 3+ components carries a
+Mermaid diagram in its description **and** commits it to the domain's
+page in `docs/diagrams/` (one page per domain, overview first). Rule and
+index: [`docs/diagrams/README.md`](docs/diagrams/README.md).
+
 ## Commits
 
 Commits are atomic: one logical change per commit, not a pile of unrelated

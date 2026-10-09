@@ -12,6 +12,7 @@
 
 - [ ] description explains what changed (plain terms or pseudocode), not a restatement of the diff
 - [ ] mermaid diagram included if the change touches a flow, a state machine, or 3+ components
+- [ ] that diagram is also committed to its domain page in `docs/diagrams/` (overview updated if a step was added or removed) - mandatory, see `docs/diagrams/README.md`
 - [ ] builds without errors or warnings
 - [ ] format / lint / typecheck / test / build green for both packages
 - [ ] tested manually (browser / API calls); screenshots on the PR or tracker issue for a UI change
