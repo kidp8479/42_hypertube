@@ -62,6 +62,11 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  /**
+   * Starts the 42 OAuth handshake: the browser navigates here (a link,
+   * not a fetch) and is redirected (302) to 42's authorize page, with a
+   * fresh `state` bound to it by {@link CookieStateStore}.
+   */
   @Public()
   @UseGuards(AuthGuard('42'))
   @Get('42/login')
@@ -84,6 +89,11 @@ export class AuthController {
     return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
   }
 
+  /**
+   * Starts the GitHub OAuth handshake: the browser navigates here (a link,
+   * not a fetch) and is redirected (302) to GitHub's authorize page, with a
+   * fresh `state` bound to it by {@link CookieStateStore}.
+   */
   @Public()
   @UseGuards(AuthGuard('github'))
   @Get('github/login')
