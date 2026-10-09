@@ -60,6 +60,9 @@ provider vouches that email is verified.
   winner created and signs in through it, rather than surfacing the
   unique-violation 409 to what is, from the user's side, a successful
   login.
+  The user-creation step just before it is not covered yet: the same
+  double first login can fail on the `email` / `username` unique
+  constraint (409, or an orphan `User` row), tracked in HYP-55.
 - **Token handoff after an OAuth callback:** a single-use exchange code,
   not a JWT placed directly in a redirect URL (which would leak it into
   browser history and server logs). Built in HYP-53, see the amendment
@@ -139,10 +142,31 @@ Replaces the JWT-in-the-body response, as decided above:
 - Restarting the backend invalidates in-flight codes: the user retries
   the login. Acceptable at this scale, to revisit with the first
   multi-instance deploy.
-- A rejected callback (missing or mismatched `state`) answers a plain 401
-  JSON body: Passport reports 403 but Nest's `AuthGuard` turns any failure
-  into 401. The browser lands on that JSON page; redirecting failures to a
-  SPA error page belongs with the frontend login buttons.
+- A rejected callback (missing or mismatched `state`) first answered a
+  plain 401 JSON body (Passport reports 403, Nest's `AuthGuard` turns any
+  failure into 401). Since HYP-57 every callback failure redirects to the
+  SPA instead, see the amendment below.
 - A cookie now exists in the auth flow even though sessions are JWT in
   `localStorage`. It carries no identity, only a one-shot nonce, and
   should not be mistaken for session state.
+
+## Amendment 2026-10-09: failed callbacks redirect to the SPA (HYP-57)
+
+Supersedes the "plain 401 JSON body" consequence above. Both callback
+routes carry `@OAuthCallback(provider)`, which adds `OAuthCallbackFilter`:
+any failure on the callback (declined consent, missing or forged `state`,
+no verified email, provider or DB error) redirects to
+`FRONTEND_ORIGIN/oauth/callback?error=<reason>` instead of answering JSON
+on the backend origin. The callback is a top-level navigation, so a JSON
+error would strand the user on a bare `{"statusCode":401}` page.
+
+- Three reasons only: `cancelled` (the provider sent
+  `?error=access_denied`), `email_unverified` (`UnverifiedEmailException`,
+  the one failure the user can fix at the provider), `failed` for
+  everything else. Details stay in the server log, never in a URL.
+- Logging: 5xx and non-HTTP errors as errors, an unverified email as a
+  warning, other 4xx (declined consent, bad `state`) not at all.
+- Success and failure redirects both carry `Referrer-Policy: no-referrer`:
+  the callback URL holds the provider's `code` and `state`. The filter
+  sets it itself, since a decorator `@Header` is not applied once the
+  guard or handler has thrown.
