@@ -9,19 +9,30 @@ interface LoginResponse {
   access_token: string;
 }
 
-/** Exchanges credentials for a token and stores it; rejects with ApiError on bad credentials (401). */
-export async function loginRequest(
-  email: string,
-  password: string,
-): Promise<void> {
-  const response = await apiFetch<LoginResponse>('/auth/login', {
+/** POSTs to an endpoint that answers `{ access_token }` and stores the token. */
+async function requestToken(path: string, body: object): Promise<void> {
+  const response = await apiFetch<LoginResponse>(path, {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   if (!response) {
     throw new Error('Login response was empty');
   }
   setAuthToken(response.access_token);
+}
+
+/** Exchanges credentials for a token and stores it; rejects with ApiError on bad credentials (401). */
+export function loginRequest(email: string, password: string): Promise<void> {
+  return requestToken('/auth/login', { email, password });
+}
+
+/**
+ * Trades the single-use code the OAuth callback redirect handed the SPA for
+ * a token, and stores it (ADR-0007). Rejects with ApiError 401 when the code
+ * is unknown, already used or expired.
+ */
+export function exchangeOAuthCode(code: string): Promise<void> {
+  return requestToken('/auth/oauth/exchange', { code });
 }
 
 /** Clears the token and every cached query, so no stale data from this session survives into the next. */

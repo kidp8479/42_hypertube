@@ -21,11 +21,14 @@ const { apiFetch } = await import('../../lib/api');
 const apiFetchMock = vi.mocked(apiFetch);
 
 function Probe() {
-  const { state, login, logout } = useAuth();
-  // The real LoginPage surfaces this rejection in form state; the probe only
-  // needs to not blow up the test with an unhandled rejection.
+  const { state, login, loginWithOAuthCode, logout } = useAuth();
+  // The real pages surface these rejections in their own state; the probe
+  // only needs to not blow up the test with an unhandled rejection.
   const tryLogin = () => {
     login('ada@example.com', 'pw').catch(() => {});
+  };
+  const tryOAuth = () => {
+    loginWithOAuthCode('one-time-code').catch(() => {});
   };
   return (
     <div>
@@ -33,6 +36,9 @@ function Probe() {
       <span data-testid="user">{state.user?.username ?? '-'}</span>
       <button type="button" onClick={tryLogin}>
         login
+      </button>
+      <button type="button" onClick={tryOAuth}>
+        oauth
       </button>
       <button type="button" onClick={logout}>
         logout
@@ -118,6 +124,37 @@ describe('AuthProvider', () => {
 
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
     // login() must not leave a token behind that a reload would pick up.
+    expect(getAuthToken()).toBeNull();
+    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
+  });
+
+  it('loginWithOAuthCode exchanges the code, stores the token and moves to authenticated', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({ access_token: 'oauth-token' }) // POST /auth/oauth/exchange
+      .mockResolvedValueOnce(fakeUser); // GET /users/me
+
+    const { user } = renderProvider();
+    await user.click(screen.getByRole('button', { name: 'oauth' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+    expect(apiFetchMock).toHaveBeenCalledWith('/auth/oauth/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code: 'one-time-code' }),
+    });
+    expect(getAuthToken()).toBe('oauth-token');
+  });
+
+  it('loginWithOAuthCode rolls the token back when /users/me fails', async () => {
+    apiFetchMock
+      .mockResolvedValueOnce({ access_token: 'oauth-token' }) // POST /auth/oauth/exchange
+      .mockRejectedValueOnce(new ApiError(500)); // GET /users/me
+
+    const { user } = renderProvider();
+    await user.click(screen.getByRole('button', { name: 'oauth' }));
+
+    await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
     expect(getAuthToken()).toBeNull();
     expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
   });

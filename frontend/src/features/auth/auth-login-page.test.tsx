@@ -16,7 +16,12 @@ function renderLoginPage(
   initialState?: { justRegistered?: boolean },
 ) {
   const login = vi.fn<AuthContextValue['login']>();
-  const value: AuthContextValue = { state, login, logout: vi.fn() };
+  const value: AuthContextValue = {
+    state,
+    login,
+    loginWithOAuthCode: vi.fn(),
+    logout: vi.fn(),
+  };
   render(
     <AuthContext.Provider value={value}>
       <MemoryRouter
