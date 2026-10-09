@@ -73,9 +73,11 @@ session backlinks, or "generated with" footers. The `.githooks/commit-msg`
 hook trims these from commit messages automatically (it never blocks a
 commit), but only where `core.hooksPath` is set: on a new machine run
 `make hooks-install` and check `git config core.hooksPath` prints
-`.githooks`. The `No assistant attribution` workflow is the check that
-cannot be skipped: it fails a PR whose commit messages or description carry
-such a trailer or footer. Human co-authors are kept.
+`.githooks`. The `No assistant attribution` workflow is the server-side
+net: it fails a PR whose commit messages or description carry such a
+trailer or footer. It is not one of `main`'s required checks, so a red run
+does not grey out the merge button - treat it as blocking anyway. Human
+co-authors are kept.
 
 ## Before committing
 
@@ -215,7 +217,7 @@ OOM-killed there. Same for `make lint` / `make typecheck` / `make format`.
 `api/bruno/` is a [Bruno](https://www.usebruno.com) collection: numbered
 `.bru` files that share runtime variables, so the order matters. Add a
 request (with its `assert` block for the status code) alongside each new
-endpoint. `make test-api` runs it headless against a running backend;
+endpoint. `make test-api` runs it headless against a running backend.
 The collection takes the backend port from `.env` via a gitignored
 symlink `api/bruno/.env` (created by `make test-api`; in the Bruno app,
 run that target once first). `POST /users` is capped at 10 per hour per
@@ -382,9 +384,10 @@ not decoration.
   for documenting required variables with placeholder values (placeholders
   must satisfy the `env.validation` schema so a first boot fails loudly on
   intent, not on a malformed example).
-- Auth endpoints (`login`, registration, and later `reset-password`) are
-  rate-limited with `@nestjs/throttler` - a global ceiling plus a tight
-  per-route `@Throttle`. Password hashing uses the pinned `ARGON2_OPTIONS`
+- Auth endpoints (`login`, registration, the OAuth code exchange, and
+  later `reset-password`) are rate-limited with `@nestjs/throttler` - a
+  global ceiling plus a tight per-route `@Throttle`. Password hashing uses
+  the pinned `ARGON2_OPTIONS`
   (ADR-0004), never the library defaults.
 - Authentication is deny-by-default: a global `JwtAuthGuard` protects
   every route, and a route is opened only with an explicit `@Public()`.
