@@ -1,6 +1,6 @@
 # Hash passwords with argon2id
 
-**Date:** 2026-08-28 · **Status:** accepted
+**Date:** 2026-08-28 · **Status:** accepted · Refined by [ADR-0004](0004-pin-argon2id-cost-parameters.md)
 
 The subject forbids storing plain-text passwords (eliminatory) but does not
 name an algorithm. We hash every password with **argon2id** (via the
@@ -25,9 +25,9 @@ and verify with `argon2.verify` at login.
   opt-in in this repo (`allowScripts` in `package.json`), so the build is
   explicitly whitelisted. CI images and the dev container must be able to
   compile it.
-- Default parameters from the library are OWASP-compliant as of 2025; if we
-  ever tune them, record the values and the target verify time (~500 ms) in
-  a follow-up note.
+- The cost parameters are no longer the library defaults: they are pinned
+  in `ARGON2_OPTIONS` (m = 19 MiB, t = 2, p = 1), see ADR-0004 for the
+  values and the reasoning.
 - The `User.password` column is `varchar(255)` and `select: false` — the
   argon2id encoded hash (~97 chars) fits, and it never leaves the DB by
   accident.

@@ -63,4 +63,5 @@ test structure, not slop.
   with a note, not bypassed per-file.
 - Once this has lived on a few PRs without friction, the rule block is
   promoted to `42-project-template` (HYP-26) so later projects inherit it.
-- Follow-up, out of scope here: the frontend CI has no `npm run test` step.
+- The frontend CI job now runs `npm run test` (Vitest) like the backend
+  one, so both packages gate on format, lint, typecheck, test and build.
