@@ -1,8 +1,11 @@
 # Defense packet
 
 Everything an evaluator needs to grade Hypertube without spelunking the
-codebase. Umbrella issue: **HYP-24**. Nothing here is generated - it is
-written and kept current by hand as features land.
+codebase. **HYP-24** (done) delivered the base: ADRs, the `auth-flow`
+diagram, the traceability matrix, the security checklist and the known
+limitations. The rows still marked todo below are **HYP-59**. Nothing
+here is generated - it is written and kept current by hand as features
+land.
 
 ## Status
 
