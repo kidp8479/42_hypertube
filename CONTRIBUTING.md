@@ -379,6 +379,12 @@ not decoration.
   running journal (what got done/blocked each day) to keep context between
   work sessions. Native Slack integrations post GitHub activity and Linear
   status changes into dedicated channels.
+- **Graphify** (`graphify-out/`, gitignored) - local, deterministic code
+  map of the repo (tree-sitter AST, no LLM, nothing leaves the machine).
+  `make graphify` builds it; `graphify explain "X"`, `graphify path "A" "B"`,
+  `graphify god-nodes` query it. Useful to trace impact before a change or
+  to orient a review without reading every file. Not a CI gate - install
+  and setup: `docs/graphify-setup.md` in `agentic-lab`.
 
 ## Security baseline (non-negotiable per the subject)
 
