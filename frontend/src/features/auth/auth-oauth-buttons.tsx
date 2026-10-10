@@ -1,4 +1,5 @@
 // "Continue with 42 / GitHub" links shared by the login and register pages.
+import { API_BASE } from '../../lib/api';
 import styles from './auth-oauth-buttons.module.css';
 
 /**
@@ -9,8 +10,8 @@ import styles from './auth-oauth-buttons.module.css';
 export function OAuthButtons() {
   return (
     <div className={styles.providers}>
-      <a href="/api/auth/42/login">Continue with 42</a>
-      <a href="/api/auth/github/login">Continue with GitHub</a>
+      <a href={`${API_BASE}/auth/42/login`}>Continue with 42</a>
+      <a href={`${API_BASE}/auth/github/login`}>Continue with GitHub</a>
     </div>
   );
 }
