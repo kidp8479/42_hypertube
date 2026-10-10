@@ -9,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
+import { clearStateCookie } from '../strategies/cookie-state.store';
 import {
   spaCallbackUrl,
   type OAuthCallbackError,
@@ -31,7 +32,8 @@ import {
  * The redirect carries `Referrer-Policy: no-referrer` like the success
  * one: the failed callback URL still holds the provider's `code` and
  * `state`, and the {@link OAuthCallback} decorator's header is not applied
- * once the handler (or its guard) has thrown.
+ * once the handler (or its guard) has thrown. It also expires the state
+ * cookie: a declined consent fails before the state store gets to.
  */
 @Catch()
 export class OAuthCallbackFilter implements ExceptionFilter {
@@ -50,6 +52,7 @@ export class OAuthCallbackFilter implements ExceptionFilter {
       this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
       { error: this.reason(exception, req) },
     );
+    clearStateCookie(res);
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.redirect(url);
   }

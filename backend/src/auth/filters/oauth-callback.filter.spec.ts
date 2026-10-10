@@ -86,6 +86,19 @@ describe('OAuthCallbackFilter', () => {
     expect(res.headers.location).toBe(`${SPA}?error=cancelled`);
   });
 
+  it('expires the state cookie on its redirect', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/rejected?error=access_denied')
+      .expect(302);
+
+    const cookies = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+    expect(cookies).toEqual([
+      expect.stringMatching(
+        /^oauth_state=;.*Path=\/auth;.*Expires=Thu, 01 Jan 1970/,
+      ),
+    ]);
+  });
+
   it('redirects any other rejection as failed, without logging it', async () => {
     const res = await request(app.getHttpServer()).get('/rejected').expect(302);
 
