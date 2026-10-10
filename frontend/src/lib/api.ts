@@ -1,7 +1,8 @@
 // The single fetch wrapper every API call in the app goes through.
 import { getAuthToken } from './token';
 
-const API_BASE = '/api';
+/** Where the backend is reached from the browser: the dev proxy (vite.config.ts) strips it. */
+export const API_BASE = '/api';
 
 /** A non-ok `fetch` response, surfaced with its status so callers can branch on it (401 -> logout, 403 -> ownership, ...). */
 export class ApiError extends Error {

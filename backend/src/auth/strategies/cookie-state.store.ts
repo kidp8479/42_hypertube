@@ -1,6 +1,8 @@
+// Cookie-bound OAuth `state` store, against login CSRF on 42 and GitHub.
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 
+/** Name of the nonce cookie, exported so the specs set the same one. */
 export const OAUTH_STATE_COOKIE = 'oauth_state';
 
 type StoreCallback = (err: Error | null, state?: string) => void;
@@ -19,6 +21,16 @@ const readCookie = (header: string | undefined, name: string) =>
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${name}=`))
     ?.slice(name.length + 1);
+
+/**
+ * Expires the nonce cookie, with the same Path as at creation or the
+ * browser keeps it. Also used by the OAuth callback filter: on a declined
+ * consent passport-oauth2 fails the request before `verify()` runs, so the
+ * nonce would otherwise stay live until it expires.
+ */
+export function clearStateCookie(res: Response): void {
+  res.clearCookie(OAUTH_STATE_COOKIE, { path: STATE_COOKIE_PATH });
+}
 
 // timingSafeEqual throws on buffers of different lengths, so length is
 // compared first; it is not secret, the nonce size is fixed.
@@ -90,8 +102,9 @@ export class CookieStateStore {
   ): void {
     const callback = (maybeCallback ?? metaOrCallback) as VerifyCallback;
     const expected = readCookie(req.headers.cookie, OAUTH_STATE_COOKIE);
-    // Same Path as at creation, or the browser keeps the cookie.
-    req.res?.clearCookie(OAUTH_STATE_COOKIE, { path: STATE_COOKIE_PATH });
+    if (req.res) {
+      clearStateCookie(req.res);
+    }
     if (!expected || !providedState || !sameValue(expected, providedState)) {
       callback(null, false, {
         message: 'Invalid authorization request state.',

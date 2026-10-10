@@ -7,6 +7,7 @@ import type { AuthState } from './auth-reducer';
 export interface AuthContextValue {
   state: AuthState;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOAuthCode: (code: string) => Promise<void>;
   logout: () => void;
 }
 

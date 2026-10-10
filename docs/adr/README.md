@@ -5,15 +5,20 @@ decisions and the reasoning behind them — the choices a defense evaluator
 might ask us to justify.
 
 - One file per decision: `NNNN-slug.md`, numbered sequentially.
-- **Immutable.** A decision that no longer holds is not rewritten: add a new
-  ADR that supersedes it and mark the old one `superseded by ADR-NNNN`.
+- **The decision is immutable, the facts around it are kept current.** A
+  decision that no longer holds is not rewritten: add a new ADR that
+  supersedes it and mark the old one `superseded by ADR-NNNN`. A decision
+  that evolves without being reversed gets a dated `Amendment` section. A
+  follow-up, consequence or status that went stale (a gap since closed, a
+  file that moved) is corrected in place, so no ADR states something
+  false about the code.
 - Only for decisions that are hard to reverse, surprising without context,
   and the result of a real trade-off. Not for routine implementation
   choices.
 
 | # | Decision | Status |
 |---|----------|--------|
-| [0001](0001-hash-passwords-with-argon2id.md) | Hash passwords with argon2id | accepted |
+| [0001](0001-hash-passwords-with-argon2id.md) | Hash passwords with argon2id | accepted, refined by 0004 |
 | [0002](0002-jwt-bearer-tokens-for-authentication.md) | JWT bearer tokens for authentication | accepted |
 | [0003](0003-validate-the-environment-at-boot.md) | Validate the environment at boot | accepted |
 | [0004](0004-pin-argon2id-cost-parameters.md) | Pin argon2id cost parameters explicitly | accepted |

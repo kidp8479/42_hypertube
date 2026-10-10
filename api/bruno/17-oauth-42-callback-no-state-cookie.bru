@@ -1,5 +1,5 @@
 meta {
-  name: 17 42 OAuth callback without the state cookie -> 401
+  name: 17 42 OAuth callback without the state cookie -> 302 to the SPA error page
   type: http
   seq: 17
 }
@@ -13,10 +13,17 @@ get {
 docs {
   Login CSRF guard (ADR-0007): the callback is accepted only when `state`
   equals the nonce cookie set by /auth/42/login. This request has no cookie,
-  so it is rejected before any call to 42. Passport reports 403 internally,
-  Nest's AuthGuard answers 401.
+  so it is rejected before any call to 42. The callback is a browser
+  navigation, so OAuthCallbackFilter turns the rejection into a redirect to
+  the SPA's /oauth/callback?error=failed instead of a JSON 401.
+}
+
+settings {
+  followRedirects: false
 }
 
 assert {
-  res.status: eq 401
+  res.status: eq 302
+  res.headers.location: contains /oauth/callback?error=failed
+  res.headers["referrer-policy"]: eq no-referrer
 }

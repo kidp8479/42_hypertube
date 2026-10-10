@@ -1,5 +1,5 @@
 // Passport OAuth2 strategy for GitHub's own OAuth provider.
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, StrategyOptions } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
@@ -7,6 +7,7 @@ import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
 import { CookieStateStore } from './cookie-state.store';
 import { fetchJson } from './fetch-json.util';
+import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 // snake_case fields mirror GitHub's /user JSON response as-is - mapped
 // to the camelCase OAuthProfile in validate() below. `email` is replaced
@@ -86,7 +87,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       // Nothing verified to link or create an account with - see
       // AuthService.resolveOAuthUser case 3, which never trusts an absent
       // or unverified email for account matching.
-      throw new UnauthorizedException('GitHub account has no verified email');
+      throw new UnverifiedEmailException();
     }
 
     // GitHub gives one free-text display name (nullable), not separate

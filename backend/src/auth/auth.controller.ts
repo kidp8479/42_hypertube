@@ -6,17 +6,20 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
-  Redirect,
+  Get,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { Public } from './decorators/public.decorator';
+import { OAuthCallback } from './decorators/oauth-callback.decorator';
+import { spaCallbackUrl } from './spa-callback-url.util';
 import { scaledThrottleLimit } from '../config/throttle.config';
 import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
-import { Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
@@ -59,6 +62,11 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  /**
+   * Starts the 42 OAuth handshake: the browser navigates here (a link,
+   * not a fetch) and is redirected (302) to 42's authorize page, with a
+   * fresh `state` bound to it by {@link CookieStateStore}.
+   */
   @Public()
   @UseGuards(AuthGuard('42'))
   @Get('42/login')
@@ -67,17 +75,25 @@ export class AuthController {
     // this body never runs.
   }
 
+  /**
+   * Where 42 sends the browser back after consent. Redirects (302) to the
+   * SPA's `/oauth/callback` with a single-use exchange code on success, or
+   * with `?error=` on any failure (see {@link OAuthCallbackFilter}) - never
+   * a JSON error, since this is a top-level navigation.
+   */
   // `req.user` is whatever FortyTwoStrategy.validate() returned - Passport
   // types it as the generic Express.User, so the cast trusts that guard
   // chain rather than proving it to the compiler.
-  @Public()
-  @UseGuards(AuthGuard('42'))
-  @Redirect()
-  @Get('42/callback')
+  @OAuthCallback('42')
   async fortyTwoCallback(@Req() req: Request) {
     return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
   }
 
+  /**
+   * Starts the GitHub OAuth handshake: the browser navigates here (a link,
+   * not a fetch) and is redirected (302) to GitHub's authorize page, with a
+   * fresh `state` bound to it by {@link CookieStateStore}.
+   */
   @Public()
   @UseGuards(AuthGuard('github'))
   @Get('github/login')
@@ -86,13 +102,15 @@ export class AuthController {
     // this body never runs.
   }
 
+  /**
+   * GitHub's counterpart of {@link AuthController.fortyTwoCallback}, plus
+   * one failure of its own: an account with no verified primary email
+   * ends on `?error=email_unverified`.
+   */
   // `req.user` is whatever GithubStrategy.validate() returned - see the
   // 42 callback above for why the cast, not a type check, is what backs
   // this.
-  @Public()
-  @UseGuards(AuthGuard('github'))
-  @Redirect()
-  @Get('github/callback')
+  @OAuthCallback('github')
   async githubCallback(@Req() req: Request) {
     return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
   }
@@ -125,11 +143,9 @@ export class AuthController {
    */
   private async spaHandoffUrl(profile: OAuthProfile): Promise<string> {
     const user = await this.authService.resolveOAuthUser(profile);
-    const url = new URL(
-      '/oauth/callback',
+    return spaCallbackUrl(
       this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
+      { code: this.oauthExchange.issue(user.id) },
     );
-    url.searchParams.set('code', this.oauthExchange.issue(user.id));
-    return url.toString();
   }
 }

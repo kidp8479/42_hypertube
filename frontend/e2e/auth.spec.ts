@@ -5,6 +5,7 @@
 // test picks a fresh unique email/username to avoid colliding with a
 // previous run's account.
 import { test, expect, type Page } from '@playwright/test';
+import { trackConsoleIssues } from './console-issues';
 
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
@@ -29,25 +30,6 @@ async function fillRegisterForm(
   await page
     .getByLabel('Confirm password')
     .fill(values.confirmPassword ?? values.password);
-}
-
-// The browser's own network log for a deliberate non-2xx (401 on login,
-// 400/409 on register) is not a JS console.error - see
-// docs/defense/known-limitations.md. Every other console error/warning
-// is a real finding (eliminatory during the 42 defense).
-function trackConsoleIssues(page: Page) {
-  const issues: string[] = [];
-  page.on('console', (msg) => {
-    const type = msg.type();
-    if (type !== 'error' && type !== 'warning') {
-      return;
-    }
-    if (/Failed to load resource/.test(msg.text())) {
-      return;
-    }
-    issues.push(`[${type}] ${msg.text()}`);
-  });
-  return issues;
 }
 
 test.describe('register -> login', () => {
@@ -125,9 +107,7 @@ test.describe('register -> login', () => {
     await page.getByRole('button', { name: 'Register' }).click();
 
     await expect(
-      page.getByText(
-        'An account with this email or username already exists.',
-      ),
+      page.getByText('An account with this email or username already exists.'),
     ).toBeVisible();
     await expect(page).toHaveURL(/\/register$/);
   });

@@ -6,9 +6,10 @@ against, where it lives, and how to prove it. Companion to
 per subject requirement); this file is the mechanism-level view and is
 also where the accepted **gaps** are written down.
 
-Scope today: the auth surface (`/auth/login`, `/users`) and the app-wide
-guards. Grows as `movies` / `comments` / `torrent` land. Tied to HYP-16
-(final security audit).
+Scope today: the auth surface (`/auth/login`, `/users`, the OAuth 42 /
+GitHub handshake and `/auth/oauth/exchange`) and the app-wide guards.
+Grows as `movies` / `comments` / `torrent` land. Tied to HYP-16 (final
+security audit).
 
 Proof is cited as a file path, not a test count. All spec files below are
 committed under `backend/src/`.
@@ -66,14 +67,26 @@ the id checked for ownership comes from the verified token
 
 | Control | Where | Proof |
 |---|---|---|
-| Every route requires a valid Bearer token unless explicitly `@Public()` | global `JwtAuthGuard` (`APP_GUARD` in `app.module.ts`) | `auth/jwt-auth.guard.spec.ts` |
-| Token signature + expiry verified on every request; `ignoreExpiration: false` | `auth/jwt.strategy.ts` | `auth/jwt.strategy.spec.ts` |
+| Every route requires a valid Bearer token unless explicitly `@Public()` | global `JwtAuthGuard` (`APP_GUARD` in `app.module.ts`) | `auth/guards/jwt-auth.guard.spec.ts` |
+| Token signature + expiry verified on every request; `ignoreExpiration: false` | `auth/strategies/jwt.strategy.ts` | `auth/strategies/jwt.strategy.spec.ts` |
 | Token payload carries only `sub` (user id); profile / roles fetched per request, never trusted from the token | `auth.service.ts` `login()`, `jwt.strategy.ts` `validate()` | ADR-0002 |
 | `JWT_SECRET` >= 32 chars, and the `.env.example` placeholder is rejected at boot | `config/env.validation.ts` | `config/env.validation.spec.ts` |
 | Signing key asserted present at startup, not lazily | `jwt.strategy.ts` `config.getOrThrow('JWT_SECRET')` | |
 | One-click logout (client-side token + query-cache discard) | `frontend/src/features/auth/` | `frontend/src/features/auth/auth-provider.test.tsx` |
 | Server-side token invalidation on logout | stateless JWT, not implemented | **gap - HYP-35**, decision pending in `docs/adr/README.md` |
 | Token TTL | `JWT_EXPIRES_IN` default `15m` | `env.validation.ts` |
+
+## 5b. OAuth sign-in (42, GitHub)
+
+| Control | Where | Proof |
+|---|---|---|
+| Login CSRF: `state` must equal a one-shot nonce cookie set by `/auth/<provider>/login` (`HttpOnly`, `SameSite=Lax`, `Path=/auth`, ~10 min, `Secure` in production), compared in constant time and cleared on the callback | `auth/strategies/cookie-state.store.ts`, passed as `store` to both strategies | `cookie-state.store.spec.ts`; Bruno 17-18; `frontend/e2e/oauth.spec.ts` |
+| No JWT in a URL: the callback redirects to the SPA with a single-use exchange code (32 random bytes, 60 s TTL, deleted on first use), traded for the token by `POST /auth/oauth/exchange` | `auth/oauth-exchange.service.ts`, `auth.controller.ts` | `oauth-exchange.service.spec.ts`; Bruno 19-20 |
+| Unknown, used and expired codes answer the same `401` | `AuthController.exchange` | `auth.controller.spec.ts` |
+| A provider identity auto-links to an existing account only through a verified email (GitHub: primary + verified row of `/user/emails`, never the public profile email) | `auth.service.ts` `resolveOAuthUser`, `github.strategy.ts` | `auth.service.spec.ts`, `github.strategy.spec.ts`; ADR-0007 |
+| Account pre-hijacking: linking a provider to an account that has a password revokes that password | `auth.service.ts` `resolveOAuthUser` | `auth.service.spec.ts`; ADR-0007 |
+| One provider account maps to one local user: unique `(provider, providerUserId)`, the loser of a link race signs in through the winner's row | `auth/entities/oauth-account.entity.ts`, `AuthService.recoverFromLinkRace` | `auth.service.spec.ts` |
+| A failed callback leaks nothing: it redirects to the SPA with one of three reasons (`cancelled`, `email_unverified`, `failed`), details stay in the server log; success and failure redirects send `Referrer-Policy: no-referrer` (the callback URL holds the provider's `code` and `state`) | `auth/filters/oauth-callback.filter.ts`, `auth/decorators/oauth-callback.decorator.ts` | `oauth-callback.filter.spec.ts`; Bruno 17-18; ADR-0007 amendment |
 
 ## 6. Account-existence disclosure
 
@@ -90,6 +103,8 @@ the id checked for ownership comes from the verified token
 | Every route, per IP | 100 / 60 s | `ThrottlerModule.forRoot` in `app.module.ts` |
 | `POST /auth/login` | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
 | `POST /users` (register) | 10 / 3600 s | `@Throttle` on `users.controller.ts` |
+| `POST /auth/oauth/exchange` | 10 / 60 s | `@Throttle` on `auth.controller.ts` |
+| Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts`, `config/env.validation.ts` |
 | Proof | | `auth/auth.throttle.spec.ts` |
 
 Guard order in `app.module.ts` is deliberate: `ThrottlerGuard` is
@@ -122,7 +137,7 @@ store is only needed once more than one backend instance runs (noted in
 | `.env` git-ignored; `.env.example` ships placeholders only | `.gitignore`, `.env.example` |
 | Placeholder secrets rejected at boot | `config/env.validation.ts` `ENV_EXAMPLE_PLACEHOLDERS` |
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
-| gitleaks secret scan | pre-commit hook + CI |
+| gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
 | CORS locked to a single configured origin, `credentials: true` | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 
@@ -143,6 +158,7 @@ store is only needed once more than one backend instance runs (noted in
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |
 | `GET /users` exposes all basic profile fields to any member | backlog | low - review |
+| Two concurrent first-time OAuth callbacks can race on user creation (409 or orphan user) | HYP-55 | low - needs a double-click on a first login |
 
 ## Notes
 

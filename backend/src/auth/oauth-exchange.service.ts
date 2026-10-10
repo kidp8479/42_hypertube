@@ -1,3 +1,4 @@
+// Single-use codes carrying an OAuth login from the callback to the SPA.
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 

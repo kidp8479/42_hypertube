@@ -6,6 +6,7 @@ import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
+import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-login-page.module.css';
 
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
@@ -85,6 +86,8 @@ export function LoginPage() {
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Logging in...' : 'Log in'}
       </button>
+
+      <OAuthButtons />
 
       <p>
         No account yet? <Link to="/register">Register</Link>

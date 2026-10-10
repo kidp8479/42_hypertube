@@ -1,8 +1,11 @@
 # Defense packet
 
 Everything an evaluator needs to grade Hypertube without spelunking the
-codebase. Umbrella issue: **HYP-24**. Nothing here is generated - it is
-written and kept current by hand as features land.
+codebase. **HYP-24** (done) delivered the base: ADRs, the `auth-flow`
+diagram, the traceability matrix, the security checklist and the known
+limitations. The rows still marked todo below are **HYP-59**. Nothing
+here is generated - it is written and kept current by hand as features
+land.
 
 ## Status
 
@@ -14,7 +17,7 @@ written and kept current by hand as features land.
 | [`rest-proof.md`](rest-proof.md) | endpoint x method x status-code table, REST constraints satisfied (subject asks for this explicitly) | todo |
 | Architecture diagram | containers + data flow (Excalidraw, exported PNG/SVG here) | todo |
 | ERD | database entities and relations | todo |
-| Sequence diagrams | login, OAuth, password reset, "watch a movie" (search -> torrent -> stream) | todo |
+| [Sequence diagrams](../diagrams/) | login, OAuth, password reset, "watch a movie" (search -> torrent -> stream) | partial - OAuth done in `diagrams/auth.md` |
 | App bootstrap diagram | startup order: env validation -> DB -> JWT -> listen (see ADR-0003) | todo |
 | [`known-limitations.md`](known-limitations.md) | deliberate prod-vs-school gaps, owned not overlooked | ongoing |
 | [`backlog.md`](backlog.md) | work identified but not yet a Linear issue | transient |

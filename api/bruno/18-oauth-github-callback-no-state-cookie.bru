@@ -1,5 +1,5 @@
 meta {
-  name: 18 GitHub OAuth callback without the state cookie -> 401
+  name: 18 GitHub OAuth callback without the state cookie -> 302 to the SPA error page
   type: http
   seq: 18
 }
@@ -14,6 +14,12 @@ docs {
   Same login CSRF guard as request 17, on the GitHub strategy.
 }
 
+settings {
+  followRedirects: false
+}
+
 assert {
-  res.status: eq 401
+  res.status: eq 302
+  res.headers.location: contains /oauth/callback?error=failed
+  res.headers["referrer-policy"]: eq no-referrer
 }

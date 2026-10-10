@@ -29,6 +29,7 @@ function renderRegisterPage(
   const value: AuthContextValue = {
     state,
     login: vi.fn(),
+    loginWithOAuthCode: vi.fn(),
     logout: vi.fn(),
   };
   render(

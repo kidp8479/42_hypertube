@@ -1,6 +1,7 @@
 // The one component that fills the auth Context: it owns the reducer state,
 // bootstraps identity from `/users/me` on load, wires the global 401 -> logout
-// safety net, and exposes `login` / `logout` to the rest of the app.
+// safety net, and exposes `login` / `loginWithOAuthCode` / `logout` to the
+// rest of the app.
 import {
   useCallback,
   useEffect,
@@ -13,9 +14,36 @@ import { queryClient, setUnauthorizedHandler } from '../../lib/query-client';
 import { getAuthToken, removeAuthToken } from '../../lib/token';
 import { AuthContext } from './auth-context';
 import { authReducer, initialState } from './auth-reducer';
-import { loginRequest, logoutLocal } from './auth-actions';
+import { exchangeOAuthCode, loginRequest, logoutLocal } from './auth-actions';
 import type { User } from './auth-types';
 import { useMeQuery } from './auth-queries';
+
+/**
+ * The tail every sign-in shares, once a token has been stored: fetch the
+ * profile with it. Done here rather than leaning on `useMeQuery`, because
+ * that hook's `enabled` flag is read during render and would not re-run
+ * just because localStorage changed.
+ *
+ * All-or-nothing: on failure the stored token is rolled back, otherwise a
+ * reload would find the client "logged in" while the caller reported the
+ * sign-in as failed.
+ */
+async function fetchSignedInUser(): Promise<User> {
+  try {
+    const user = await apiFetch<User>('/users/me');
+    if (!user) {
+      throw new Error('Signed in but /users/me returned no profile');
+    }
+    // Seed the cache so the now-token-enabled useMeQuery reuses this profile
+    // instead of firing a second, identical /users/me right after login.
+    queryClient.setQueryData(['me'], user);
+    return user;
+  } catch (error) {
+    removeAuthToken();
+    queryClient.removeQueries({ queryKey: ['me'] });
+    throw error;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -57,29 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, []);
 
-  // `loginRequest` stores the token; the follow-up `/users/me` (now sent with
-  // that token) gives us the profile to dispatch. Doing it here rather than
-  // leaning on `useMeQuery` because that hook's `enabled` flag is read during
-  // render and would not re-run just because localStorage changed.
   const login = useCallback(async (email: string, password: string) => {
     await loginRequest(email, password);
-    try {
-      const user = await apiFetch<User>('/users/me');
-      if (!user) {
-        throw new Error('Signed in but /users/me returned no profile');
-      }
-      // Seed the cache so the now-token-enabled useMeQuery reuses this profile
-      // instead of firing a second, identical /users/me right after login.
-      queryClient.setQueryData(['me'], user);
-      dispatch({ type: 'login-success', user });
-    } catch (error) {
-      // loginRequest already persisted the token; without this rollback a
-      // failure here leaves the client "logged in" on the next reload while
-      // this call reports failure to the form. Login is all-or-nothing.
-      removeAuthToken();
-      queryClient.removeQueries({ queryKey: ['me'] });
-      throw error;
-    }
+    dispatch({ type: 'login-success', user: await fetchSignedInUser() });
+  }, []);
+
+  const loginWithOAuthCode = useCallback(async (code: string) => {
+    await exchangeOAuthCode(code);
+    dispatch({ type: 'login-success', user: await fetchSignedInUser() });
   }, []);
 
   const logout = useCallback(() => {
@@ -88,8 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ state, login, logout }),
-    [state, login, logout],
+    () => ({ state, login, loginWithOAuthCode, logout }),
+    [state, login, loginWithOAuthCode, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -13,7 +13,7 @@ library) that lets a video start playing while it's still downloading.
 ## Tooling
 
 - **Language**: TypeScript everywhere (backend and frontend)
-- **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser auth-flow e2e, `frontend/e2e/`)
+- **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser e2e of the auth flow and the OAuth handshake guards, `frontend/e2e/`)
 - **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
 - **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand)
 - **API testing**: [Bruno](https://www.usebruno.com) collection in `api/bruno/` - plain-text `.bru` files tracked in git (diffs in PRs, no account), with status/body assertions on every request. Open the folder in the Bruno app, or run it headless with `make test-api` (needs the stack up)
@@ -38,6 +38,7 @@ Hypertube/
 ├── frontend/           # React SPA (Dockerfile: dev + prod stages, nginx.conf for prod)
 ├── api/bruno/          # Bruno request collection (manual + assertion-checked API calls)
 ├── db/init/            # optional Postgres init scripts
+├── docs/               # ADRs, defense packet, diagrams, dependency-upgrade log
 ├── docker-compose.yml  # db + backend + frontend (dev target)
 └── .env.example        # required environment variables, copy to .env
 ```
@@ -79,9 +80,15 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make format-check` | Check formatting without writing (used by the pre-commit hook and CI) |
 | `make lint` | Lint (ESLint --fix) on backend + frontend |
 | `make lint-check` | Lint without auto-fixing (used by the pre-commit hook and CI) |
+| `make re` | Full reset: `fclean` then `up` |
+| `make wipe-db` | Drop only the database volume (fast schema reset) |
+| `make typecheck` | `tsc --noEmit` on backend + frontend |
 | `make test` | Run backend + frontend unit tests |
-| `make test-e2e` | Run the Playwright auth-flow e2e suite (needs the stack already up) |
+| `make test-e2e` | Run the Playwright e2e suite (needs the stack already up) |
+| `make test-api` | Run the Bruno collection against the running backend |
 | `make build` | Production build for backend + frontend |
+| `make doc` | Generate the Compodoc backend docs into `docs/backend/` |
+| `make verify` | Full local gate: format-check, lint-check, typecheck, test, build |
 
 See `make help` for the up-to-date list.
 

@@ -13,6 +13,7 @@ function renderGuard(state: AuthState) {
   const value: AuthContextValue = {
     state,
     login: vi.fn(),
+    loginWithOAuthCode: vi.fn(),
     logout: vi.fn(),
   };
   return render(
