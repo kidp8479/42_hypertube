@@ -116,6 +116,13 @@ Then split all confirmed findings (yours + the survivors from step 6):
   especially close to a deadline or when the file is shared with other
   in-flight work. State it as context, request no action.
 
+End the triage with one merge-danger line: door type + blast radius, per
+`coding-standards.md`. **One-way door** (migration, data loss risk, a
+notification reaching many users, anything hard to revert) gets the full
+review above. **Two-way door** (easy to revert, localized blast radius)
+gets a skim - state that explicitly rather than defaulting to full review
+depth out of caution.
+
 ## 8. Draft the comment
 
 Constraints from the user:
