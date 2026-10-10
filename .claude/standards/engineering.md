@@ -190,6 +190,20 @@ summary to keep in sync with it:
   `SameSite`; CORS restricted to the expected origin; logout invalidates
   server-side.
 
+## Web projects: launch checklist
+
+Before calling a web UI done (demo, evaluation, release), run the
+`web-launch-checklist` skill. The skill is the source of truth; summary:
+
+- **Always**: custom 404 and error page, loading / error / empty states,
+  responsive at 360px, accessibility basics (`lang`, `alt`, labels, focus,
+  contrast, keyboard), per-page `<title>`, favicon, working forms,
+  optimized images, one Lighthouse pass, no secrets or debug output in the
+  client bundle.
+- **Public product only** (N/A for local demos): meta description, Open
+  Graph, `robots.txt`, `sitemap.xml`, legal pages, cookie consent when
+  non-essential trackers exist, analytics, error monitoring.
+
 ## Containers: dev bind mounts
 
 - Never let a dev container write directly onto a bind mount. Put
