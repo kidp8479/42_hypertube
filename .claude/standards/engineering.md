@@ -146,12 +146,10 @@ order they fire:
 - **check**: `lint-feedback` hook, eslint on the file just written.
 - **gate**: the ESLint / ruff complexity ratchet at commit and CI
   (`--max-warnings <baseline>`, monotone: can only go down).
-- **review**: `diff-auditor` subagent and the `pr-review` skill.
-
-Complexity budget (same intent for JS/TS and Python): branches per
-function <= 10, nesting <= 4, params <= 4, function <= 80 lines
-(components 120), file <= 300 lines. Over budget: split, do not disable
-the rule.
+- **review**: `diff-auditor` subagent and the `pr-review` skill, against
+  `coding-standards.md` (the exact budget and checklist live there, not
+  duplicated here - that file is what a review agent reads, this one is
+  what a human or implementing agent reads).
 
 The most common agent slop is not copy-paste but **semantic
 duplication**: logic that already exists in the codebase, reimplemented
