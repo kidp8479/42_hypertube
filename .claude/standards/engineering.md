@@ -250,3 +250,9 @@ Default (42 projects):
 Personal projects: when the user asks for it, the agent can run a task
 end to end on its own and surface only the friction points (decisions,
 tradeoffs, anything ambiguous) instead of every step.
+
+At the end of a long task, or when blocked: lead the response with a
+numbered list of what is needed from the human, one thing per item, most
+blocking first - what to do, where, and what to send back when done (e.g.
+"log into Stripe, export the September refunds CSV, put it in inbox/").
+If nothing is needed, say so instead of padding the list.
