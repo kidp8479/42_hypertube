@@ -6,10 +6,11 @@ vi.mock('../../lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/api')>()),
   apiFetch: vi.fn(),
 }));
-const { apiFetch } = await import('../../lib/api');
+const { apiFetch, ApiError } = await import('../../lib/api');
 const apiFetchMock = vi.mocked(apiFetch);
 
-const { registerRequest } = await import('./auth-actions');
+const { registerRequest, exchangeOAuthCode, OAuthCodeRejectedError } =
+  await import('./auth-actions');
 const { setAuthToken, getAuthToken, removeAuthToken } =
   await import('../../lib/token');
 
@@ -74,5 +75,22 @@ describe('registerRequest', () => {
     // that a failed register doesn't clear a session the user already had.
     expect(getAuthToken()).toBe('unrelated-token-from-a-prior-session');
     removeAuthToken();
+  });
+});
+
+describe('exchangeOAuthCode', () => {
+  it('turns the exchange 401 into OAuthCodeRejectedError', async () => {
+    apiFetchMock.mockRejectedValueOnce(new ApiError(401));
+
+    await expect(exchangeOAuthCode('used-code')).rejects.toBeInstanceOf(
+      OAuthCodeRejectedError,
+    );
+  });
+
+  it('passes any other failure through untouched', async () => {
+    const outage = new ApiError(503);
+    apiFetchMock.mockRejectedValueOnce(outage);
+
+    await expect(exchangeOAuthCode('any-code')).rejects.toBe(outage);
   });
 });

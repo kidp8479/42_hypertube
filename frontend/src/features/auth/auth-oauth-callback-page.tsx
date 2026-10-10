@@ -3,7 +3,7 @@
 // token or an `error` reason (ADR-0007).
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ApiError } from '../../lib/api';
+import { OAuthCodeRejectedError } from './auth-actions';
 import { useAuth } from './auth-context';
 import styles from './auth-oauth-callback-page.module.css';
 
@@ -52,7 +52,7 @@ function readCallbackParams(params: URLSearchParams) {
 }
 
 export function OAuthCallbackPage() {
-  const { loginWithOAuthCode } = useAuth();
+  const { state, loginWithOAuthCode } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [{ code, error: initialError }] = useState(() =>
@@ -62,23 +62,33 @@ export function OAuthCallbackPage() {
   // The code is single-use: StrictMode runs this effect twice in dev, and a
   // ref (unlike state) survives that, so only the first run exchanges it.
   const exchangeStarted = useRef(false);
+  const bootstrapping = state.status === 'loading';
 
+  // Out of the URL right away, before any request, so it never reaches
+  // browser history or a Referer header.
   useEffect(() => {
-    if (!code || exchangeStarted.current) {
+    if (code) {
+      navigate('/oauth/callback', { replace: true });
+    }
+  }, [code, navigate]);
+
+  // Held back until AuthProvider's startup /users/me check settles: with a
+  // stale token in storage, its late 401 would otherwise wipe the token the
+  // exchange just stored and sign the user straight back out.
+  useEffect(() => {
+    if (!code || bootstrapping || exchangeStarted.current) {
       return;
     }
     exchangeStarted.current = true;
-    // Out of the URL before any request, so it never reaches browser
-    // history or a Referer header.
-    navigate('/oauth/callback', { replace: true });
     loginWithOAuthCode(code).then(
       () => navigate('/', { replace: true }),
       (caught: unknown) => {
-        const is401 = caught instanceof ApiError && caught.status === 401;
-        setError(is401 ? 'expired' : 'failed');
+        setError(
+          caught instanceof OAuthCodeRejectedError ? 'expired' : 'failed',
+        );
       },
     );
-  }, [code, loginWithOAuthCode, navigate]);
+  }, [code, bootstrapping, loginWithOAuthCode, navigate]);
 
   return (
     <main className={styles.page}>

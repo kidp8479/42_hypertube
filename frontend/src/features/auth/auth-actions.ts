@@ -1,6 +1,6 @@
 // Auth actions with real side effects (network + localStorage/cache),
 // kept out of authReducer so it stays a pure state transition.
-import { apiFetch } from '../../lib/api';
+import { ApiError, apiFetch } from '../../lib/api';
 import { setAuthToken, removeAuthToken } from '../../lib/token';
 import { queryClient } from '../../lib/query-client';
 import type { RegisterValues } from './auth-validation';
@@ -27,12 +27,31 @@ export function loginRequest(email: string, password: string): Promise<void> {
 }
 
 /**
- * Trades the single-use code the OAuth callback redirect handed the SPA for
- * a token, and stores it (ADR-0007). Rejects with ApiError 401 when the code
- * is unknown, already used or expired.
+ * The exchange's own 401 (unknown, already used or expired code), kept apart
+ * from a 401 on the `/users/me` call that follows it: only this one means
+ * "start the sign-in again".
  */
-export function exchangeOAuthCode(code: string): Promise<void> {
-  return requestToken('/auth/oauth/exchange', { code });
+export class OAuthCodeRejectedError extends Error {
+  constructor() {
+    super('OAuth exchange code rejected');
+    this.name = 'OAuthCodeRejectedError';
+  }
+}
+
+/**
+ * Trades the single-use code the OAuth callback redirect handed the SPA for
+ * a token, and stores it (ADR-0007). Rejects with OAuthCodeRejectedError when
+ * the backend refuses the code.
+ */
+export async function exchangeOAuthCode(code: string): Promise<void> {
+  try {
+    await requestToken('/auth/oauth/exchange', { code });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      throw new OAuthCodeRejectedError();
+    }
+    throw error;
+  }
 }
 
 /** Clears the token and every cached query, so no stale data from this session survives into the next. */

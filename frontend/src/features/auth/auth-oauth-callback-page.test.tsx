@@ -4,6 +4,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
 import { AuthContext, type AuthContextValue } from './auth-context';
+import { OAuthCodeRejectedError } from './auth-actions';
+import type { AuthState } from './auth-reducer';
 import { OAuthCallbackPage } from './auth-oauth-callback-page';
 
 // Renders the URL the page is on, so "the code left the URL" is observable.
@@ -19,12 +21,17 @@ function renderCallbackPage(
   {
     exchange = () => Promise.resolve(),
     strict = false,
-  }: { exchange?: () => Promise<void>; strict?: boolean } = {},
+    state = { status: 'anonymous', user: null },
+  }: {
+    exchange?: () => Promise<void>;
+    strict?: boolean;
+    state?: AuthState;
+  } = {},
 ) {
   const loginWithOAuthCode =
     vi.fn<AuthContextValue['loginWithOAuthCode']>(exchange);
   const value: AuthContextValue = {
-    state: { status: 'anonymous', user: null },
+    state,
     login: vi.fn(),
     loginWithOAuthCode,
     logout: vi.fn(),
@@ -77,9 +84,20 @@ describe('OAuthCallbackPage', () => {
     expect(loginWithOAuthCode).toHaveBeenCalledTimes(1);
   });
 
-  it('says the link expired when the exchange 401s', async () => {
+  it('waits for the auth bootstrap to settle before exchanging, but strips the code at once', async () => {
+    const { loginWithOAuthCode } = renderCallbackPage('?code=abc', {
+      state: { status: 'loading', user: null },
+    });
+
+    expect(await screen.findByTestId('url')).toHaveTextContent(
+      /^\/oauth\/callback$/,
+    );
+    expect(loginWithOAuthCode).not.toHaveBeenCalled();
+  });
+
+  it('says the link expired when the backend rejects the code', async () => {
     renderCallbackPage('?code=abc', {
-      exchange: () => Promise.reject(new ApiError(401)),
+      exchange: () => Promise.reject(new OAuthCodeRejectedError()),
     });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -90,9 +108,12 @@ describe('OAuthCallbackPage', () => {
     ).toHaveAttribute('href', '/login');
   });
 
-  it('shows a generic failure when the exchange fails for any other reason', async () => {
+  it.each([
+    ['a network error', new Error('network down')],
+    ['a 401 on /users/me after the exchange', new ApiError(401)],
+  ])('shows a generic failure on %s', async (_, failure) => {
     renderCallbackPage('?code=abc', {
-      exchange: () => Promise.reject(new Error('network down')),
+      exchange: () => Promise.reject(failure),
     });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
