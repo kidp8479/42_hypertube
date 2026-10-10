@@ -84,5 +84,8 @@ docs/*
 # PR Lens writes its previews here. They are rebuilt on demand.
 .pr-lens/
 
+# Graphify writes its code graph here. Rebuilt on demand (`make graphify`).
+graphify-out/
+
 # Orca workspace state
 .orca/
