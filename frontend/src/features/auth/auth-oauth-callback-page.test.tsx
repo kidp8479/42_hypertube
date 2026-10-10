@@ -6,6 +6,7 @@ import { ApiError } from '../../lib/api';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import { OAuthCodeRejectedError } from './auth-actions';
 import type { AuthState } from './auth-reducer';
+import { fakeUser } from '../../test/fixtures';
 import { OAuthCallbackPage } from './auth-oauth-callback-page';
 
 // Renders the URL the page is on, so "the code left the URL" is observable.
@@ -30,32 +31,38 @@ function renderCallbackPage(
 ) {
   const loginWithOAuthCode =
     vi.fn<AuthContextValue['loginWithOAuthCode']>(exchange);
-  const value: AuthContextValue = {
-    state,
-    login: vi.fn(),
-    loginWithOAuthCode,
-    logout: vi.fn(),
+  const tree = (current: AuthState) => {
+    const value: AuthContextValue = {
+      state: current,
+      login: vi.fn(),
+      loginWithOAuthCode,
+      logout: vi.fn(),
+    };
+    const app = (
+      <AuthContext.Provider value={value}>
+        <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>
+          <Routes>
+            <Route
+              path="/oauth/callback"
+              element={
+                <>
+                  <OAuthCallbackPage />
+                  <CurrentUrl />
+                </>
+              }
+            />
+            <Route path="/" element={<p>home page</p>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+    return strict ? <StrictMode>{app}</StrictMode> : app;
   };
-  const tree = (
-    <AuthContext.Provider value={value}>
-      <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>
-        <Routes>
-          <Route
-            path="/oauth/callback"
-            element={
-              <>
-                <OAuthCallbackPage />
-                <CurrentUrl />
-              </>
-            }
-          />
-          <Route path="/" element={<p>home page</p>} />
-        </Routes>
-      </MemoryRouter>
-    </AuthContext.Provider>
-  );
-  render(strict ? <StrictMode>{tree}</StrictMode> : tree);
-  return { loginWithOAuthCode };
+  const { rerender } = render(tree(state));
+  // Moves the auth state on, the way AuthProvider does once its startup
+  // /users/me check settles.
+  const settle = (next: AuthState) => rerender(tree(next));
+  return { loginWithOAuthCode, settle };
 }
 
 describe('OAuthCallbackPage', () => {
@@ -94,6 +101,24 @@ describe('OAuthCallbackPage', () => {
     );
     expect(loginWithOAuthCode).not.toHaveBeenCalled();
   });
+
+  it.each<[string, AuthState]>([
+    ['anonymous', { status: 'anonymous', user: null }],
+    ['authenticated', { status: 'authenticated', user: fakeUser }],
+  ])(
+    'exchanges the code once the bootstrap settles as %s',
+    async (_, settled) => {
+      const { loginWithOAuthCode, settle } = renderCallbackPage('?code=abc', {
+        state: { status: 'loading', user: null },
+      });
+
+      settle(settled);
+
+      expect(await screen.findByText('home page')).toBeInTheDocument();
+      expect(loginWithOAuthCode).toHaveBeenCalledTimes(1);
+      expect(loginWithOAuthCode).toHaveBeenCalledWith('abc');
+    },
+  );
 
   it('says the link expired when the backend rejects the code', async () => {
     renderCallbackPage('?code=abc', {
