@@ -2,7 +2,11 @@
 // (HYP-19) will host it.
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../lib/i18n';
+import {
+  DEFAULT_LANGUAGE,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguage,
+} from '../lib/languages';
 import { isSupportedLanguage, storeLanguage } from '../lib/language';
 import { useAuth } from '../features/auth/auth-context';
 import { savePreferredLanguage } from './language-actions';
@@ -24,8 +28,8 @@ export function LanguageSwitcher() {
   const { t, i18n } = useTranslation('common');
   const { state } = useAuth();
   const save = useMutation({
-    mutationFn: (language: SupportedLanguage) =>
-      savePreferredLanguage(state.user!.id, language),
+    mutationFn: (variables: { userId: number; language: SupportedLanguage }) =>
+      savePreferredLanguage(variables.userId, variables.language),
   });
 
   function handleChange(value: string) {
@@ -35,7 +39,7 @@ export function LanguageSwitcher() {
     void i18n.changeLanguage(value);
     storeLanguage(value);
     if (state.user) {
-      save.mutate(value);
+      save.mutate({ userId: state.user.id, language: value });
     }
   }
 
@@ -44,7 +48,7 @@ export function LanguageSwitcher() {
       <label>
         {t('language.label')}{' '}
         <select
-          value={i18n.resolvedLanguage}
+          value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
           onChange={(event) => handleChange(event.target.value)}
         >
           {SUPPORTED_LANGUAGES.map((language) => (

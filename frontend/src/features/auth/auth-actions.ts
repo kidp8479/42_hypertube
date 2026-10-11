@@ -3,7 +3,7 @@
 import { ApiError, apiFetch } from '../../lib/api';
 import { setAuthToken, removeAuthToken } from '../../lib/token';
 import { queryClient } from '../../lib/query-client';
-import type { SupportedLanguage } from '../../lib/i18n';
+import type { SupportedLanguage } from '../../lib/languages';
 import type { RegisterValues } from './auth-validation';
 
 interface LoginResponse {

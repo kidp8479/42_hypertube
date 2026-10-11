@@ -1,8 +1,11 @@
 // Which UI language to use: the pure rules, with no React and no i18next
 // instance to configure. `useLanguageSync` applies the result.
-import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './i18n';
+import {
+  DEFAULT_LANGUAGE,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguage,
+} from './languages';
 
-export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 const LANGUAGE_STORAGE_KEY = 'hypertube_language';
 
 export function isSupportedLanguage(

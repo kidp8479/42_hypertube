@@ -17,7 +17,8 @@ import {
   type RegisterErrors,
   type ValidationError,
 } from './auth-validation';
-import { DEFAULT_LANGUAGE, isSupportedLanguage } from '../../lib/language';
+import { DEFAULT_LANGUAGE } from '../../lib/languages';
+import { isSupportedLanguage } from '../../lib/language';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
