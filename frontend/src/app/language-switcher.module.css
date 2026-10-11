@@ -1,0 +1,7 @@
+/* Minimal layout only - real visual design lands with the base layout (HYP-19). */
+.switcher {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
