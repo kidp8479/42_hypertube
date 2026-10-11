@@ -27,7 +27,8 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test test-backend test-frontend test-e2e test-api build doc verify
+        test test-backend test-frontend test-e2e test-api build doc verify \
+        graphify
 
 help:
 	@echo "Setup"
@@ -63,6 +64,7 @@ help:
 	@echo "  test-api         - run the Bruno request collection (api/bruno) against a running backend"
 	@echo "  build            - production build, backend + frontend"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
+	@echo "  graphify         - build a local code graph into graphify-out/ (needs graphify installed, see docs/graphify-setup.md in agentic-lab)"
 	@echo ""
 	@echo "Full local gate"
 	@echo "  verify           - format-check, lint-check, typecheck, test, build (one command, read the result)"
@@ -254,3 +256,13 @@ verify: format-check lint-check typecheck test build
 
 doc:
 	cd backend && npm run doc
+
+# Local, deterministic code graph (tree-sitter AST, no LLM, nothing leaves
+# the machine). Needs the graphify CLI installed once: `uv tool install
+# graphifyy` (see docs/graphify-setup.md in agentic-lab). --code-only skips
+# docs/PDFs/images, which would need an LLM backend. Query it with
+# `graphify explain "X"`, `graphify path "A" "B"`, `graphify god-nodes`, or
+# open graphify-out/graph.html in a browser.
+graphify:
+	graphify extract . --code-only
+	graphify cluster-only . --no-label
