@@ -3,6 +3,7 @@
 // token or an `error` reason (ADR-0007).
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { OAuthCodeRejectedError } from './auth-actions';
 import { useAuth } from './auth-context';
 import styles from './auth-oauth-callback-page.module.css';
@@ -21,23 +22,6 @@ function parseErrorParam(value: string): OAuthErrorCode {
 }
 
 /**
- * The one place that turns an error code into text - the i18n work swaps
- * this body for `t()` lookups, like `describeValidationError`.
- */
-function describeOAuthError(code: OAuthErrorCode): string {
-  switch (code) {
-    case 'cancelled':
-      return 'Sign-in was cancelled.';
-    case 'email_unverified':
-      return 'Your GitHub account has no verified email address. Verify one on GitHub, then try again.';
-    case 'expired':
-      return 'This sign-in link has expired. Please try again.';
-    case 'failed':
-      return 'Sign-in failed. Please try again.';
-  }
-}
-
-/**
  * Reads the callback parameters once, on the first render: the code is
  * stripped from the URL right after, and the reason shown must not change
  * when it is.
@@ -52,6 +36,7 @@ function readCallbackParams(params: URLSearchParams) {
 }
 
 export function OAuthCallbackPage() {
+  const { t } = useTranslation('auth');
   const { state, loginWithOAuthCode } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -94,18 +79,18 @@ export function OAuthCallbackPage() {
     <main className={styles.page}>
       {/* React hoists this to <head>: no page loaded from here may learn the callback URL. */}
       <meta name="referrer" content="no-referrer" />
-      <h1>Sign in</h1>
+      <h1>{t('oauthCallback.title')}</h1>
       {error ? (
         <>
           <p className={styles.error} role="alert">
-            {describeOAuthError(error)}
+            {t(`oauthCallback.errors.${error}`)}
           </p>
           <p>
-            <Link to="/login">Back to log in</Link>
+            <Link to="/login">{t('oauthCallback.backToLogin')}</Link>
           </p>
         </>
       ) : (
-        <p>Signing you in...</p>
+        <p>{t('oauthCallback.signingIn')}</p>
       )}
     </main>
   );

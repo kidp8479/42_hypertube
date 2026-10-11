@@ -1,4 +1,5 @@
 // "Continue with 42 / GitHub" links shared by the login and register pages.
+import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../../lib/api';
 import styles from './auth-oauth-buttons.module.css';
 
@@ -8,10 +9,15 @@ import styles from './auth-oauth-buttons.module.css';
  * the backend sets must land in the browser before leaving for the provider.
  */
 export function OAuthButtons() {
+  const { t } = useTranslation('auth');
   return (
     <div className={styles.providers}>
-      <a href={`${API_BASE}/auth/42/login`}>Continue with 42</a>
-      <a href={`${API_BASE}/auth/github/login`}>Continue with GitHub</a>
+      <a href={`${API_BASE}/auth/42/login`}>
+        {t('oauth.continueWith', { provider: '42' })}
+      </a>
+      <a href={`${API_BASE}/auth/github/login`}>
+        {t('oauth.continueWith', { provider: 'GitHub' })}
+      </a>
     </div>
   );
 }

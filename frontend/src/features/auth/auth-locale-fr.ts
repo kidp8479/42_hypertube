@@ -11,6 +11,9 @@ export const authFr: typeof authEn = {
     firstName: 'Prénom',
     lastName: 'Nom',
   },
+  errors: {
+    generic: 'Une erreur est survenue. Veuillez réessayer.',
+  },
   validation: {
     required: 'Le champ « {{field}} » est obligatoire',
     invalidEmail: 'Adresse e-mail invalide',
@@ -26,6 +29,33 @@ export const authFr: typeof authEn = {
     hasAccount: 'Vous avez déjà un compte ?',
     logIn: 'Se connecter',
     conflict: 'Un compte existe déjà avec cet e-mail ou ce nom d’utilisateur.',
-    generic: 'Une erreur est survenue. Veuillez réessayer.',
+  },
+  login: {
+    title: 'Connexion',
+    submit: 'Se connecter',
+    submitting: 'Connexion...',
+    registeredNotice: 'Compte créé. Veuillez vous connecter.',
+    badCredentials: 'E-mail ou mot de passe invalide.',
+    noAccount: 'Pas encore de compte ?',
+    register: 'S’inscrire',
+  },
+  home: {
+    signedIn: 'Connecté en tant que <strong>{{username}}</strong> ({{email}})',
+    logout: 'Se déconnecter',
+  },
+  oauth: {
+    continueWith: 'Continuer avec {{provider}}',
+  },
+  oauthCallback: {
+    title: 'Connexion',
+    signingIn: 'Connexion en cours...',
+    backToLogin: 'Retour à la connexion',
+    errors: {
+      cancelled: 'La connexion a été annulée.',
+      email_unverified:
+        'Votre compte GitHub n’a aucune adresse e-mail vérifiée. Vérifiez-en une sur GitHub, puis réessayez.',
+      expired: 'Ce lien de connexion a expiré. Veuillez réessayer.',
+      failed: 'La connexion a échoué. Veuillez réessayer.',
+    },
   },
 };

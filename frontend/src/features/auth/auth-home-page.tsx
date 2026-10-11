@@ -2,6 +2,7 @@
 // Real content (the video library) lands in a later issue - for now it only
 // proves the round trip works: it reads the bootstrapped user off the context
 // and offers a way back out.
+import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth-context';
 import styles from './auth-home-page.module.css';
 
@@ -11,6 +12,7 @@ import styles from './auth-home-page.module.css';
  * auth state flips the guard to `anonymous`, which sends the user to `/login`.
  */
 export function HomePage() {
+  const { t } = useTranslation('auth');
   const { state, logout } = useAuth();
 
   // RequireAuth only renders this component in the `authenticated` state, so
@@ -22,10 +24,15 @@ export function HomePage() {
     <main className={styles.page}>
       <h1>Hypertube</h1>
       <p>
-        Signed in as <strong>{user?.username}</strong> ({user?.email})
+        <Trans
+          t={t}
+          i18nKey="home.signedIn"
+          values={{ username: user?.username, email: user?.email }}
+          components={{ strong: <strong /> }}
+        />
       </p>
       <button type="button" onClick={logout}>
-        Log out
+        {t('home.logout')}
       </button>
     </main>
   );

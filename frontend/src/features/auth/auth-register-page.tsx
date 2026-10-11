@@ -20,9 +20,9 @@ import {
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
-// The form-level error is stored as a code, not a sentence, so it is
-// translated at render time and follows a language switch.
-type FormError = 'conflict' | 'generic';
+// The form-level error is stored as a translation key, not a sentence, so it
+// is translated at render time and follows a language switch.
+type FormError = 'register.conflict' | 'errors.generic';
 
 /** One field's validation message, or nothing when the field is valid. */
 function FieldError({
@@ -121,7 +121,7 @@ export function RegisterPage() {
       navigate('/login', { replace: true, state: { justRegistered: true } });
     } catch (caught) {
       const isConflict = caught instanceof ApiError && caught.status === 409;
-      setFormError(isConflict ? 'conflict' : 'generic');
+      setFormError(isConflict ? 'register.conflict' : 'errors.generic');
       setIsSubmitting(false);
     }
   }
@@ -180,7 +180,7 @@ export function RegisterPage() {
       />
       {formError && (
         <p className={styles.error} role="alert">
-          {t(`register.${formError}`)}
+          {t(formError)}
         </p>
       )}
 
