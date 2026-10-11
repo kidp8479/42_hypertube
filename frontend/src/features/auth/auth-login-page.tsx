@@ -4,14 +4,14 @@
 // was wrong, so neither do we.
 import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-login-page.module.css';
 
-const GENERIC_ERROR = 'Something went wrong. Please try again.';
-const BAD_CREDENTIALS = 'Invalid email or password.';
-const REGISTERED_NOTICE = 'Account created. Please sign in.';
+// Stored as a translation key, not a sentence, so it follows a language switch.
+type LoginError = 'login.badCredentials' | 'errors.generic';
 
 /** Router state `RegisterPage` hands off on a successful registration redirect. */
 interface LoginLocationState {
@@ -19,6 +19,7 @@ interface LoginLocationState {
 }
 
 export function LoginPage() {
+  const { t } = useTranslation('auth');
   const { state, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,7 +28,7 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LoginError | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Someone who is already logged in has no business on /login.
@@ -44,19 +45,21 @@ export function LoginPage() {
       navigate('/', { replace: true });
     } catch (caught) {
       const is401 = caught instanceof ApiError && caught.status === 401;
-      setError(is401 ? BAD_CREDENTIALS : GENERIC_ERROR);
+      setError(is401 ? 'login.badCredentials' : 'errors.generic');
       setIsSubmitting(false);
     }
   }
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <h1>Log in</h1>
+      <h1>{t('login.title')}</h1>
 
-      {justRegistered && <p className={styles.notice}>{REGISTERED_NOTICE}</p>}
+      {justRegistered && (
+        <p className={styles.notice}>{t('login.registeredNotice')}</p>
+      )}
 
       <label className={styles.field}>
-        Email
+        {t('fields.email')}
         <input
           type="email"
           value={email}
@@ -67,7 +70,7 @@ export function LoginPage() {
       </label>
 
       <label className={styles.field}>
-        Password
+        {t('fields.password')}
         <input
           type="password"
           value={password}
@@ -79,18 +82,18 @@ export function LoginPage() {
 
       {error && (
         <p className={styles.error} role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
 
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Logging in...' : 'Log in'}
+        {isSubmitting ? t('login.submitting') : t('login.submit')}
       </button>
 
       <OAuthButtons />
 
       <p>
-        No account yet? <Link to="/register">Register</Link>
+        {t('login.noAccount')} <Link to="/register">{t('login.register')}</Link>
       </p>
     </form>
   );

@@ -6,18 +6,24 @@ import { LoginPage } from './features/auth/auth-login-page';
 import { RegisterPage } from './features/auth/auth-register-page';
 import { OAuthCallbackPage } from './features/auth/auth-oauth-callback-page';
 import { HomePage } from './features/auth/auth-home-page';
+import { useLanguageSync } from './app/language-sync';
+import { LanguageSwitcher } from './app/language-switcher';
 
 function App() {
+  useLanguageSync();
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
-      <Route element={<RequireAuth />}>
-        <Route path="/" element={<HomePage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <LanguageSwitcher />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 

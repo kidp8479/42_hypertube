@@ -5,6 +5,7 @@
 // message - like /login, never says which field clashed.
 import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
 import { registerRequest } from './auth-actions';
@@ -16,11 +17,14 @@ import {
   type RegisterErrors,
   type ValidationError,
 } from './auth-validation';
+import { DEFAULT_LANGUAGE } from '../../lib/languages';
+import { isSupportedLanguage } from '../../lib/language';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
-const CONFLICT_ERROR = 'An account with this email or username already exists.';
-const GENERIC_ERROR = 'Something went wrong. Please try again.';
+// The form-level error is stored as a translation key, not a sentence, so it
+// is translated at render time and follows a language switch.
+type FormError = 'register.conflict' | 'errors.generic';
 
 /** One field's validation message, or nothing when the field is valid. */
 function FieldError({
@@ -30,15 +34,52 @@ function FieldError({
   field: RegisterField;
   error?: ValidationError;
 }) {
+  const { t } = useTranslation('auth');
   if (!error) {
     return null;
   }
   return (
-    <p className={styles.fieldError}>{describeValidationError(field, error)}</p>
+    <p className={styles.fieldError}>
+      {describeValidationError(field, error, t)}
+    </p>
+  );
+}
+
+/** A labelled input plus its validation message, for one register field. */
+function RegisterInput({
+  field,
+  type,
+  autoComplete,
+  value,
+  error,
+  onChange,
+}: {
+  field: RegisterField;
+  type: 'email' | 'text' | 'password';
+  autoComplete: string;
+  value: string;
+  error?: ValidationError;
+  onChange: (field: RegisterField, value: string) => void;
+}) {
+  const { t } = useTranslation('auth');
+  return (
+    <>
+      <label className={styles.field}>
+        {t(`fields.${field}`)}
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(field, e.target.value)}
+          autoComplete={autoComplete}
+        />
+      </label>
+      <FieldError field={field} error={error} />
+    </>
   );
 }
 
 export function RegisterPage() {
+  const { t, i18n } = useTranslation('auth');
   const { state } = useAuth();
   const navigate = useNavigate();
 
@@ -51,7 +92,7 @@ export function RegisterPage() {
     firstName: '',
   });
   const [errors, setErrors] = useState<RegisterErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormError | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Someone who is already logged in has no business on /register either.
@@ -78,99 +119,85 @@ export function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await registerRequest(values);
+      await registerRequest(
+        values,
+        isSupportedLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE,
+      );
       navigate('/login', { replace: true, state: { justRegistered: true } });
     } catch (caught) {
       const isConflict = caught instanceof ApiError && caught.status === 409;
-      setFormError(isConflict ? CONFLICT_ERROR : GENERIC_ERROR);
+      setFormError(isConflict ? 'register.conflict' : 'errors.generic');
       setIsSubmitting(false);
     }
   }
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <h1>Register</h1>
+      <h1>{t('register.title')}</h1>
 
-      <label className={styles.field}>
-        Email
-        <input
-          type="email"
-          value={values.email}
-          onChange={(e) => handleChange('email', e.target.value)}
-          autoComplete="email"
-        />
-      </label>
-      <FieldError field="email" error={errors.email} />
-
-      <label className={styles.field}>
-        Username
-        <input
-          type="text"
-          value={values.username}
-          onChange={(e) => handleChange('username', e.target.value)}
-          autoComplete="username"
-        />
-      </label>
-      <FieldError field="username" error={errors.username} />
-
-      <label className={styles.field}>
-        First name
-        <input
-          type="text"
-          value={values.firstName}
-          onChange={(e) => handleChange('firstName', e.target.value)}
-          autoComplete="given-name"
-        />
-      </label>
-      <FieldError field="firstName" error={errors.firstName} />
-
-      <label className={styles.field}>
-        Last name
-        <input
-          type="text"
-          value={values.lastName}
-          onChange={(e) => handleChange('lastName', e.target.value)}
-          autoComplete="family-name"
-        />
-      </label>
-      <FieldError field="lastName" error={errors.lastName} />
-
-      <label className={styles.field}>
-        Password
-        <input
-          type="password"
-          value={values.password}
-          onChange={(e) => handleChange('password', e.target.value)}
-          autoComplete="new-password"
-        />
-      </label>
-      <FieldError field="password" error={errors.password} />
-
-      <label className={styles.field}>
-        Confirm password
-        <input
-          type="password"
-          value={values.confirmPassword}
-          onChange={(e) => handleChange('confirmPassword', e.target.value)}
-          autoComplete="new-password"
-        />
-      </label>
-      <FieldError field="confirmPassword" error={errors.confirmPassword} />
-
+      <RegisterInput
+        field="email"
+        type="email"
+        autoComplete="email"
+        value={values.email}
+        error={errors.email}
+        onChange={handleChange}
+      />
+      <RegisterInput
+        field="username"
+        type="text"
+        autoComplete="username"
+        value={values.username}
+        error={errors.username}
+        onChange={handleChange}
+      />
+      <RegisterInput
+        field="firstName"
+        type="text"
+        autoComplete="given-name"
+        value={values.firstName}
+        error={errors.firstName}
+        onChange={handleChange}
+      />
+      <RegisterInput
+        field="lastName"
+        type="text"
+        autoComplete="family-name"
+        value={values.lastName}
+        error={errors.lastName}
+        onChange={handleChange}
+      />
+      <RegisterInput
+        field="password"
+        type="password"
+        autoComplete="new-password"
+        value={values.password}
+        error={errors.password}
+        onChange={handleChange}
+      />
+      <RegisterInput
+        field="confirmPassword"
+        type="password"
+        autoComplete="new-password"
+        value={values.confirmPassword}
+        error={errors.confirmPassword}
+        onChange={handleChange}
+      />
       {formError && (
         <p className={styles.error} role="alert">
-          {formError}
+          {t(formError)}
         </p>
       )}
 
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Registering...' : 'Register'}
+        {isSubmitting ? t('register.submitting') : t('register.submit')}
       </button>
 
       <OAuthButtons />
 
       <p>
-        Already have an account? <Link to="/login">Log in</Link>
+        {t('register.hasAccount')}{' '}
+        <Link to="/login">{t('register.logIn')}</Link>
       </p>
     </form>
   );

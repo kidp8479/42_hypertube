@@ -18,14 +18,17 @@ describe('registerRequest', () => {
   it('posts the trimmed CreateUserDto fields to /users, dropping confirmPassword', async () => {
     apiFetchMock.mockResolvedValueOnce(undefined);
 
-    await registerRequest({
-      email: '  ada@example.com  ',
-      username: '  adalovelace  ',
-      firstName: '  Ada  ',
-      lastName: '  Lovelace  ',
-      password: 'correct horse',
-      confirmPassword: 'correct horse',
-    });
+    await registerRequest(
+      {
+        email: '  ada@example.com  ',
+        username: '  adalovelace  ',
+        firstName: '  Ada  ',
+        lastName: '  Lovelace  ',
+        password: 'correct horse',
+        confirmPassword: 'correct horse',
+      },
+      'fr',
+    );
 
     expect(apiFetchMock).toHaveBeenCalledWith('/users', {
       method: 'POST',
@@ -35,6 +38,7 @@ describe('registerRequest', () => {
         username: 'adalovelace',
         lastName: 'Lovelace',
         firstName: 'Ada',
+        preferredLanguage: 'fr',
       }),
     });
   });
@@ -43,14 +47,17 @@ describe('registerRequest', () => {
     removeAuthToken();
     apiFetchMock.mockResolvedValueOnce(undefined);
 
-    await registerRequest({
-      email: 'ada@example.com',
-      username: 'adalovelace',
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      password: 'correct horse',
-      confirmPassword: 'correct horse',
-    });
+    await registerRequest(
+      {
+        email: 'ada@example.com',
+        username: 'adalovelace',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        password: 'correct horse',
+        confirmPassword: 'correct horse',
+      },
+      'en',
+    );
 
     expect(getAuthToken()).toBeNull();
   });
@@ -61,14 +68,17 @@ describe('registerRequest', () => {
     apiFetchMock.mockRejectedValueOnce(conflict);
 
     await expect(
-      registerRequest({
-        email: 'ada@example.com',
-        username: 'adalovelace',
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        password: 'correct horse',
-        confirmPassword: 'correct horse',
-      }),
+      registerRequest(
+        {
+          email: 'ada@example.com',
+          username: 'adalovelace',
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          password: 'correct horse',
+          confirmPassword: 'correct horse',
+        },
+        'en',
+      ),
     ).rejects.toBe(conflict);
 
     // Unrelated to this call's own (failed) token handling, but pins down

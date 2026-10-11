@@ -12,6 +12,7 @@ directly, so there is nothing to export.
 | Domain | Page | Covers |
 |---|---|---|
 | Auth | [`auth.md`](auth.md) | overview, register (frontend), SPA session states, OAuth handshake, OAuth identity linking |
+| Language | [`i18n.md`](i18n.md) | overview, which language wins, switching, registration |
 
 Domains still to come, each with its own page once built: video library
 and search (HYP-13), torrent download (HYP-12), streaming and transcoding
@@ -24,6 +25,7 @@ Mermaid.
 | Poster | Domain page |
 |---|---|
 | [`auth-flow.png`](auth-flow.png) | [`auth.md`](auth.md) |
+| [`i18n-language.png`](i18n-language.png) | [`i18n.md`](i18n.md) |
 
 ## Rule: a diagram in a PR lands here too
 
