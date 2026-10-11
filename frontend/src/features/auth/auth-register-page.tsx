@@ -17,6 +17,7 @@ import {
   type RegisterErrors,
   type ValidationError,
 } from './auth-validation';
+import { DEFAULT_LANGUAGE, isSupportedLanguage } from '../../lib/language';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
@@ -77,7 +78,7 @@ function RegisterInput({
 }
 
 export function RegisterPage() {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
   const { state } = useAuth();
   const navigate = useNavigate();
 
@@ -117,7 +118,10 @@ export function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await registerRequest(values);
+      await registerRequest(
+        values,
+        isSupportedLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE,
+      );
       navigate('/login', { replace: true, state: { justRegistered: true } });
     } catch (caught) {
       const isConflict = caught instanceof ApiError && caught.status === 409;

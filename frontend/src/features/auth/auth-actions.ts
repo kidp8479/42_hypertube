@@ -3,6 +3,7 @@
 import { ApiError, apiFetch } from '../../lib/api';
 import { setAuthToken, removeAuthToken } from '../../lib/token';
 import { queryClient } from '../../lib/query-client';
+import type { SupportedLanguage } from '../../lib/i18n';
 import type { RegisterValues } from './auth-validation';
 
 interface LoginResponse {
@@ -64,8 +65,15 @@ export function logoutLocal(): void {
  * Creates the account (`POST /users`). Deliberately does not store a
  * token or log the user in - the subject and HYP-46 both call for a
  * fresh account to land on `/login`, not be signed in silently.
+ *
+ * `language` is the UI language at submit time. Without it the account is
+ * created as English, and the first login would flip a French visitor back
+ * to English (the account language wins over the browser's).
  */
-export async function registerRequest(values: RegisterValues): Promise<void> {
+export async function registerRequest(
+  values: RegisterValues,
+  language: SupportedLanguage,
+): Promise<void> {
   // Send exactly what validateRegister checked - untrimmed values here would
   // let e.g. a 100-char name plus a stray space pass the client check
   // (which trims) and then fail the backend's @Length(1, 100) (which
@@ -78,6 +86,7 @@ export async function registerRequest(values: RegisterValues): Promise<void> {
       username: values.username.trim(),
       lastName: values.lastName.trim(),
       firstName: values.firstName.trim(),
+      preferredLanguage: language,
     }),
   });
 }

@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
+import i18n from '../../lib/i18n';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import type { AuthState } from './auth-reducer';
 import { fakeUser } from '../../test/fixtures';
@@ -54,6 +55,11 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Confirm password'), 'correct horse');
 }
 
+// The language is a global on the shared i18n instance: put it back.
+afterEach(async () => {
+  await i18n.changeLanguage('en');
+});
+
 describe('RegisterPage', () => {
   it('blocks submission and shows field errors when the form is invalid', async () => {
     const { user } = renderRegisterPage();
@@ -64,6 +70,17 @@ describe('RegisterPage', () => {
     expect(registerRequest).not.toHaveBeenCalled();
   });
 
+  it('registers the account in the language the visitor is browsing in', async () => {
+    vi.mocked(registerRequest).mockResolvedValue(undefined);
+    const { user } = renderRegisterPage();
+    await fillValidForm(user);
+
+    await act(() => i18n.changeLanguage('fr'));
+    await user.click(screen.getByRole('button', { name: 'S’inscrire' }));
+
+    expect(registerRequest).toHaveBeenCalledWith(expect.anything(), 'fr');
+  });
+
   it('registers and redirects to /login with the "account created" notice', async () => {
     vi.mocked(registerRequest).mockResolvedValue(undefined);
     const { user } = renderRegisterPage();
@@ -71,14 +88,17 @@ describe('RegisterPage', () => {
     await fillValidForm(user);
     await user.click(screen.getByRole('button', { name: 'Register' }));
 
-    expect(registerRequest).toHaveBeenCalledWith({
-      email: 'ada@example.com',
-      username: 'adalovelace',
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      password: 'correct horse',
-      confirmPassword: 'correct horse',
-    });
+    expect(registerRequest).toHaveBeenCalledWith(
+      {
+        email: 'ada@example.com',
+        username: 'adalovelace',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        password: 'correct horse',
+        confirmPassword: 'correct horse',
+      },
+      'en',
+    );
     expect(
       await screen.findByText('login page - registered'),
     ).toBeInTheDocument();
