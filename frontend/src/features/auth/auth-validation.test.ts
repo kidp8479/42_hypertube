@@ -1,3 +1,4 @@
+import i18n from '../../lib/i18n';
 import { describe, it, expect } from 'vitest';
 import {
   describeValidationError,
@@ -120,6 +121,17 @@ describe('describeValidationError', () => {
     ],
     ['confirmPassword', { code: 'mismatch' }, 'Passwords do not match'],
   ])('%s: %o -> %s', (field, error, expected) => {
-    expect(describeValidationError(field, error)).toBe(expected);
+    expect(
+      describeValidationError(field, error, i18n.getFixedT('en', 'auth')),
+    ).toBe(expected);
+  });
+
+  it('renders the same codes in French with the field label interpolated', () => {
+    const t = i18n.getFixedT('fr', 'auth');
+    expect(
+      describeValidationError('username', { code: 'tooShort', min: 3 }, t),
+    ).toBe(
+      'Le champ « Nom d’utilisateur » doit contenir au moins 3 caractères',
+    );
   });
 });

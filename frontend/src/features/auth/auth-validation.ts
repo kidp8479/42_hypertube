@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 export type RegisterField =
   | 'email'
   | 'password'
@@ -111,37 +113,27 @@ export function validateRegister(values: RegisterValues): RegisterErrors {
   return errors;
 }
 
-// Same wording as the form's own labels, so an error names the field the
-// user can actually see.
-const FIELD_LABELS: Record<RegisterField, string> = {
-  email: 'Email',
-  password: 'Password',
-  confirmPassword: 'Confirm password',
-  username: 'Username',
-  firstName: 'First name',
-  lastName: 'Last name',
-};
-
 /**
- * English rendering of a {@link ValidationError}. The single place the UI
- * turns an error code into text - HYP-56 replaces this body with `t()`
- * lookups and leaves every caller as is.
+ * Localised rendering of a {@link ValidationError}. The single place the UI
+ * turns an error code into text; `t` is passed in (from `useTranslation`) so
+ * the caller re-renders when the language changes.
  */
 export function describeValidationError(
   field: RegisterField,
   error: ValidationError,
+  t: TFunction<'auth'>,
 ): string {
-  const label = FIELD_LABELS[field];
+  const fieldLabel = t(`fields.${field}`);
   switch (error.code) {
     case 'required':
-      return `${label} is required`;
+      return t('validation.required', { field: fieldLabel });
     case 'invalidEmail':
-      return 'Invalid email address';
+      return t('validation.invalidEmail');
     case 'tooShort':
-      return `${label} must be at least ${error.min} characters long`;
+      return t('validation.tooShort', { field: fieldLabel, min: error.min });
     case 'tooLong':
-      return `${label} must be at most ${error.max} characters long`;
+      return t('validation.tooLong', { field: fieldLabel, max: error.max });
     case 'mismatch':
-      return 'Passwords do not match';
+      return t('validation.mismatch');
   }
 }
