@@ -74,7 +74,10 @@
   structure)
 - Evaluation runs on: the evaluated group's machine
 - Solo or team: solo
-- Seeded test accounts: <to define before the first `browser-e2e` session>
+- Seeded test accounts: one dev account for `browser-e2e`, read from the
+  git-ignored `.env` (`E2E_USER_EMAIL`, `E2E_USER_PASSWORD`; names in
+  `.env.example`). It lives in the local dev database only: recreate it with
+  `POST /users` on a fresh database. Never write its password in the repo.
 
 ## Engineering standards
 
