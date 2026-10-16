@@ -14,9 +14,10 @@ state: the token simply stops being used, and expires on its own after
   needs a DB or cache round-trip. A logout that revokes tokens on the
   server would reintroduce exactly the state ADR-0002 avoided, for a
   project with a single backend instance and no real end users.
-- **The exposure window is bounded.** A token that leaks after logout is
-  usable for at most the remaining TTL (15 minutes). The TTL is validated
-  at boot (ADR-0003), so it cannot silently drift to days.
+- **The exposure window is bounded by the TTL.** A token that leaks after
+  logout is usable for at most its remaining lifetime, 15 minutes by
+  default. `JWT_EXPIRES_IN` is a validated `ms` duration (ADR-0003) but is
+  not capped, so raising it widens this window one for one: keep it short.
 - **The endpoint still exists on purpose.** The subject's RESTful API
   evidence and the defense benefit from a real route, and it gives a
   single place to add server-side revocation later without changing the
@@ -40,7 +41,7 @@ state: the token simply stops being used, and expires on its own after
 
 - **A stolen token stays valid until it expires**, even after the user
   logged out. Recorded in `docs/defense/known-limitations.md`.
-- `POST /auth/logout` does nothing server-side today. A test pins the
+- `POST /auth/logout` does nothing server-side today. A Jest spec pins the
   contract (`204` with a valid token, `401` without) so a future
   revocation change is a conscious one.
 - Lowering `JWT_EXPIRES_IN` is the only knob that shrinks the window.
