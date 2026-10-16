@@ -88,3 +88,21 @@ SPA (`OAuthExchangeService`, ADR-0007) are kept in an in-memory `Map`.
   others unless the load balancer pins the browser.
 - **Cost to fix later:** low. Move the `Map` to Redis with a key TTL, same
   as the throttler storage above.
+
+## Logout does not revoke the access token
+
+`POST /auth/logout` is an authenticated no-op (`204`); the frontend discards
+its token. A token that was copied before logout stays valid until it
+expires (`JWT_EXPIRES_IN`, 15 minutes by default). See ADR-0008.
+
+- **Why:** revoking tokens needs server-side state (a blocklist or stored
+  refresh tokens), which ADR-0002 deliberately avoided. The subject asks
+  for a one-click logout, not for server-side revocation, and the graded
+  deployment has no real end users.
+- **Real-world:** a stolen token is usable until expiry even after the
+  victim logs out. Production apps pair a short access token with a
+  revocable refresh token, or check a `jti` blocklist on each request.
+- **Cost to fix later:** medium. Refresh-token rotation (storage, rotation
+  endpoint, silent refresh on the frontend) or a `jti` blocklist read by
+  `JwtAuthGuard`. The `POST /auth/logout` route and its frontend call
+  already exist, so the contract does not change.
