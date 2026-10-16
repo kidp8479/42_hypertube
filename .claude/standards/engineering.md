@@ -146,12 +146,10 @@ order they fire:
 - **check**: `lint-feedback` hook, eslint on the file just written.
 - **gate**: the ESLint / ruff complexity ratchet at commit and CI
   (`--max-warnings <baseline>`, monotone: can only go down).
-- **review**: `diff-auditor` subagent and the `pr-review` skill.
-
-Complexity budget (same intent for JS/TS and Python): branches per
-function <= 10, nesting <= 4, params <= 4, function <= 80 lines
-(components 120), file <= 300 lines. Over budget: split, do not disable
-the rule.
+- **review**: `diff-auditor` subagent and the `pr-review` skill, against
+  `coding-standards.md` (the exact budget and checklist live there, not
+  duplicated here - that file is what a review agent reads, this one is
+  what a human or implementing agent reads).
 
 The most common agent slop is not copy-paste but **semantic
 duplication**: logic that already exists in the codebase, reimplemented
@@ -189,6 +187,20 @@ summary to keep in sync with it:
 - **Session/transport**: session cookies `HttpOnly` + `Secure` +
   `SameSite`; CORS restricted to the expected origin; logout invalidates
   server-side.
+
+## Web projects: launch checklist
+
+Before calling a web UI done (demo, evaluation, release), run the
+`web-launch-checklist` skill. The skill is the source of truth; summary:
+
+- **Always**: custom 404 and error page, loading / error / empty states,
+  responsive at 360px, accessibility basics (`lang`, `alt`, labels, focus,
+  contrast, keyboard), per-page `<title>`, favicon, working forms,
+  optimized images, one Lighthouse pass, no secrets or debug output in the
+  client bundle.
+- **Public product only** (N/A for local demos): meta description, Open
+  Graph, `robots.txt`, `sitemap.xml`, legal pages, cookie consent when
+  non-essential trackers exist, analytics, error monitoring.
 
 ## Containers: dev bind mounts
 
@@ -236,3 +248,9 @@ Default (42 projects):
 Personal projects: when the user asks for it, the agent can run a task
 end to end on its own and surface only the friction points (decisions,
 tradeoffs, anything ambiguous) instead of every step.
+
+At the end of a long task, or when blocked: lead the response with a
+numbered list of what is needed from the human, one thing per item, most
+blocking first - what to do, where, and what to send back when done (e.g.
+"log into Stripe, export the September refunds CSV, put it in inbox/").
+If nothing is needed, say so instead of padding the list.
