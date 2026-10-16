@@ -11,7 +11,8 @@ Decisions behind it: [ADR-0001](../adr/0001-hash-passwords-with-argon2id.md)
 [ADR-0007](../adr/0007-oauth-identity-linking-and-second-provider.md) (OAuth),
 [ADR-0008](../adr/0008-client-side-logout-with-short-lived-jwt.md) (logout).
 The backend legs are also drawn as one poster in
-[`auth-flow.png`](auth-flow.png) (Excalidraw source next to it).
+[`auth-flow.png`](auth-flow.png), and the logout alone in
+[`auth-logout.png`](auth-logout.png) (Excalidraw sources next to them).
 
 ## Overview
 

@@ -25,6 +25,7 @@ Mermaid.
 | Poster | Domain page |
 |---|---|
 | [`auth-flow.png`](auth-flow.png) | [`auth.md`](auth.md) |
+| [`auth-logout.png`](auth-logout.png) | [`auth.md`](auth.md) (section 6) |
 | [`i18n-language.png`](i18n-language.png) | [`i18n.md`](i18n.md) |
 
 ## Rule: a diagram in a PR lands here too
@@ -109,5 +110,9 @@ merges", not every edit.
   `?error=` redirect on any callback failure).
   Reflects HYP-10 + HYP-44 + HYP-46 + HYP-11 + HYP-53 + HYP-57. Backend
   legs only: the SPA side is in [`auth.md`](auth.md), adding it to the
-  poster is HYP-51. Logout (HYP-35) is in `auth.md` only, to be added to
-  the poster with HYP-51; add reset-password when it is built.
+  poster is HYP-51. Logout has its own poster (`auth-logout`, below); add
+  reset-password when it is built.
+- **`auth-logout`** - the one-click logout (HYP-35, ADR-0008): the
+  not-awaited `POST /auth/logout` and the guard answering 204 or 401, the
+  local sign-out (token + query cache cleared, redirect to `/login`), and the
+  limit that the token is not revoked.
