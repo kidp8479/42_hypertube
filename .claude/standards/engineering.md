@@ -104,6 +104,10 @@ Even solo:
 - Non-trivial task (3+ steps, or an architectural choice): agree a plan
   before touching code (plan mode). If the work goes sideways, stop and
   re-plan rather than pushing on.
+- Before that plan, when the request is vague or the design is open, run
+  Superpowers' `/brainstorming` (or `/grill-me`) so the agent asks the
+  clarifying questions instead of deciding silently. Skip it for a task
+  that is already fully specified.
 - After a course correction, write the lesson down: a `feedback` memory
   for a cross-project habit, `docs/lessons.md` for a project-specific one.
 - A deliberate tradeoff or accepted tech debt (not a bug to fix) goes in

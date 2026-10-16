@@ -42,18 +42,22 @@ with the file or URL as evidence, then fix the FAILs that are cheap.
     fix the obvious (bundle size, unoptimized images, blocking scripts).
 12. **No secrets or debug output in the client bundle**; no `console.log`
     left; env vars only through the project's `.env` convention.
+13. **Design quality**: run `/impeccable audit` (then `/impeccable polish`
+    on what it flags) when the `impeccable` plugin is enabled. It catches
+    the generic "AI look" this list does not (typography, spacing, color,
+    motion). Skip with a note if the plugin is not installed.
 
 ## Public product only
 
-13. **Meta description** on each page.
-14. **Open Graph / Twitter card**: `og:title`, `og:description`,
+14. **Meta description** on each page.
+15. **Open Graph / Twitter card**: `og:title`, `og:description`,
     `og:image` (absolute URL).
-15. **`robots.txt`** and **`sitemap.xml`**; canonical URL per page.
-16. **Legal**: terms / privacy page, legal notice where required.
-17. **Cookies / consent**: a banner only if non-essential trackers are
+16. **`robots.txt`** and **`sitemap.xml`**; canonical URL per page.
+17. **Legal**: terms / privacy page, legal notice where required.
+18. **Cookies / consent**: a banner only if non-essential trackers are
     set (GDPR / ePrivacy); essential session cookies do not need one.
-18. **Analytics**, ideally privacy-friendly and behind consent when needed.
-19. **Monitoring**: error reporting wired, so production failures are seen.
+19. **Analytics**, ideally privacy-friendly and behind consent when needed.
+20. **Monitoring**: error reporting wired, so production failures are seen.
 
 ## Output
 
