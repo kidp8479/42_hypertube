@@ -8,9 +8,11 @@ Decisions behind it: [ADR-0001](../adr/0001-hash-passwords-with-argon2id.md)
 / [ADR-0004](../adr/0004-pin-argon2id-cost-parameters.md) (argon2id),
 [ADR-0002](../adr/0002-jwt-bearer-tokens-for-authentication.md) (JWT bearer),
 [ADR-0006](../adr/0006-frontend-architecture.md) (frontend state),
-[ADR-0007](../adr/0007-oauth-identity-linking-and-second-provider.md) (OAuth).
+[ADR-0007](../adr/0007-oauth-identity-linking-and-second-provider.md) (OAuth),
+[ADR-0008](../adr/0008-client-side-logout-with-short-lived-jwt.md) (logout).
 The backend legs are also drawn as one poster in
-[`auth-flow.png`](auth-flow.png) (Excalidraw source next to it).
+[`auth-flow.png`](auth-flow.png), and the logout alone in
+[`auth-logout.png`](auth-logout.png) (Excalidraw sources next to them).
 
 ## Overview
 
@@ -31,11 +33,14 @@ flowchart TD
     token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>+ ownership check on writes"]
     jwt --> routes["every other route"]
 
+    out["SPA - logout button"] --> postLogout["API - POST /auth/logout<br/>204, stateless no-op"]
+    out -- "discarded" --> token
+
     classDef spa fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef api fill:#ede9fe,stroke:#7c3aed,color:#3b0764
     classDef ext fill:#f3f4f6,stroke:#6b7280,color:#111827
-    class reg,login,btns,cbpage,token spa
-    class postUsers,postLogin,oLogin,oCb,exch,jwt api
+    class reg,login,btns,cbpage,token,out spa
+    class postUsers,postLogin,oLogin,oCb,exch,jwt,postLogout api
     class prov,routes ext
 ```
 
@@ -76,7 +81,7 @@ stateDiagram-v2
     loading --> authenticated: bootstrap-success<br/>(token + GET /users/me ok)
     loading --> anonymous: bootstrap-anonymous<br/>(no token, or /users/me 4xx)
     anonymous --> authenticated: login-success<br/>(password login or OAuth code exchange)
-    authenticated --> anonymous: logout<br/>(token + query cache cleared)
+    authenticated --> anonymous: logout<br/>(POST /auth/logout best effort,<br/>token + query cache cleared)
     authenticated --> anonymous: session-expired<br/>(any 401 mid-session)
 ```
 
@@ -162,3 +167,28 @@ flowchart TD
 
 The page also sets `<meta name="referrer" content="no-referrer">`, and
 the error messages all go through `describeOAuthError`, ready for i18n.
+
+## 6. Logout (HYP-35)
+
+Logout is client-side (ADR-0008): the backend keeps no session, so
+`POST /auth/logout` clears nothing there. The SPA calls it best effort and
+signs out locally whatever the answer, so the button works offline or with
+an already expired token.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as SPA (AuthProvider)
+    participant A as Backend
+    U->>S: click "Log out"
+    S->>A: POST /auth/logout (Bearer token)
+    Note over S: no await, the answer is ignored
+    S->>S: remove token, clear query cache
+    S->>S: dispatch logout (state: anonymous)
+    A-->>S: 204 (or 401 / network error, dropped)
+    S-->>U: RequireAuth redirects to /login
+```
+
+The token itself is not revoked: a copy taken before logout stays valid
+until `JWT_EXPIRES_IN` (15 minutes by default). Listed in
+[`known-limitations.md`](../defense/known-limitations.md).

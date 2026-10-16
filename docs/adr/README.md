@@ -25,6 +25,7 @@ might ask us to justify.
 | [0005](0005-lint-complexity-budget.md) | Lint complexity budget as an anti-slop net | accepted |
 | [0006](0006-frontend-architecture.md) | Frontend architecture: declarative routing, feature folders, split state | accepted |
 | [0007](0007-oauth-identity-linking-and-second-provider.md) | OAuth identity linking, GitHub as the second provider | accepted |
+| [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted |
 
 ## Planned
 
@@ -33,7 +34,6 @@ becomes a numbered ADR when the decision is actually taken - not before.
 
 | Trigger | Decision to record |
 |---------|--------------------|
-| logout endpoint (HYP-35) | one-click logout with a stateless JWT: client-side discard vs refresh-token rotation vs blocklist |
 | password reset (HYP-34) | reset-token shape: random, single-use, short TTL, hashed at rest (mirrors ADR-0001) |
 | password strength (HYP-37) | zxcvbn score threshold vs blocklist, and why |
 | BitTorrent client | from-scratch protocol vs allowed low-level libs (`bencode`, `parse-torrent`) - the eliminatory "no ready-made streaming" constraint, spelled out |

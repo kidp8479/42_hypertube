@@ -25,8 +25,8 @@ import type { Request } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
- * Public authentication routes: email/password login, plus the 42 and
- * GitHub OAuth handshakes (register / reset / logout to follow). All
+ * Authentication routes: email/password login, the 42 and GitHub OAuth
+ * handshakes (public), and logout (authenticated). All
  * credential logic lives in {@link AuthService}.
  */
 @Controller('auth')
@@ -60,6 +60,22 @@ export class AuthController {
       throw new UnauthorizedException();
     }
     return this.authService.login(user);
+  }
+
+  /**
+   * One-click logout. Answers 204 and does nothing server-side: the token
+   * is stateless, so "logging out" is the client discarding it, and it
+   * expires on its own after `JWT_EXPIRES_IN` (ADR-0008). The route exists
+   * so the SPA has a real endpoint to call and a revocation step can be
+   * added later without changing the contract.
+   *
+   * Deliberately not `@Public()`: the global `JwtAuthGuard` answers 401 to
+   * a caller with no valid token.
+   */
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  logout(): void {
+    // Intentionally empty: see above, there is no server-side state to clear.
   }
 
   /**

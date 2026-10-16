@@ -187,4 +187,44 @@ describe('AuthProvider', () => {
     expect(getAuthToken()).toBeNull();
     expect(queryClient.getQueryData(['stale'])).toBeUndefined();
   });
+
+  it('logout tells the backend before it forgets the token', async () => {
+    setAuthToken('live-token');
+    // apiFetch reads the stored token when it is called, so the token must
+    // still be there at that instant or the request would go out anonymous.
+    let tokenWhenCalled: string | null = null;
+    apiFetchMock.mockResolvedValueOnce(fakeUser).mockImplementationOnce(() => {
+      tokenWhenCalled = getAuthToken();
+      return Promise.resolve(undefined);
+    });
+
+    const { user } = renderProvider();
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'logout' }));
+
+    expect(apiFetchMock).toHaveBeenCalledWith('/auth/logout', {
+      method: 'POST',
+    });
+    expect(tokenWhenCalled).toBe('live-token');
+  });
+
+  it('logout still signs out locally when the backend call fails', async () => {
+    setAuthToken('live-token');
+    apiFetchMock
+      .mockResolvedValueOnce(fakeUser) // GET /users/me
+      .mockRejectedValueOnce(new Error('offline')); // POST /auth/logout
+
+    const { user } = renderProvider();
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'logout' }));
+
+    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
+    expect(getAuthToken()).toBeNull();
+  });
 });

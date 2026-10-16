@@ -14,7 +14,12 @@ import { queryClient, setUnauthorizedHandler } from '../../lib/query-client';
 import { getAuthToken, removeAuthToken } from '../../lib/token';
 import { AuthContext } from './auth-context';
 import { authReducer, initialState } from './auth-reducer';
-import { exchangeOAuthCode, loginRequest, logoutLocal } from './auth-actions';
+import {
+  exchangeOAuthCode,
+  loginRequest,
+  logoutLocal,
+  logoutRequest,
+} from './auth-actions';
 import type { User } from './auth-types';
 import { useMeQuery } from './auth-queries';
 
@@ -96,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Best effort: the sign-out below must work offline or with an already
+    // expired token (the call would 401), so a failure is deliberately dropped.
+    logoutRequest().catch(() => undefined);
     logoutLocal();
     dispatch({ type: 'logout' });
   }, []);

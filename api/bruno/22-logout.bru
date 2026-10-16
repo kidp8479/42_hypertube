@@ -1,0 +1,24 @@
+meta {
+  name: 22 Logout with token -> 204
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Stateless no-op (ADR-0008). The token stays valid afterwards, which is why
+  the cleanup request below can still reuse it.
+}
+
+assert {
+  res.status: eq 204
+}

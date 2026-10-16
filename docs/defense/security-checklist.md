@@ -72,8 +72,8 @@ the id checked for ownership comes from the verified token
 | Token payload carries only `sub` (user id); profile / roles fetched per request, never trusted from the token | `auth.service.ts` `login()`, `jwt.strategy.ts` `validate()` | ADR-0002 |
 | `JWT_SECRET` >= 32 chars, and the `.env.example` placeholder is rejected at boot | `config/env.validation.ts` | `config/env.validation.spec.ts` |
 | Signing key asserted present at startup, not lazily | `jwt.strategy.ts` `config.getOrThrow('JWT_SECRET')` | |
-| One-click logout (client-side token + query-cache discard) | `frontend/src/features/auth/` | `frontend/src/features/auth/auth-provider.test.tsx` |
-| Server-side token invalidation on logout | stateless JWT, not implemented | **gap - HYP-35**, decision pending in `docs/adr/README.md` |
+| One-click logout (`POST /auth/logout`, then client-side token + query-cache discard) | `auth.controller.ts`, `frontend/src/features/auth/` | `auth/auth.logout.spec.ts`, `frontend/src/features/auth/auth-provider.test.tsx` |
+| Server-side token invalidation on logout | stateless JWT, deliberately not implemented | **accepted limit** - ADR-0008, `docs/defense/known-limitations.md` |
 | Token TTL | `JWT_EXPIRES_IN` default `15m` | `env.validation.ts` |
 
 ## 5b. OAuth sign-in (42, GitHub)
@@ -154,7 +154,7 @@ store is only needed once more than one backend instance runs (noted in
 | Register leaks account existence via `409` vs `201` status code | HYP-50 | medium - throttled, but real |
 | No CSP / Helmet response headers | HYP-49 (HYP-28 is an older duplicate) | medium |
 | No TypeORM migrations (still `synchronize`) | ADR-planned | medium before defense |
-| No server-side logout / token revocation | HYP-35 | low (short TTL) |
+| No server-side logout / token revocation | ADR-0008 (accepted) | low (short TTL) |
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |
 | `GET /users` exposes all basic profile fields to any member | backlog | low - review |
