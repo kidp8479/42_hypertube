@@ -1,0 +1,15 @@
+meta {
+  name: 21 Logout without token -> 401
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}
