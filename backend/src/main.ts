@@ -6,6 +6,11 @@ import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { QueryFailedFilter } from './common/filters/query-failed.filter';
 
+/**
+ * Backend entry point: builds the Nest app, registers the global pipe,
+ * interceptor, filter and CORS policy, serves the Swagger UI, then listens.
+ * Everything that applies to every route is set here and nowhere else.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
