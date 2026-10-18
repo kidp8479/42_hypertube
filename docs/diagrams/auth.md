@@ -111,7 +111,7 @@ sequenceDiagram
     else any failure
         A-->>B: 302 FRONTEND_ORIGIN/oauth/callback?error=cancelled | email_unverified | failed
     end
-    Note over A,B: every callback redirect carries Referrer-Policy: no-referrer
+    Note over A,B: every callback redirect carries Referrer-Policy: no-referrer<br/>and expires the oauth_state cookie, whether the callback passed or failed
 ```
 
 ## 4. OAuth identity linking (HYP-11)
