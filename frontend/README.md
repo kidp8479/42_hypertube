@@ -11,9 +11,9 @@ is recorded in [ADR-0006](../docs/adr/0006-frontend-architecture.md).
 src/
 ├── main.tsx          # entry point
 ├── App.tsx           # the single route table (public routes + <RequireAuth> subtree)
-├── app/              # provider stack
-├── features/auth/    # auth state machine, guard, auth pages (login, register, OAuth)
-├── lib/              # fetch wrapper (apiFetch), token accessor, QueryClient
+├── app/              # provider stack, language switcher and sync
+├── features/auth/    # auth state machine, guard, auth pages (login, register, OAuth), auth strings (en/fr)
+├── lib/              # fetch wrapper (apiFetch), token accessor, QueryClient, i18n setup and language rules
 └── test/             # Vitest setup and shared fixtures
 e2e/                  # Playwright specs (real browser, against a running stack)
 ```

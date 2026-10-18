@@ -11,7 +11,7 @@ directly, so there is nothing to export.
 
 | Domain | Page | Covers |
 |---|---|---|
-| Auth | [`auth.md`](auth.md) | overview, register (frontend), SPA session states, OAuth handshake, OAuth identity linking |
+| Auth | [`auth.md`](auth.md) | overview, register (frontend), SPA session states, OAuth handshake, OAuth identity linking, OAuth callback page (frontend), logout |
 | Language | [`i18n.md`](i18n.md) | overview, which language wins, switching, registration |
 
 Domains still to come, each with its own page once built: video library
