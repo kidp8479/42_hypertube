@@ -1,3 +1,5 @@
+// Unit spec for CookieStateStore: the OAuth state nonce is bound to the browser
+// by a cookie, checked on the callback and cleared either way (login CSRF).
 import type { Request } from 'express';
 import { CookieStateStore, OAUTH_STATE_COOKIE } from './cookie-state.store';
 

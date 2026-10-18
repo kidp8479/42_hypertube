@@ -1,3 +1,4 @@
+// Unit spec for OAuthExchangeService: single-use, short-lived codes.
 import { OAuthExchangeService } from './oauth-exchange.service';
 
 describe('OAuthExchangeService', () => {

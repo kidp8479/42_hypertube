@@ -1,3 +1,5 @@
+// Spec for useLanguageSync: which language wins at startup, and <html lang>
+// following every change.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';

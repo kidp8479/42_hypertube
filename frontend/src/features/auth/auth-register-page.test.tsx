@@ -1,3 +1,5 @@
+// Spec for RegisterPage: client-side validation, submit in the visitor
+// language, 409 conflict and generic errors, and the redirect to /login.
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

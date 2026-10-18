@@ -1,3 +1,5 @@
+// Spec for the auth actions with network side effects: register payload and
+// the OAuth code exchange error mapping.
 import { describe, it, expect, vi } from 'vitest';
 
 // Replace only `apiFetch`; keep the real `ApiError` class so `instanceof`

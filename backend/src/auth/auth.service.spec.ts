@@ -1,3 +1,5 @@
+// Unit spec for AuthService: credential checks, token minting, and the OAuth
+// identity -> local user resolution (linking, password revocation, races).
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';

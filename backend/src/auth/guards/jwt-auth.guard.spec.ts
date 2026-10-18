@@ -1,3 +1,5 @@
+// Spec for JwtAuthGuard: the @Public() bypass in isolation, then the guard
+// wired globally over HTTP (401 without a valid token, 200 with one).
 import {
   Controller,
   ExecutionContext,

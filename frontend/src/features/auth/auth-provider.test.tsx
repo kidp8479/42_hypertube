@@ -1,3 +1,5 @@
+// Spec for AuthProvider: bootstrap from a stored token, login (password and
+// OAuth code) with token rollback on failure, logout, and the 401 safety net.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

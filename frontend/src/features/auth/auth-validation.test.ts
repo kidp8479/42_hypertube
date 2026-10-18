@@ -1,3 +1,5 @@
+// Spec for the register form rules and for the localised rendering of their
+// error codes.
 import i18n from '../../lib/i18n';
 import { describe, it, expect } from 'vitest';
 import {

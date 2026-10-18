@@ -1,3 +1,5 @@
+// Unit spec for OAuthCallbackFilter: every callback failure becomes a redirect
+// to the SPA with the right reason, and is logged at the right level.
 import {
   Controller,
   Get,

@@ -1,3 +1,5 @@
+// Spec for OAuthCallbackPage: the single-use code is exchanged once and kept
+// out of the URL, every ?error= reason has its message, no referrer leaks.
 import { StrictMode } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';

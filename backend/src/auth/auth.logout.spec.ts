@@ -1,3 +1,5 @@
+// HTTP spec for POST /auth/logout: guarded by the global JwtAuthGuard, 204
+// with no body, and nothing else happens server-side (ADR-0008).
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';

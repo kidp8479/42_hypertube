@@ -1,3 +1,4 @@
+// Vitest setup: jest-dom matchers, strict i18n keys and a clean localStorage.
 import '@testing-library/jest-dom/vitest';
 import { afterEach } from 'vitest';
 import i18n from '../lib/i18n';
