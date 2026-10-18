@@ -14,6 +14,8 @@ async function bootstrap() {
   // (what `docker stop` sends) instead of dropping them.
   app.enableShutdownHooks();
 
+  // Validates every incoming body/query against its DTO (class-validator)
+  // before the handler runs: the "validate all forms" security constraint.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // strips fields not declared in the DTO
@@ -32,9 +34,10 @@ async function bootstrap() {
     new QueryFailedFilter(app.get(HttpAdapterHost).httpAdapter),
   );
 
+  // The browser blocks cross-origin calls by default and the frontend runs
+  // on another origin, so only that one is allowed (never "*").
   app.enableCors({
     origin: config.getOrThrow<string>('FRONTEND_ORIGIN'),
-    credentials: true, // needed later for cookies / the Authorization header
   });
 
   // Swagger UI is served in every environment on purpose: /api-docs is the
