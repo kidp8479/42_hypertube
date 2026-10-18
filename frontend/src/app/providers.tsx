@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { queryClient } from '../lib/query-client';
 import { AuthProvider } from '../features/auth/auth-provider';
 
+/** Wraps the app in the shared providers, in the order described above. */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>

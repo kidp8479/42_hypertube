@@ -78,6 +78,7 @@ function RegisterInput({
   );
 }
 
+/** The `/register` page: the sign-up form, validated client-side before submit. */
 export function RegisterPage() {
   const { t, i18n } = useTranslation('auth');
   const { state } = useAuth();

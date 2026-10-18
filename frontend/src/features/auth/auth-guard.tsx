@@ -4,6 +4,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './auth-context';
 
+/** Layout route that only lets authenticated users through to its children. */
 export function RequireAuth() {
   const { state } = useAuth();
 

@@ -13,6 +13,11 @@ import { AuthModule } from './auth/auth.module';
 import { envValidationSchema } from './config/env.validation';
 import { scaledThrottleLimit } from './config/throttle.config';
 
+/**
+ * Root module: validated config, the database connection, the global guards
+ * (rate limit, then JWT) and the feature modules. Everything else hangs off
+ * this one.
+ */
 @Module({
   imports: [
     ConfigModule.forRoot({
