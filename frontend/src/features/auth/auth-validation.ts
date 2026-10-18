@@ -1,3 +1,6 @@
+// Client-side rules for the register form. They only save a round trip: the
+// backend DTO (CreateUserDto) stays the authority, so the length limits below
+// mirror its @Length / @MaxLength values and must move with them.
 import type { TFunction } from 'i18next';
 
 export type RegisterField =
@@ -22,6 +25,8 @@ export type ValidationError =
   | { code: 'mismatch' };
 export type RegisterErrors = Partial<Record<RegisterField, ValidationError>>;
 
+// Deliberately loose (something@something.tld): a stricter pattern would
+// reject valid addresses, and the backend's @IsEmail has the final say.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validateEmail(email: string): ValidationError | undefined {

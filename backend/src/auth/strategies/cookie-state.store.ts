@@ -13,6 +13,8 @@ type VerifyCallback = (
 ) => void;
 
 const STATE_COOKIE_PATH = '/auth';
+// Long enough for a user to sign in and consent at the provider, short
+// enough that an abandoned handshake does not leave a live nonce around.
 const STATE_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
 
 const readCookie = (header: string | undefined, name: string) =>
@@ -70,6 +72,7 @@ export class CookieStateStore {
       sameSite: 'lax',
       path: STATE_COOKIE_PATH,
       maxAge: STATE_COOKIE_MAX_AGE_MS,
+      // Secure needs HTTPS, which the local dev stack does not have.
       secure: process.env.NODE_ENV === 'production',
     });
     callback(null, nonce);

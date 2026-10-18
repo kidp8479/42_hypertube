@@ -143,9 +143,10 @@ export class UsersService {
 
   /**
    * Applies a partial update by id and returns the saved row. Goes
-   * through `preload` + `save` (not `repository.update`) so entity
-   * lifecycle hooks run on the change. Throws {@link NotFoundException}
-   * (404) when the id matches no row.
+   * through `preload` + `save` (not `repository.update`) because `preload`
+   * resolves to `undefined` for an unknown id, which is what lets us answer
+   * 404 instead of silently updating nothing. Throws
+   * {@link NotFoundException} (404) when the id matches no row.
    */
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.preload({ id, ...updateUserDto });

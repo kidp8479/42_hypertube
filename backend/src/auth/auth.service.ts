@@ -1,4 +1,5 @@
-// Credential checking and token issuance, used by AuthController.
+// Credential checking, token issuance and OAuth account resolution, used by
+// AuthController.
 import {
   Injectable,
   NotFoundException,
@@ -19,8 +20,9 @@ import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { UNIQUE_VIOLATION } from '../common/filters/query-failed.filter';
 
 /**
- * Credential verification for the login flow. Sits on top of
- * {@link UsersService} and never touches the repository directly.
+ * Credential verification and token issuance for the login flow, plus the
+ * OAuth identity -> local user resolution. Goes through {@link UsersService}
+ * for `User` rows; it only holds the `OAuthAccount` repository itself.
  */
 @Injectable()
 export class AuthService implements OnModuleInit {

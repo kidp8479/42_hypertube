@@ -28,6 +28,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: DEFAULT_LANGUAGE,
   supportedLngs: SUPPORTED_LANGUAGES,
   defaultNS: 'auth',
+  // React already escapes what it renders; escaping here too would double-encode.
   interpolation: { escapeValue: false },
 });
 

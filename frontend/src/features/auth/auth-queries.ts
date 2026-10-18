@@ -16,7 +16,8 @@ function retryBootstrap(failureCount: number, error: unknown) {
 
 /**
  * Bootstrap identity check: skipped entirely (`enabled: false`) when there's
- * no stored token, and never retried on failure.
+ * no stored token, and retried only on a transient failure (network drop or
+ * 5xx, see `retryBootstrap`).
  *
  * Fetched once, on load. After that AuthProvider owns the identity - it seeds
  * this cache entry on login, clears it on logout, and the global 401 net
