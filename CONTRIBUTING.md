@@ -349,10 +349,26 @@ the body/logs.
 
 ## Doc comments
 
-Public surface (exported classes/methods, controllers, entities, scripts
-called from outside) gets a doc comment; obvious private code does not.
-Comment the *why*, not the *what* - a line restating the identifier name
-earns nothing.
+**Every class has a `/** */` doc comment**, with no exception for how
+trivial it looks: modules, controllers, services, entities, DTOs,
+strategies, guards, filters, exception classes. The same goes for every
+React component. A defense reviewer and a developer onboarding on the
+project both start from "what is this and why is it here"; the class
+comment is the one place that answers it without opening the body. A module
+or a one-method service still earns one line (its role and what it hands
+to the rest of the app), never a restatement of its name.
+
+Below the class, public surface (exported functions, public methods, HTTP
+routes, scripts called from outside) gets a doc comment; obvious private
+code does not. Comment the *why*, not the *what* - a line restating the
+identifier name earns nothing.
+
+The `//` header at the top of a file stays: it says what the *file* is for,
+the class comment says what the *class* is for.
+
+Syntax: `/** */` on declarations (class, method, function, exported
+constant), because Compodoc reads it. `//` for comments inside a function
+body or on a call (ex: the bootstrap in `main.ts`).
 
 Prose carries the intent. JSDoc tags are added **only when they state
 something the TypeScript signature does not**:
