@@ -1,0 +1,59 @@
+# Rendered by the nginx image's envsubst step: only ${...} variables that are
+# set in the container environment are replaced, nginx's own $variables stay.
+
+server_tokens off;
+
+# Plain HTTP only redirects. The public HTTPS port is the one published on the
+# host (it may not be 443), so the redirect target comes from the environment.
+server {
+    listen 8080;
+    server_name _;
+    return 301 https://$host:${PROXY_PUBLIC_HTTPS_PORT}$request_uri;
+}
+
+server {
+    listen 8443 ssl;
+    server_name _;
+
+    ssl_certificate     /etc/nginx/certs/tls.crt;
+    ssl_certificate_key /etc/nginx/certs/tls.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    # Edge headers. HSTS is keyed on the host name, not the port: sent from
+    # https://localhost it would make the browser upgrade every other
+    # localhost port (the direct backend and Vite ports) to HTTPS. It is
+    # therefore off (max-age=0) unless PROXY_HSTS_MAX_AGE is set for a real
+    # deployment. Referrer-Policy is left to the backend, which sets it where
+    # it matters (the OAuth callback); an edge value would be a second header.
+    add_header Strict-Transport-Security "max-age=${PROXY_HSTS_MAX_AGE}" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+
+    # API: same contract as the Vite dev proxy, /api/<path> reaches the
+    # backend as /<path> (the trailing slash on proxy_pass strips the prefix).
+    location /api/ {
+        proxy_pass http://backend:3000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Swagger UI and its schema live at the backend root, not under /api.
+    location /api-docs {
+        proxy_pass http://backend:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Everything else is the SPA. The upgrade headers carry Vite's HMR
+    # websocket in dev.
+    location / {
+        proxy_pass http://frontend:5173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
