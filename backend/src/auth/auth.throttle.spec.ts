@@ -10,6 +10,7 @@ import { App } from 'supertest/types';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 // The @Throttle limit on POST /auth/login only takes effect over HTTP
 // through ThrottlerGuard, so this drives a real request pipeline with a
@@ -25,6 +26,7 @@ describe('POST /auth/login throttling', () => {
         { provide: AuthService, useValue: { validateUser: jest.fn() } },
         // Only the OAuth callbacks use these; login never touches them.
         { provide: OAuthExchangeService, useValue: {} },
+        { provide: RefreshTokenService, useValue: { issue: jest.fn() } },
         { provide: ConfigService, useValue: {} },
         { provide: APP_GUARD, useClass: ThrottlerGuard },
       ],

@@ -1,0 +1,41 @@
+meta {
+  name: 29 Refresh rotates the token
+  type: http
+  seq: 29
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: refresh_token={{refreshFirst}}
+}
+
+script:post-response {
+  const fromSetCookie = (res) => {
+    const cookie = (res.headers["set-cookie"] || []).find((c) => c.startsWith("refresh_token="));
+    return cookie ? cookie.split(";")[0].slice("refresh_token=".length) : undefined;
+  };
+  bru.setVar("refreshSecond", fromSetCookie(res));
+}
+
+docs {
+  The cookie token is consumed and the answer carries the next one, with a new
+  access token. The public route needs no Authorization header: the cookie is
+  the credential.
+}
+
+assert {
+  res.status: eq 200
+  res.body.access_token: isString
+}
+
+tests {
+  test("hands back a different refresh token", function () {
+    expect(bru.getVar("refreshSecond")).to.be.a("string");
+    expect(bru.getVar("refreshSecond")).to.not.equal(bru.getVar("refreshFirst"));
+  });
+}

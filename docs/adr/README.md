@@ -25,9 +25,10 @@ might ask us to justify.
 | [0005](0005-lint-complexity-budget.md) | Lint complexity budget as an anti-slop net | accepted |
 | [0006](0006-frontend-architecture.md) | Frontend architecture: declarative routing, feature folders, split state | accepted |
 | [0007](0007-oauth-identity-linking-and-second-provider.md) | OAuth identity linking, GitHub as the second provider | accepted |
-| [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted |
+| [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted, revocation superseded by 0011 |
 | [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted |
 | [0010](0010-typeorm-migrations-build-the-schema.md) | TypeORM migrations build the schema, `synchronize` is off | accepted |
+| [0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md) | Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session | accepted (backend; SPA side HYP-78) |
 
 ## Planned
 

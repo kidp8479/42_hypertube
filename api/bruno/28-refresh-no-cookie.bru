@@ -1,0 +1,15 @@
+meta {
+  name: 28 Refresh without a cookie -> 401
+  type: http
+  seq: 28
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

@@ -1,0 +1,30 @@
+meta {
+  name: 32 Session: log in again
+  type: http
+  seq: 32
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "sess-{{runId}}@example.com",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+script:post-response {
+  const fromSetCookie = (res) => {
+    const cookie = (res.headers["set-cookie"] || []).find((c) => c.startsWith("refresh_token="));
+    return cookie ? cookie.split(";")[0].slice("refresh_token=".length) : undefined;
+  };
+  bru.setVar("refreshThird", fromSetCookie(res));
+}
+
+assert {
+  res.status: eq 200
+}

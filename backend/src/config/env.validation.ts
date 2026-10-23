@@ -54,6 +54,13 @@ export const envValidationSchema = Joi.object({
     .pattern(/^\d+(s|m|h|d)$/)
     .default('15m'),
 
+  // Refresh-token lifetime (HYP-77), same format. Sliding: every rotation
+  // issues a fresh window, so this is how long a session may sit idle. The
+  // absolute cap per login is fixed in code, not configured.
+  REFRESH_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+(s|m|h|d)$/)
+    .default('7d'),
+
   // Dev-only knob: multiplies every rate limit (see config/throttle.config.ts).
   // Pinned to 1 in production so a stray value can never loosen the limits.
   THROTTLE_LIMIT_MULTIPLIER: Joi.number()

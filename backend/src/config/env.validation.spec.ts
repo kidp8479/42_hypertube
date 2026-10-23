@@ -31,6 +31,23 @@ describe('envValidationSchema', () => {
     expect(error?.message).toMatch(/JWT_SECRET/);
   });
 
+  it('defaults the refresh token lifetime to 7 days', () => {
+    const { value } = envValidationSchema.validate(base) as {
+      value: { REFRESH_EXPIRES_IN: string };
+    };
+
+    expect(value.REFRESH_EXPIRES_IN).toBe('7d');
+  });
+
+  it('rejects a refresh token lifetime that is not <number><s|m|h|d>', () => {
+    const { error } = envValidationSchema.validate({
+      ...base,
+      REFRESH_EXPIRES_IN: 'a week',
+    });
+
+    expect(error?.message).toMatch(/REFRESH_EXPIRES_IN/);
+  });
+
   it('rejects a missing JWT_SECRET', () => {
     const { JWT_SECRET, ...withoutSecret } = base;
     void JWT_SECRET;

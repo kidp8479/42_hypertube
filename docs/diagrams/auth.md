@@ -9,7 +9,7 @@ Decisions behind it: [ADR-0001](../adr/0001-hash-passwords-with-argon2id.md)
 [ADR-0002](../adr/0002-jwt-bearer-tokens-for-authentication.md) (JWT bearer),
 [ADR-0006](../adr/0006-frontend-architecture.md) (frontend state),
 [ADR-0007](../adr/0007-oauth-identity-linking-and-second-provider.md) (OAuth),
-[ADR-0008](../adr/0008-client-side-logout-with-short-lived-jwt.md) (logout).
+[ADR-0011](../adr/0011-rotating-refresh-tokens-in-an-httponly-cookie.md) (refresh tokens, logout).
 The backend legs are also drawn as one poster in
 [`auth-flow.png`](auth-flow.png), and the logout alone in
 [`auth-logout.png`](auth-logout.png) (Excalidraw sources next to them).
@@ -32,15 +32,17 @@ flowchart TD
     exch -- "access_token" --> token
     token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>+ ownership check on writes"]
     jwt --> routes["every other route"]
+    token -. "expired" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
+    refresh -- "access_token" --> token
 
-    out["SPA - logout button"] --> postLogout["API - POST /auth/logout<br/>204, stateless no-op"]
+    out["SPA - logout button"] --> postLogout["API - POST /auth/logout<br/>revokes the session, 204"]
     out -- "discarded" --> token
 
     classDef spa fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef api fill:#ede9fe,stroke:#7c3aed,color:#3b0764
     classDef ext fill:#f3f4f6,stroke:#6b7280,color:#111827
     class reg,login,btns,cbpage,token,out spa
-    class postUsers,postLogin,oLogin,oCb,exch,jwt,postLogout api
+    class postUsers,postLogin,oLogin,oCb,exch,jwt,postLogout,refresh api
     class prov,routes ext
 ```
 
@@ -170,12 +172,33 @@ the error messages are translation keys (`oauthCallback.errors.<code>`),
 with the English and French texts in `auth-locale-en.ts` / `auth-locale-fr.ts`
 (HYP-56).
 
-## 6. Logout (HYP-35)
+## 6. Staying logged in: refresh and rotation (HYP-77)
 
-Logout is client-side (ADR-0008): the backend keeps no session, so
-`POST /auth/logout` clears nothing there. The SPA calls it best effort and
-signs out locally whatever the answer, so the button works offline or with
-an already expired token.
+Login and the OAuth exchange hand out two things: the access token in the body
+(15 minutes) and a **refresh token in an `HttpOnly` cookie** (7 days, 30 at
+most). When the access token expires, `POST /auth/refresh` trades the cookie for
+a new access token **and the next cookie**: each refresh token works once.
+
+```mermaid
+flowchart TD
+    A["POST /auth/refresh<br/>(cookie only, no Bearer)"] --> B{"token known, alive,<br/>not revoked?"}
+    B -- no --> X["401 + clear the cookie"]
+    B -- yes --> C{"already used?"}
+    C -- "no" --> OK["mark it used, issue the next one<br/>200 + new access token + new cookie"]
+    C -- "yes, under 10 s ago<br/>(two tabs, a retry)" --> OK
+    C -- "yes, longer ago<br/>= a copy was stolen" --> R["revoke the whole session<br/>401 (the legitimate holder too)"]
+```
+
+Only the token's SHA-256 is stored, grouped by session (`familyId`). Until the
+SPA side lands (HYP-78) the SPA still keeps the access token in `localStorage`
+and does not refresh: the cookie is set but unused.
+
+## 7. Logout (HYP-35, HYP-77)
+
+`POST /auth/logout` is public and driven by the cookie, so it works with an
+expired access token: it revokes the whole session, clears the cookie and
+answers 204, even when there is nothing to revoke. The SPA calls it best effort
+and signs out locally whatever the answer.
 
 ```mermaid
 sequenceDiagram
@@ -183,14 +206,15 @@ sequenceDiagram
     participant S as SPA (AuthProvider)
     participant A as Backend
     U->>S: click "Log out"
-    S->>A: POST /auth/logout (Bearer token)
+    S->>A: POST /auth/logout (the browser adds the refresh cookie)
     Note over S: no await, the answer is ignored
     S->>S: remove token, clear query cache
     S->>S: dispatch logout (state: anonymous)
-    A-->>S: 204 (or 401 / network error, dropped)
+    A->>A: revoke the session of the cookie token
+    A-->>S: 204 + clear the cookie (or an error, dropped)
     S-->>U: RequireAuth redirects to /login
 ```
 
-The token itself is not revoked: a copy taken before logout stays valid
-until `JWT_EXPIRES_IN` (15 minutes by default). Listed in
+An access token copied before logout still works until it expires (15 minutes),
+but nothing can renew it. Listed in
 [`known-limitations.md`](../defense/known-limitations.md).

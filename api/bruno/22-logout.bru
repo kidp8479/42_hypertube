@@ -1,5 +1,5 @@
 meta {
-  name: 22 Logout with token -> 204
+  name: 22 Logout with an access token only -> 204
   type: http
   seq: 22
 }
@@ -15,8 +15,9 @@ auth:bearer {
 }
 
 docs {
-  Stateless no-op (ADR-0008). The token stays valid afterwards, which is why
-  the cleanup request below can still reuse it.
+  No refresh cookie is sent here, so nothing is revoked. The access token stays
+  valid (it is stateless, only the refresh token is revocable), which is why the
+  cleanup request below can still reuse it. The session logout is 33.
 }
 
 assert {

@@ -25,3 +25,16 @@ assert {
   res.status: eq 200
   res.body.access_token: isString
 }
+
+tests {
+  test("starts a session: an HttpOnly, SameSite=Strict refresh cookie", function () {
+    const cookie = (res.headers["set-cookie"] || []).find((c) => c.startsWith("refresh_token="));
+    expect(cookie).to.be.a("string");
+    expect(cookie).to.include("HttpOnly");
+    expect(cookie).to.include("SameSite=Strict");
+  });
+
+  test("keeps the refresh token out of the body", function () {
+    expect(JSON.stringify(res.body)).to.not.include("refresh");
+  });
+}

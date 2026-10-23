@@ -1,0 +1,24 @@
+meta {
+  name: 31 After reuse the whole session is cut -> 401
+  type: http
+  seq: 31
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: refresh_token={{refreshSecond}}
+}
+
+docs {
+  The legitimate, newer token is dead too: seeing a consumed token again means
+  two parties hold copies, so the session ends for both.
+}
+
+assert {
+  res.status: eq 401
+}

@@ -1,0 +1,30 @@
+meta {
+  name: 26 Session: register a user for the refresh scenario
+  type: http
+  seq: 26
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "sess-{{runId}}@example.com",
+    "username": "sess-{{runId}}",
+    "firstName": "Grace",
+    "lastName": "Hopper",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+docs {
+  Requests 26 to 34 walk a session through its life on their own user: login,
+  refresh (rotation), reuse of a rotated token, logout (ADR-0011).
+}
+
+assert {
+  res.status: eq 201
+}

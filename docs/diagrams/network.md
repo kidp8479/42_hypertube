@@ -58,7 +58,7 @@ sequenceDiagram
     P-->>B: 200 + X-Content-Type-Options, X-Frame-Options
     B->>P: POST /api/auth/login
     P->>A: POST /auth/login (X-Forwarded-For, -Proto, -Prefix: /api)
-    A-->>P: 200 { access_token } (or 401)
+    A-->>P: 200 { access_token } + Set-Cookie refresh_token, Path=/api/auth, Secure (or 401)
     P-->>B: same answer, edge headers added
 ```
 

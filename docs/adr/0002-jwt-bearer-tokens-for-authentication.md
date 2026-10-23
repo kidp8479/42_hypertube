@@ -37,7 +37,8 @@ they differ in who authenticates and how.
 
 - **A JWT cannot be revoked before it expires.** Mitigations:
   - short access-token TTL, 15 minutes by default (`JWT_EXPIRES_IN`), and
-    no refresh token for now (the upgrade path is described in ADR-0008).
+    a rotating refresh token keeps the session alive and makes logout real
+    (ADR-0011); the access token itself stays stateless.
   - **One-click logout** (subject requirement): with a pure JWT, logout is
     client-side (discard the token). A true server-side invalidation needs
     a token blocklist or DB-backed refresh tokens - a deliberate,

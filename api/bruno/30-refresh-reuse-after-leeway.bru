@@ -1,0 +1,27 @@
+meta {
+  name: 30 Reusing a rotated token -> 401
+  type: http
+  seq: 30
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: refresh_token={{refreshFirst}}
+}
+
+script:pre-request {
+  // A rotated token is tolerated for 10 seconds (two tabs, a retry). Wait it out
+  // so this is read as a second copy of the token, i.e. theft. The wait is
+  // generous because the runner's sleep is not exact: 11 s was measured to be
+  // only 9.4 s between two requests once, which fell inside the tolerance.
+  await bru.sleep(15000);
+}
+
+assert {
+  res.status: eq 401
+}

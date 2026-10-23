@@ -55,7 +55,9 @@ it is public.
   state machine (three states, five events). Redux/Zustand would be a dependency
   and a pattern to learn for no gain here. `useReducer` is a React fundamental
   and keeps the transition logic pure and unit-testable without React.
-- **Token in `localStorage`, read only by the wrapper.** Keeping it out of
+- **Token in `localStorage`, read only by the wrapper** (amended by ADR-0011:
+  the access token moves to memory with HYP-78, only an `HttpOnly` refresh
+  cookie survives a reload). Keeping it out of
   React state means there is exactly one source of truth and no re-render
   storm on login/logout; the trade-off (XSS can read `localStorage`) is
   accepted for a project with a strict input-sanitisation requirement and no

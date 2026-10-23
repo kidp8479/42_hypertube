@@ -1,0 +1,31 @@
+meta {
+  name: 33 Logout revokes the session -> 204
+  type: http
+  seq: 33
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: refresh_token={{refreshThird}}
+}
+
+docs {
+  No Authorization header: logout is cookie driven and must work with an expired
+  access token.
+}
+
+assert {
+  res.status: eq 204
+}
+
+tests {
+  test("clears the cookie", function () {
+    const cookie = (res.headers["set-cookie"] || []).find((c) => c.startsWith("refresh_token="));
+    expect(cookie).to.include("Expires=Thu, 01 Jan 1970");
+  });
+}
