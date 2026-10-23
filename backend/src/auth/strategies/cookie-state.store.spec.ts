@@ -3,13 +3,18 @@
 import type { Request } from 'express';
 import { CookieStateStore, OAUTH_STATE_COOKIE } from './cookie-state.store';
 
-// Only what the store touches: req.headers.cookie and req.res.cookie() /
-// clearCookie(). No Nest module needed.
-const buildReq = (cookieHeader?: string) => {
+// Only what the store touches: req.headers (cookie and the proxy's
+// X-Forwarded-Prefix), req.secure and req.res.cookie() / clearCookie(). No
+// Nest module needed.
+const buildReq = (
+  cookieHeader?: string,
+  { prefix, secure }: { prefix?: string; secure?: boolean } = {},
+) => {
   const cookie = jest.fn();
   const clearCookie = jest.fn();
   const req = {
-    headers: { cookie: cookieHeader },
+    headers: { cookie: cookieHeader, 'x-forwarded-prefix': prefix },
+    secure,
     res: { cookie, clearCookie },
   } as unknown as Request;
   return { req, cookie, clearCookie };
@@ -39,6 +44,44 @@ describe('CookieStateStore', () => {
         maxAge: 10 * 60 * 1000,
         secure: false,
       });
+    });
+
+    it('scopes the cookie to the path the browser sees behind the edge proxy', () => {
+      const { req, cookie } = buildReq(undefined, { prefix: '/api' });
+
+      store.store(req, jest.fn());
+
+      expect(cookie).toHaveBeenCalledWith(
+        OAUTH_STATE_COOKIE,
+        expect.any(String),
+        expect.objectContaining({ path: '/api/auth' }),
+      );
+    });
+
+    it('ignores a forwarded prefix that is not a plain path', () => {
+      const { req, cookie } = buildReq(undefined, {
+        prefix: '/../x; Domain=a',
+      });
+
+      store.store(req, jest.fn());
+
+      expect(cookie).toHaveBeenCalledWith(
+        OAUTH_STATE_COOKIE,
+        expect.any(String),
+        expect.objectContaining({ path: '/auth' }),
+      );
+    });
+
+    it('is Secure when the request reached the backend over HTTPS (behind the proxy)', () => {
+      const { req, cookie } = buildReq(undefined, { secure: true });
+
+      store.store(req, jest.fn());
+
+      expect(cookie).toHaveBeenCalledWith(
+        OAUTH_STATE_COOKIE,
+        expect.any(String),
+        expect.objectContaining({ secure: true }),
+      );
     });
 
     it('fails instead of crashing when the request carries no response', () => {
@@ -102,6 +145,18 @@ describe('CookieStateStore', () => {
           path: '/auth',
         }),
       );
+    });
+
+    it('clears the cookie under the same prefixed path it was set on', () => {
+      const { req, clearCookie } = buildReq(`${OAUTH_STATE_COOKIE}=abc123`, {
+        prefix: '/api',
+      });
+
+      store.verify(req, 'abc123', jest.fn());
+
+      expect(clearCookie).toHaveBeenCalledWith(OAUTH_STATE_COOKIE, {
+        path: '/api/auth',
+      });
     });
   });
 });
