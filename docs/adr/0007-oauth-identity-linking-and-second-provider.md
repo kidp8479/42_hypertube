@@ -108,7 +108,7 @@ Options considered:
 
 Cookie attributes: `HttpOnly`, `SameSite=Lax` (the callback is a
 top-level GET navigation from the provider, which Lax sends), `Secure`
-outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
+in production only, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
 callback that carries a `code`, whether the check passes or not. When the
 provider redirects back with `?error=...` (consent denied), Passport stops
 before checking the state, so the store never runs; `OAuthCallbackFilter`
@@ -133,10 +133,11 @@ Replaces the JWT-in-the-body response, as decided above:
   instance, same reasoning as the rate limiter, no Redis. It holds the
   user id, not a JWT, so the real token is minted only at exchange time.
 - TTL: 60 seconds. Deleted on first use, and expired entries are swept
-  on access.
+  each time a new code is issued (no timer).
 - `POST /auth/oauth/exchange` with `{ code }`, `@Public()` and throttled
-  like `/auth/login`, answers `{ access_token }` or 401 for an unknown,
-  used or expired code (same answer for all three).
+  (10 per minute, against 5 for `/auth/login`), answers
+  `{ access_token }` or 401 for an unknown, used or expired code (same
+  answer for all three).
 
 ### Consequences
 
