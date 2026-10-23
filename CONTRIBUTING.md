@@ -105,8 +105,17 @@ push and pull request, alongside a secret scan
 (`.github/workflows/gitleaks.yml`).
 
 `make verify` runs the whole local gate in one go (format-check, lint-check,
-typecheck, test, build) and is the command to run before declaring a change
-ready - it mirrors what CI checks, minus the e2e job.
+typecheck, test, build, check-docs) and is the command to run before
+declaring a change ready - it mirrors what CI checks, minus the e2e job.
+
+`make check-docs` (`scripts/check-docs.mjs`, the `docs` CI job) is the doc
+drift check: relative links resolve, no em / en dash, every variable the
+backend requires is wired in compose, `.env.example` and the e2e job, the
+ADR and diagram indexes list everything, each `.excalidraw` has its `.png`,
+and every `METHOD /path` cited in the docs is declared by a controller **and**
+called by a request of `api/bruno/`. A route cited before it is built goes in
+the `PLANNED` list of `scripts/doc-checks/routes.mjs`. It names the file and
+line of each problem.
 
 `lint:check` runs with `--max-warnings 0`. On top of the usual rules it
 enforces a complexity / size budget (function length, nesting depth,

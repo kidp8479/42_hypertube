@@ -6,6 +6,19 @@ on:
   pull_request:
 
 jobs:
+  # Doc drift (HYP-70): deterministic checks over the tracked files, no
+  # dependency to install. Not a required check on `main` until the branch
+  # protection lists it.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: node --test "scripts/**/*.test.mjs"
+      - run: node scripts/check-docs.mjs
+
   backend:
     runs-on: ubuntu-latest
     defaults:
