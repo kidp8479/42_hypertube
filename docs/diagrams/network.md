@@ -57,7 +57,7 @@ sequenceDiagram
     B->>P: GET http://localhost:8080/login
     P-->>B: 301 https://localhost:8443/login
     B->>P: GET https://localhost:8443/login (TLS, self-signed)
-    P->>F: GET /login
+    P->>F: forwards /login (a SPA route, not an API route)
     F-->>P: index.html
     P-->>B: 200 + X-Content-Type-Options, X-Frame-Options
     B->>P: POST /api/auth/login
