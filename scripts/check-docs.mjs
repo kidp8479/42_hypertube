@@ -9,12 +9,14 @@ import { checkDashes } from './doc-checks/dashes.mjs';
 import { checkEnv } from './doc-checks/env.mjs';
 import { checkIndexes } from './doc-checks/indexes.mjs';
 import { checkLinks } from './doc-checks/links.mjs';
+import { checkRoutes } from './doc-checks/routes.mjs';
 
 const CHECKS = [
   ['relative links', checkLinks],
   ['dashes', checkDashes],
   ['env variables', checkEnv],
   ['doc indexes and renders', checkIndexes],
+  ['routes: controller and Bruno request', checkRoutes],
 ];
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
