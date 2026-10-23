@@ -38,7 +38,7 @@ Hypertube/
 ├── frontend/           # React SPA (Dockerfile: dev + prod stages, nginx.conf for prod)
 ├── api/bruno/          # Bruno request collection (manual + assertion-checked API calls)
 ├── db/init/            # optional Postgres init scripts
-├── docs/               # ADRs, defense packet, diagrams, dependency-upgrade log
+├── docs/               # ADRs, defense packet, diagrams, design mockup, dependency-upgrade log
 ├── docker-compose.yml  # db + backend + frontend (dev target)
 └── .env.example        # required environment variables, copy to .env
 ```

@@ -16,3 +16,22 @@ one `h1`, a `header` and a `main` per page) and the meaning of each colour:
 
 The React app is the source of truth once the tokens land in
 `frontend/src`; this file is not kept in sync with it.
+
+## Screens
+
+Captured from the mockup (1280 x 800). Regenerate them by opening the mockup
+and choosing the page and state in its tabs.
+
+| Sign in | Sign in, error |
+| --- | --- |
+| ![Sign in](screens/login.png) | ![Sign in with an error](screens/login-error.png) |
+
+| Register, errors | Library |
+| --- | --- |
+| ![Register with errors](screens/register-errors.png) | ![Library](screens/library.png) |
+
+| Library, loading | Video |
+| --- | --- |
+| ![Library loading](screens/library-loading.png) | ![Video page](screens/video.png) |
+
+![Video, conversion in progress](screens/video-conversion.png)
