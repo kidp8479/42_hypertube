@@ -2,7 +2,7 @@
 
 How a browser request reaches the app: one entry point that terminates TLS
 and routes to the services on the compose network. Decision:
-[ADR-0009](../adr/0009-nginx-edge-proxy-with-tls.md) (phase 1 of HYP-71).
+[ADR-0009](../adr/0009-nginx-edge-proxy-with-tls.md) (HYP-71).
 
 ## Overview
 
@@ -13,7 +13,6 @@ flowchart LR
     subgraph host["Host (loopback only)"]
         p8080[":8080 HTTP"]
         p8443[":8443 HTTPS"]
-        direct[":13000 / :15173<br/>direct ports (dev, phase 1)"]
     end
 
     subgraph net["Compose network"]
@@ -25,9 +24,6 @@ flowchart LR
 
     browser --> p8080 -- "301 to HTTPS" --> proxy
     browser --> p8443 --> proxy
-    browser -. "Bruno, e2e, host dev" .-> direct
-    direct -.-> frontend
-    direct -.-> backend
 
     proxy -- "/ (and the HMR websocket)" --> frontend
     proxy -- "/api/* (prefix stripped)" --> backend
@@ -39,12 +35,12 @@ flowchart LR
     classDef ext fill:#f3f4f6,stroke:#6b7280,color:#111827
     class proxy edge
     class frontend,backend,db svc
-    class browser,p8080,p8443,direct ext
+    class browser,p8080,p8443 ext
 ```
 
 Amber: the edge. Violet: the services. Grey: the browser and the host ports.
-Dashed: the direct ports of phase 1, which phase 2 removes so that the proxy
-is the only way in.
+The proxy is the only way in: the backend and the frontend publish no host
+port. Bruno and the e2e suite go through it too.
 
 ## 1. One request through the edge
 
@@ -61,13 +57,29 @@ sequenceDiagram
     F-->>P: index.html
     P-->>B: 200 + X-Content-Type-Options, X-Frame-Options
     B->>P: POST /api/auth/login
-    P->>A: POST /auth/login (X-Forwarded-For, X-Forwarded-Proto)
+    P->>A: POST /auth/login (X-Forwarded-For, -Proto, -Prefix: /api)
     A-->>P: 200 { access_token } (or 401)
     P-->>B: same answer, edge headers added
 ```
 
-## Not yet (phase 2)
+## 2. OAuth through the edge
 
-Direct ports unpublished, `trust proxy` in the backend (so the rate limiter
-sees the real client), Bruno and the CI e2e job behind the proxy, OAuth over
-HTTPS (callback URLs and the state cookie path).
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant P as proxy (nginx)
+    participant A as backend
+    participant O as 42 / GitHub
+    B->>P: GET /api/auth/42/login
+    P->>A: /auth/42/login (X-Forwarded-Prefix: /api)
+    A-->>B: 302 to the provider + Set-Cookie oauth_state, Path=/api/auth, Secure
+    B->>O: authorize
+    O-->>B: 302 https://localhost:8443/api/auth/42/callback?code&state
+    B->>P: callback (the cookie matches /api/auth)
+    P->>A: /auth/42/callback
+    A-->>B: 302 FRONTEND_ORIGIN/oauth/callback?code=C (https, the proxy's origin)
+```
+
+The backend trusts one proxy hop (`trust proxy`), so the rate limiter keys on
+the client address nginx appended and `req.secure` follows
+`X-Forwarded-Proto`.

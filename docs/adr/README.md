@@ -26,7 +26,7 @@ might ask us to justify.
 | [0006](0006-frontend-architecture.md) | Frontend architecture: declarative routing, feature folders, split state | accepted |
 | [0007](0007-oauth-identity-linking-and-second-provider.md) | OAuth identity linking, GitHub as the second provider | accepted |
 | [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted |
-| [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted (phase 1) |
+| [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted |
 
 ## Planned
 

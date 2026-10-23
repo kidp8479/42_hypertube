@@ -52,10 +52,10 @@ workspace for now (see `CONTRIBUTING.md` for the reasoning).
 
 ```sh
 cp .env.example .env   # first time only, fill in real values
-make up                 # Postgres on the internal network, backend on :3000, frontend on :5173
+make up                 # db, backend and frontend on the internal network, the edge proxy in front
 ```
 
-The app is served through the edge proxy at **https://localhost:8443** (self-signed certificate: accept the browser warning once; `http://localhost:8080` redirects there). The direct backend and frontend ports stay published for now (`docs/adr/0009-nginx-edge-proxy-with-tls.md`).
+The app is served only through the edge proxy at **https://localhost:8443** (self-signed certificate: accept the browser warning once; `http://localhost:8080` redirects there). The backend and the frontend publish no host port (`docs/adr/0009-nginx-edge-proxy-with-tls.md`). After pulling this change, update your `.env` (see `.env.example`): `FRONTEND_ORIGIN`, the two `*_CALLBACK_URL`, and the redirect URIs registered at 42 and GitHub.
 
 `make up` auto-detects `docker compose` vs `podman-compose` (see the Makefile) - same command works on Docker or Podman.
 

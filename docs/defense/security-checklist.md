@@ -100,7 +100,7 @@ the id checked for ownership comes from the verified token
 
 | Scope | Limit | Where |
 |---|---|---|
-| Every route, per IP | 100 / 60 s | `ThrottlerModule.forRoot` in `app.module.ts` |
+| Every route, per client IP (the address the edge proxy appended: `trust proxy`, ADR-0009) | 100 / 60 s | `ThrottlerModule.forRoot` in `app.module.ts`, `config/trust-proxy.config.ts` |
 | `POST /auth/login` | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
 | `POST /users` (register) | 10 / 3600 s | `@Throttle` on `users.controller.ts` |
 | `POST /auth/oauth/exchange` | 10 / 60 s | `@Throttle` on `auth.controller.ts` |
@@ -139,6 +139,7 @@ store is only needed once more than one backend instance runs (noted in
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
 | gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
+| TLS terminated at the edge proxy (self-signed in dev, a mounted certificate elsewhere); HTTP redirects to HTTPS; `nosniff` and frame options at the edge; HSTS only when `PROXY_HSTS_MAX_AGE` is set. CSP and helmet remain open (HYP-49) | `proxy/`, ADR-0009 |
 | CORS locked to a single configured origin (no `*`, no credentialed requests: the JWT is a bearer header) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 
 ## 11. Schema / data integrity

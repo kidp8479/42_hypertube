@@ -1,6 +1,6 @@
 # An nginx edge proxy terminates TLS in front of the app
 
-**Date:** 2026-10-23 · **Status:** accepted (phase 1 of HYP-71)
+**Date:** 2026-10-23 · **Status:** accepted
 
 The stack served plain HTTP and had no single entry point: the backend and
 the frontend each published their own host port, and in dev Vite proxied
@@ -40,21 +40,32 @@ the Vite dev proxy) and `/api-docs` to the backend.
 - **Referrer-Policy is not set at the edge.** The backend sets
   `no-referrer` on the OAuth callback; a second value from nginx would be a
   duplicate header.
-- **Phase 1 is additive: the direct ports stay published.** Bruno
-  (`make test-api`), the Playwright suite, `make dev-backend` and the CI wait
-  loop keep working unchanged, and the suite also passes through the proxy
-  (`E2E_BASE_URL=https://localhost:8443`).
+- **The proxy is the only way in.** The backend and the frontend publish no
+  host port (the database is published only by a personal override, for a DB
+  client). Bruno (`make test-api`), the Playwright suite and the CI wait loop
+  go through `https://localhost:8443`. Host dev without containers
+  (`make dev-backend`, `make dev-frontend`) is unchanged: the Vite proxy and
+  the direct backend port are still what it uses.
+- **`trust proxy` is on** (`app.set('trust proxy', 1)`, `trust-proxy.config.ts`).
+  It was left off while the direct ports were published, because a client
+  could then forge `X-Forwarded-For` and pick the address the rate limiter
+  keys on. With the proxy as the single hop, the backend takes the address
+  nginx appended and ignores whatever the client put in front of it (a spec
+  pins that).
+- **OAuth over HTTPS.** The callback URLs are
+  `https://localhost:<port>/api/auth/<provider>/callback`, registered at 42
+  and GitHub, and `FRONTEND_ORIGIN` is the proxy's origin. The proxy sends
+  `X-Forwarded-Prefix: /api` so the state cookie is scoped to the path the
+  browser sees (`/api/auth`), and the cookie is `Secure` whenever the request
+  came in over HTTPS (ADR-0007).
 
 ## Consequences
 
-- **The backend still trusts every connection as direct.** Behind the proxy
-  every request comes from the proxy's address, so the per-IP rate limiter
-  would see one client. `trust proxy` is **not** enabled yet on purpose: while
-  the direct ports are published, a client could forge `X-Forwarded-For` and
-  dodge the limits. It lands with phase 2.
-- **Phase 2** (rest of HYP-71): unpublish the direct ports so the proxy is the
-  only way in, enable `trust proxy`, move Bruno and the CI e2e job behind it,
-  and switch OAuth to HTTPS. That last part changes the callback URLs
-  registered at 42 and GitHub, and the state cookie's `Path=/auth` no longer
-  matches `/api/auth/...` behind the prefix (ADR-0007).
 - **A browser warning** on the self-signed certificate, once per browser.
+- **Existing `.env` files need an update**: `FRONTEND_ORIGIN`, the two
+  `*_CALLBACK_URL`, and the redirect URIs registered at the providers. The
+  old `HYPERTUBE_BACKEND_PORT` and `HYPERTUBE_FRONTEND_PORT` no longer do
+  anything.
+- **One more container to explain and keep in step**: a route added to the
+  backend is reachable through `/api/` with no proxy change, but a new
+  top-level path (like `/api-docs`) needs its own `location`.
