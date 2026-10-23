@@ -127,7 +127,7 @@ flowchart TD
     C -- no --> D{"email verified<br/>by the provider?"}
     D -- yes --> E{"local user with<br/>this email?"}
     D -- no --> F["create a new user"]
-    E -- yes --> G["link identity to that user;<br/>revoke its local password"]
+    E -- yes --> G["link identity to that user;<br/>revoke its local password, if it has one"]
     E -- no --> F
     F --> H["link identity to the new user"]
     G --> L
@@ -166,7 +166,9 @@ flowchart TD
 ```
 
 The page also sets `<meta name="referrer" content="no-referrer">`, and
-the error messages all go through `describeOAuthError`, ready for i18n.
+the error messages are translation keys (`oauthCallback.errors.<code>`),
+with the English and French texts in `auth-locale-en.ts` / `auth-locale-fr.ts`
+(HYP-56).
 
 ## 6. Logout (HYP-35)
 
