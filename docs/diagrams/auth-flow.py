@@ -127,7 +127,7 @@ d.text_box(
 d.text_box(
     1590,
     960,
-    "Reset password and logout: not built yet (HYP-10 follow-ups).",
+    "Logout: see auth-logout. Reset password: not built yet (HYP-34).",
     font_size=13,
     color="gray",
 )
