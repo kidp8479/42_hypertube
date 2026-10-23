@@ -113,11 +113,11 @@ merges", not every edit.
   (`JwtAuthGuard`, `@Public()`, ownership check), and sign-in with 42 or
   GitHub (state cookie, callback, single-use exchange code, token, and the
   `?error=` redirect on any callback failure).
-  Reflects HYP-10 + HYP-44 + HYP-46 + HYP-11 + HYP-53 + HYP-57. Backend
+  Reflects HYP-10 + HYP-44 + HYP-46 + HYP-11 + HYP-53 + HYP-57 + HYP-77 (the refresh cookie set at login and exchange). Backend
   legs only: the SPA side is in [`auth.md`](auth.md), adding it to the
   poster is HYP-51. Logout has its own poster (`auth-logout`, below); add
   reset-password when it is built.
-- **`auth-logout`** - the one-click logout (HYP-35, ADR-0008): the
-  not-awaited `POST /auth/logout` and the guard answering 204 or 401, the
-  local sign-out (token + query cache cleared, redirect to `/login`), and the
-  limit that the token is not revoked.
+- **`auth-logout`** - the one-click logout (HYP-35, ADR-0011): the public,
+  cookie-driven `POST /auth/logout` that revokes the refresh-token session and
+  clears the cookie (204 even with nothing to revoke), the local sign-out, and
+  the limit that an access token already issued lives out its 15 minutes.

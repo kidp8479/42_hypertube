@@ -67,15 +67,15 @@ d.text_box(
 )
 
 # ================= Column B: get a token =================
-d.text_box(830, 90, "2. Get a token   POST /auth/login", font_size=18, color="violet")
+d.text_box(830, 90, "2. Get a session   POST /auth/login", font_size=18, color="violet")
 
 cli = d.box(890, 150, "Client", color="gray", width=110, height=54)
 login = d.box(840, 250, "AuthController", color="violet", width=210, height=56)
 valid = d.box(840, 350, "validateUser()", color="blue", width=210, height=56)
 dec1 = d.box(840, 455, "credentials valid?", color="yellow", shape="diamond", width=210, height=110)
 r401 = d.box(840, 640, "401 Unauthorized", color="red", width=210, height=56)
-sign = d.box(1130, 470, "sign JWT (sub: id)", color="green", width=200, height=56)
-tok = d.box(1140, 360, "access_token", color="green", width=180, height=56)
+sign = d.box(1130, 470, "sign JWT (sub: id)\n+ refresh cookie", color="green", width=200, height=64)
+tok = d.box(1130, 340, "access_token in body\nrefresh_token in an\nHttpOnly cookie", color="green", width=200, height=84)
 
 d.arrow_between(cli, login, "email + password", from_side="bottom", to_side="top")
 d.arrow_between(login, valid, from_side="bottom", to_side="top")
@@ -168,7 +168,7 @@ YB = 1500
 exch = d.box(XS[7], YB, "POST oauth/exchange\n{ code }", color="violet", width=W, height=H)
 dec_code = d.box(XS[6], YB - 30, "code valid?\n(unused, < 60 s)", color="yellow", shape="diamond", width=W, height=120)
 sign2 = d.box(XS[5], YB, "loginById\nsign JWT (sub: id)", color="green", width=W, height=H)
-tok2 = d.box(XS[4], YB, "access_token\nto the SPA", color="green", width=W, height=H)
+tok2 = d.box(XS[4], YB, "access_token to the SPA\n+ refresh cookie", color="green", width=W, height=H)
 r401b = d.box(XS[6], 1690, "401 Unauthorized", color="red", width=W, height=H)
 
 d.arrow_between(spa, exch, "SPA loads", from_side="bottom", to_side="top")
