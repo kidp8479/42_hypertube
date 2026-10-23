@@ -88,7 +88,8 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make test-api` | Run the Bruno collection against the running backend |
 | `make build` | Production build for backend + frontend |
 | `make doc` | Generate the Compodoc backend docs into `docs/backend/` |
-| `make verify` | Full local gate: format-check, lint-check, typecheck, test, build |
+| `make check-docs` | Doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno |
+| `make verify` | Full local gate: format-check, lint-check, typecheck, test, build, check-docs |
 
 See `make help` for the up-to-date list.
 

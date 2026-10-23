@@ -27,7 +27,7 @@ PROJECT := $(notdir $(CURDIR))
         lint lint-backend lint-frontend \
         lint-check lint-check-backend lint-check-frontend \
         typecheck typecheck-backend typecheck-frontend \
-        test test-backend test-frontend test-e2e test-api build doc verify \
+        test test-backend test-frontend test-e2e test-api build check-docs doc verify \
         graphify
 
 help:
@@ -63,11 +63,12 @@ help:
 	@echo "  test             - backend + frontend unit tests"
 	@echo "  test-api         - run the Bruno request collection (api/bruno) against a running backend"
 	@echo "  build            - production build, backend + frontend"
+	@echo "  check-docs       - doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
 	@echo "  graphify         - build a local code graph into graphify-out/ (needs graphify installed, see docs/graphify-setup.md in agentic-lab)"
 	@echo ""
 	@echo "Full local gate"
-	@echo "  verify           - format-check, lint-check, typecheck, test, build (one command, read the result)"
+	@echo "  verify           - format-check, lint-check, typecheck, test, build, check-docs (one command, read the result)"
 
 # ---------------------------------------------------------------------------- #
 # Setup                                                                        #
@@ -257,7 +258,13 @@ build:
 	cd backend && npm run build
 	cd frontend && npm run build
 
-verify: format-check lint-check typecheck test build
+# Deterministic doc drift check (HYP-70): links, dashes, env variables, doc
+# indexes, cited routes vs controllers and Bruno. Its own tests run first.
+check-docs:
+	node --test "scripts/**/*.test.mjs"
+	node scripts/check-docs.mjs
+
+verify: format-check lint-check typecheck test build check-docs
 
 doc:
 	cd backend && npm run doc

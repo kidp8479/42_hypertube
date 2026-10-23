@@ -6,7 +6,7 @@ The React SPA (`frontend/`) is built on four deliberate choices, settled in a
 design and grilling session before any auth screen existed:
 
 - **Routing:** `react-router-dom` v7 in its *declarative* form (`<BrowserRouter>`
-  + a `<Routes>`/`<Route>` tree written as JSX in `src/App.tsx`). Not
+  and a `<Routes>`/`<Route>` tree written as JSX in `src/App.tsx`). Not
   file-based routing (TanStack Router, Next.js app router), not the v7
   data-router with `loader`/`action` functions.
 - **Folder layout:** by domain feature. `src/features/<domain>/` holds

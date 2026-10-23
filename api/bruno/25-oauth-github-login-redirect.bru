@@ -1,0 +1,31 @@
+meta {
+  name: 25 GitHub OAuth login -> 302 to GitHub with the state cookie
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/auth/github/login
+  body: none
+  auth: none
+}
+
+docs {
+  Start of the GitHub handshake (ADR-0007): same contract as the 42 login
+  above. Redirects are not followed so the 302 itself can be asserted.
+}
+
+settings {
+  followRedirects: false
+}
+
+assert {
+  res.status: eq 302
+  res.headers.location: contains https://github.com/login/oauth/authorize
+}
+
+tests {
+  test("binds the flow to the browser with the state cookie", function () {
+    expect(res.getHeader("set-cookie").join(";")).to.contain("oauth_state=");
+  });
+}

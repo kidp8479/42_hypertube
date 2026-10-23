@@ -11,10 +11,10 @@ land.
 
 | Document | Purpose | State |
 |----------|---------|-------|
-| [`run-guide.md`](run-guide.md) | clone -> `.env` -> `make up` -> working app, on a fresh machine | todo |
+| `run-guide.md` | clone -> `.env` -> `make up` -> working app, on a fresh machine | todo |
 | [`traceability.md`](traceability.md) | every subject requirement -> Linear issue -> code -> test; also where the eliminatory constraints live once `CLAUDE.md` is removed for the defense | ongoing |
 | [`security-checklist.md`](security-checklist.md) | mechanism-level inventory of every security control + the accepted gaps | ongoing |
-| [`rest-proof.md`](rest-proof.md) | endpoint x method x status-code table, REST constraints satisfied (subject asks for this explicitly) | todo |
+| `rest-proof.md` | endpoint x method x status-code table, REST constraints satisfied (subject asks for this explicitly) | todo |
 | Architecture diagram | containers + data flow (Excalidraw, exported PNG/SVG here) | todo |
 | ERD | database entities and relations | todo |
 | [Sequence diagrams](../diagrams/) | login, OAuth, password reset, "watch a movie" (search -> torrent -> stream) | partial - login, OAuth and logout done in `diagrams/auth.md`, language in `diagrams/i18n.md` |
