@@ -1,0 +1,68 @@
+/*
+ * Design tokens (HYP-66): the one place the visual identity is defined.
+ * Components read these variables, they never hold a colour, a size or a
+ * border width of their own.
+ *
+ * Direction: dark, near-black with a blue-green cast, no gradients or shadows,
+ * 1px monoline strokes, off-white for structure, orange and mint kept rare.
+ * One dark look on purpose, so there is no light theme to maintain (the
+ * library is full of colourful posters; a quiet frame suits them).
+ *
+ * Contrast is computed (WCAG relative luminance), not estimated. Text needs
+ * 4.5:1, a functional border 3:1; a decorative line may be lower.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --color-bg: #171a1b;
+  --color-surface: #1f2324;
+
+  /* Lines. `line` only separates (1.75:1 on bg), it is never the edge of a
+     control. `edge` is the border of an input, a chip or an idle badge
+     (3.70:1 on bg, 3.35:1 on surface). */
+  --color-line: #3b4446;
+  --color-edge: #6b7577;
+
+  /* Text and accents, contrast on bg / on surface */
+  --color-ink: #ece9e1; /* 14.42 / 13.07: text and structure */
+  --color-ink-hover: #f6f3ec; /* filled ink buttons on hover */
+  --color-muted: #9ba4a2; /* 6.85 / 6.21: secondary text, hints */
+  --color-orange: #e8873a; /* 6.63 / 6.01: a flow in progress, nothing else */
+  --color-mint: #7fc79a; /* 8.78 / 7.96: the brand, success, secondary accent */
+  --color-alert: #ff6b81; /* 6.39 / 5.79: errors only, never an accent */
+
+  /* Type. IBM Plex is named first but not bundled: no web font request, the
+     system stacks are the fallback. */
+  --font-sans:
+    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --text-xs: 0.75rem; /* 12px: labels, hints, captions */
+  --text-sm: 0.8125rem; /* 13px: buttons, alerts */
+  --text-base: 0.9375rem; /* 15px: body */
+  --text-lg: 1.5rem; /* 24px: page titles */
+  --leading-body: 1.5;
+  --leading-title: 1.2;
+
+  /* Space: a 4px base, every gap and padding is one of these. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Strokes and corners. Controls are square; only the round badge and the
+     pill chip are round. */
+  --border-width: 1px;
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-round: 50%;
+  --radius-pill: 999px;
+
+  /* Focus and targets */
+  --focus-ring: 2px solid var(--color-ink);
+  --focus-offset: 2px;
+  --target-min: 1.5rem; /* 24px, WCAG 2.2 minimum target size */
+}

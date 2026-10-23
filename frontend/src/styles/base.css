@@ -1,0 +1,73 @@
+/*
+ * Base styles (HYP-66): what every page inherits before any component adds
+ * its own. Replaces the Vite template stylesheet. Reads tokens.css only.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: 400 var(--text-base) / var(--leading-body) var(--font-sans);
+  /* Keep content off the notch on phones in landscape. */
+  padding-inline: max(var(--space-4), env(safe-area-inset-left, 0px))
+    max(var(--space-4), env(safe-area-inset-right, 0px));
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--space-4);
+  font-weight: 500;
+  line-height: var(--leading-title);
+}
+
+h1 {
+  font-size: var(--text-lg);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--color-ink);
+  text-underline-offset: 3px;
+}
+
+/* Form controls do not inherit the page font on their own. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* One focus ring for everything focusable, visible on keyboard use only. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* Muted placeholder text must still pass 4.5:1: opacity is reset because
+   browsers dim it by default. */
+::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
