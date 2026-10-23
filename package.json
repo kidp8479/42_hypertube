@@ -1,0 +1,9 @@
+{
+  "name": "hypertube-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Editor tooling only (TypeScript LSP). Not a workspace root: backend/ and frontend/ install and build on their own.",
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  }
+}
