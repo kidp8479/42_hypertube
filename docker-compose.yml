@@ -80,7 +80,9 @@ services:
     build:
       context: ./proxy
     environment:
-      # Where the HTTP -> HTTPS redirect sends the browser: the port published below.
+      # Where the HTTP -> HTTPS redirect sends the browser: this name and the
+      # port published below. Never taken from the Host header.
+      PROXY_SERVER_NAME: ${PROXY_SERVER_NAME:-localhost}
       PROXY_PUBLIC_HTTPS_PORT: ${HYPERTUBE_HTTPS_PORT:-8443}
       # 0 = no HSTS. Set it only for a real deployment: HSTS is per host name,
       # so on localhost it would force HTTPS onto every other local port.

@@ -9,6 +9,7 @@ RUN apk add --no-cache openssl
 # (only variables set in the environment) into /etc/nginx/conf.d/, and runs
 # the scripts of /docker-entrypoint.d/ before starting nginx.
 COPY templates/ /etc/nginx/templates/
+COPY snippets/ /etc/nginx/snippets/
 COPY docker-entrypoint.d/ /docker-entrypoint.d/
 RUN chmod +x /docker-entrypoint.d/*.sh
 
