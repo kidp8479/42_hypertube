@@ -1,3 +1,5 @@
+// Spec for apiFetch: body parsing, headers (token, Content-Type) and ApiError
+// on a non-ok response.
 import { describe, it, expect, vi } from 'vitest';
 import { apiFetch, ApiError } from './api';
 import { setAuthToken } from './token';

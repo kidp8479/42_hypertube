@@ -1,3 +1,4 @@
+// Spec for the stored JWT accessors.
 import { describe, it, expect } from 'vitest';
 import { getAuthToken, setAuthToken, removeAuthToken } from './token';
 

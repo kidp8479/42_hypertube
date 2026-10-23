@@ -1,3 +1,5 @@
+// Spec for LoginPage: submit, error messages, redirect when already logged in,
+// and the "account created" notice after registering.
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

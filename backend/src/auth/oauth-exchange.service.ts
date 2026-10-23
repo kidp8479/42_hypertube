@@ -2,6 +2,8 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 
+// The SPA redeems the code on page load, right after the redirect: a minute
+// is plenty, and a shorter life shrinks the window for a leaked code.
 const CODE_TTL_MS = 60 * 1000;
 
 /**

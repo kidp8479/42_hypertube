@@ -38,8 +38,8 @@ export class User {
   lastName!: string;
 
   /**
-   * Password hash (argon2/bcrypt), never the plaintext - 255 chars fit
-   * either algorithm's output. `select: false` keeps it out of normal
+   * Password hash (argon2id, ADR-0001), never the plaintext - 255 chars
+   * fit the encoded hash string. `select: false` keeps it out of normal
    * reads; fetch it deliberately (e.g. at login) with
    * `{ select: { password: true } }` or a query builder `addSelect`.
    * `@Exclude` is the second line of defence: even when the hash is
@@ -60,8 +60,8 @@ export class User {
   password!: string | null;
 
   /**
-   * Avatar URL. Nullable until the file-upload flow lands: registration
-   * currently falls back to a default avatar in UsersService.create.
+   * Avatar URL. Nullable until the file-upload flow lands: nothing sets
+   * it yet, so it stays `null` for every account.
    */
   // Explicit `type` because the `string | null` union erases the
   // reflected column type (TypeORM would otherwise see "Object").

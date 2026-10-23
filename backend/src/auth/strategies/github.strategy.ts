@@ -27,6 +27,13 @@ interface GithubEmail {
   verified: boolean;
 }
 
+/**
+ * "Continue with GitHub": runs the OAuth2 handshake with GitHub, resolves a
+ * verified primary email from `/user/emails` (the profile's own email is not
+ * proven) and normalises everything into an {@link OAuthProfile} for
+ * {@link AuthService.resolveOAuthUser}. Registered with Passport as
+ * `'github'`.
+ */
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(configService: ConfigService) {

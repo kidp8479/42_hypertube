@@ -1,3 +1,4 @@
+// Unit spec for the root liveness route.
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

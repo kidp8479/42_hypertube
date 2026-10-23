@@ -18,6 +18,11 @@ interface FortyTwoProfile {
   last_name: string;
 }
 
+/**
+ * "Continue with 42": runs the OAuth2 handshake with 42's intra, reads the
+ * profile from `/v2/me` and normalises it into an {@link OAuthProfile} for
+ * {@link AuthService.resolveOAuthUser}. Registered with Passport as `'42'`.
+ */
 @Injectable()
 export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
   constructor(configService: ConfigService) {

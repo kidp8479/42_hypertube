@@ -18,6 +18,7 @@ interface LoginLocationState {
   justRegistered?: boolean;
 }
 
+/** The `/login` page: the email + password form and the OAuth buttons. */
 export function LoginPage() {
   const { t } = useTranslation('auth');
   const { state, login } = useAuth();

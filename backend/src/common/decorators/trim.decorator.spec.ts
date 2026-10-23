@@ -1,3 +1,4 @@
+// Unit spec for @Trim.
 import { plainToInstance } from 'class-transformer';
 import { Trim } from './trim.decorator';
 

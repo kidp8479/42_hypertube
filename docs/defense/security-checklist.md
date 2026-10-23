@@ -139,7 +139,7 @@ store is only needed once more than one backend instance runs (noted in
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
 | gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
-| CORS locked to a single configured origin, `credentials: true` | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
+| CORS locked to a single configured origin (no `*`, no credentialed requests: the JWT is a bearer header) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 
 ## 11. Schema / data integrity
 

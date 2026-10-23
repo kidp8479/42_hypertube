@@ -9,6 +9,7 @@ import { HomePage } from './features/auth/auth-home-page';
 import { useLanguageSync } from './app/language-sync';
 import { LanguageSwitcher } from './app/language-switcher';
 
+/** Root component: keeps the UI language in sync, then renders the route table. */
 function App() {
   useLanguageSync();
   return (

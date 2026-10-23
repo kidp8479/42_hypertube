@@ -1,3 +1,5 @@
+// Unit spec for QueryFailedFilter: a unique violation answers 409, any other
+// query error stays a 500.
 import { Controller, Get, INestApplication } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Test } from '@nestjs/testing';

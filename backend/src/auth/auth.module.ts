@@ -1,5 +1,5 @@
-// Wires the login flow together: JwtStrategy (bearer tokens), the 42
-// OAuth strategy, AuthService, AuthController.
+// Wires the login flow together: JwtStrategy (bearer tokens), the 42 and
+// GitHub OAuth strategies, AuthService, OAuthExchangeService, AuthController.
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';

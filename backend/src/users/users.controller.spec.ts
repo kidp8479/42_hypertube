@@ -1,3 +1,5 @@
+// Unit spec for UsersController: ownership checks (403) on update and remove,
+// and findMe. Service calls are mocked.
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthUser } from '../auth/decorators/current-user.decorator';

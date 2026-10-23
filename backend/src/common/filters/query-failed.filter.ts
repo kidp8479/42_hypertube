@@ -9,7 +9,7 @@ export const UNIQUE_VIOLATION = '23505';
 /**
  * Turns a Postgres unique-violation into a 409 instead of letting it
  * surface as an unhandled 500 that also dumps the SQL error to the logs
- * (hit today on a duplicate email/username at registration).
+ * (e.g. a duplicate email/username at registration).
  *
  * The message stays generic - it must not reveal which value clashed
  * (account enumeration). HYP-50 replaces this with a uniform-response

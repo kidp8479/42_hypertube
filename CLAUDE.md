@@ -92,10 +92,12 @@ and additions specific to this project:
   (`cookie-state.store.ts`, `fortytwo.strategy.ts`), frontend files are
   kebab-case `<feature>-<descriptor>`. Reuse an existing role suffix
   before inventing one. Full rule in `CONTRIBUTING.md` > File naming.
-- Compodoc docs (JSDoc `/** */`) on any method/class whose WHY is not
-  obvious from reading it - public or private (e.g. `AuthService.
-  dummyHash`, `UsersService.findAvailableUsername`). No comment when the
-  name + signature already make the WHY clear.
+- Compodoc docs (JSDoc `/** */`) on **every class and every React
+  component**, always (defense evidence + onboarding), and on any method
+  whose WHY is not obvious from reading it - public or private (e.g.
+  `AuthService.dummyHash`, `UsersService.findAvailableUsername`). No
+  comment on a method when the name + signature already make the WHY
+  clear. Full rule in `CONTRIBUTING.md` > Doc comments.
 - Commits: `type(HYP-N): summary`, with the Linear issue key, one logical
   change per commit.
 - Branches: rebase onto `main`, never merge `main` into a feature branch.

@@ -1,3 +1,5 @@
+// HTTP spec for the brute-force ceiling on POST /auth/login (429 after 5
+// attempts in the window).
 import { INestApplication } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';

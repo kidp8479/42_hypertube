@@ -1,3 +1,5 @@
+// Spec for RequireAuth: protected route when authenticated, redirect to
+// /login when anonymous, nothing while auth is resolving.
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';

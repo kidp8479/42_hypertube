@@ -1,3 +1,6 @@
+// Unit spec for AuthController with mocked services: login, the two OAuth
+// callbacks and the code exchange. HTTP-level behaviour (guards, status codes)
+// is covered by the neighbouring *.spec.ts files that boot the app.
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

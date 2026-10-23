@@ -1,3 +1,5 @@
+// Unit spec for UsersService with a mocked repository: password hashing,
+// OAuth account creation (username fallback, column limits), update and 404s.
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -218,7 +220,7 @@ describe('UsersService', () => {
   });
 
   describe('update', () => {
-    it('preloads the merged row and saves it (so entity hooks run)', async () => {
+    it('preloads the merged row and saves it', async () => {
       const merged = { id: 1, firstName: 'Grace' } as User;
       repository.preload.mockResolvedValue(merged);
       repository.save.mockResolvedValue(merged);

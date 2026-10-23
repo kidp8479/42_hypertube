@@ -1,3 +1,5 @@
+// Spec for LanguageSwitcher: switching the UI, remembering the choice, and
+// saving it on the account when logged in.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

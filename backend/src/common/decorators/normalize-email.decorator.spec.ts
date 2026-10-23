@@ -1,3 +1,4 @@
+// Unit spec for @NormalizeEmail.
 import { plainToInstance } from 'class-transformer';
 import { NormalizeEmail } from './normalize-email.decorator';
 

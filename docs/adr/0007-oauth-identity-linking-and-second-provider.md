@@ -111,8 +111,9 @@ top-level GET navigation from the provider, which Lax sends), `Secure`
 outside dev, `Path=/auth`, `Max-Age` about 10 minutes, cleared on the
 callback that carries a `code`, whether the check passes or not. When the
 provider redirects back with `?error=...` (consent denied), Passport stops
-before checking the state, so the cookie is left to expire on its own after
-10 minutes. Implemented as `CookieStateStore`,
+before checking the state, so the store never runs; `OAuthCallbackFilter`
+expires the cookie on its failure redirect instead (see the amendment
+below). Implemented as `CookieStateStore`,
 passed as the `store` option of both strategies, so `state` handling
 stays out of the controller. The cookie is read from the `Cookie` header
 by hand: one cookie, so no `cookie-parser` dependency or middleware. The
@@ -166,6 +167,9 @@ error would strand the user on a bare `{"statusCode":401}` page.
   everything else. Details stay in the server log, never in a URL.
 - Logging: 5xx and non-HTTP errors as errors, an unverified email as a
   warning, other 4xx (declined consent, bad `state`) not at all.
+- The failure redirect also expires the `oauth_state` cookie: a declined
+  consent fails before `CookieStateStore.verify()` runs, so without this
+  the nonce would stay live for its full 10 minutes.
 - Success and failure redirects both carry `Referrer-Policy: no-referrer`:
   the callback URL holds the provider's `code` and `state`. The filter
   sets it itself, since a decorator `@Header` is not applied once the

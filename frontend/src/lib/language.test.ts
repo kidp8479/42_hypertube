@@ -1,3 +1,5 @@
+// Spec for the pure language rules: browser pick, priority order, and stored
+// choice handling.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   pickBrowserLanguage,

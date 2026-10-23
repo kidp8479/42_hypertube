@@ -1,3 +1,5 @@
+// Unit spec for FortyTwoStrategy: profile fetch, mapping to OAuthProfile, and
+// the state check on the handshake. The network is mocked.
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import { OAUTH_STATE_COOKIE } from './cookie-state.store';

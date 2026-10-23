@@ -1,3 +1,4 @@
+// Unit spec for JwtStrategy: the verified payload becomes a minimal req.user.
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 

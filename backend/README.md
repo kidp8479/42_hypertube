@@ -8,7 +8,7 @@ the [root README](../README.md); conventions in
 
 ```
 src/
-├── main.ts           # bootstrap: global ValidationPipe, serializer, CORS, Swagger
+├── main.ts           # bootstrap: global ValidationPipe, serializer, exception filter, CORS, Swagger
 ├── app.module.ts     # composition root: config, TypeORM, throttler, global guards
 ├── config/           # Joi env schema (ADR-0003), throttle scaling
 ├── common/           # cross-module decorators (@NormalizeEmail, @Trim), QueryFailedFilter, utils
@@ -17,7 +17,9 @@ src/
 ```
 
 Files are named `<kebab-name>.<role>.ts`, specs co-located as
-`<kebab-name>.<role>.spec.ts` (`CONTRIBUTING.md` > File naming).
+`<kebab-name>.<role>.spec.ts` (`CONTRIBUTING.md` > File naming). Every class
+carries a `/** */` doc comment, which `make doc` renders
+(`CONTRIBUTING.md` > Doc comments).
 
 ## Scripts
 

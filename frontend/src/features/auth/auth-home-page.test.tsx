@@ -1,3 +1,4 @@
+// Spec for HomePage: shows the signed-in user and follows a language switch.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import i18n from '../../lib/i18n';

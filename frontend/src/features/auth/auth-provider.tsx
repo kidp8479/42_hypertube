@@ -50,6 +50,10 @@ async function fetchSignedInUser(): Promise<User> {
   }
 }
 
+/**
+ * Owns the auth state and provides it to the app through {@link AuthContext}.
+ * Mount it once, above the router, inside the Query client provider.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const meQuery = useMeQuery();

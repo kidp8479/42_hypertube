@@ -1,3 +1,5 @@
+// Spec for the i18n setup: English by default, a missing key fails loudly in
+// tests, and the starting language is resolved before the first render.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import i18n from './i18n';
 

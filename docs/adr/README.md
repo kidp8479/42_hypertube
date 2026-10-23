@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Short, append-only notes recording *structural, hard-to-reverse* technical
-decisions and the reasoning behind them — the choices a defense evaluator
+decisions and the reasoning behind them - the choices a defense evaluator
 might ask us to justify.
 
 - One file per decision: `NNNN-slug.md`, numbered sequentially.

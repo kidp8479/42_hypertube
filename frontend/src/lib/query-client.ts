@@ -26,6 +26,7 @@ function routeUnauthorized(error: unknown) {
 /** App-wide singleton client; a 401 from any query or mutation triggers the registered unauthorized handler. */
 export const queryClient = new QueryClient({
   defaultOptions: {
+    // Off by default; a query that wants retries opts in (see useMeQuery).
     queries: { retry: false },
   },
   queryCache: new QueryCache({ onError: routeUnauthorized }),

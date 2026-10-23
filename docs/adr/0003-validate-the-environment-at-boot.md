@@ -12,7 +12,7 @@ malformed, the process refuses to boot.
 
 - **A missing secret must fail loudly, immediately.** Without validation, an
   absent `JWT_SECRET` in production lets the app start and sign tokens with
-  `undefined` — anyone can then forge a valid token, and the problem only
+  `undefined` - anyone can then forge a valid token, and the problem only
   shows up once users are affected. A boot-time check turns that into a
   crash at deploy time with a named error.
 - **`NODE_ENV` drives destructive behaviour.** `synchronize` and SQL
@@ -28,16 +28,16 @@ malformed, the process refuses to boot.
 
 ## Considered options
 
-- **Nothing (`process.env` directly)** — the status quo we are replacing.
+- **Nothing (`process.env` directly)** - the status quo we are replacing.
   Zero validation, defaults duplicated across files.
-- **`class-validator`** — already used for HTTP DTOs. For env validation it
+- **`class-validator`** - already used for HTTP DTOs. For env validation it
   needs a config class with decorators plus a custom `validate` function:
   more ceremony for this one object. Kept for DTOs, not used here.
-- **`zod`** — equally capable. But `ConfigModule` has first-class support
+- **`zod`** - equally capable. But `ConfigModule` has first-class support
   for `validationSchema` (Joi); `zod` would need a custom `validate:`
   callback. Joi is the path the NestJS docs describe, so it is the least
   surprising for anyone who knows the framework.
-- **Validate only `JWT_SECRET`** — the marginal cost of covering the rest
+- **Validate only `JWT_SECRET`** - the marginal cost of covering the rest
   is one line each, and the other variables share the same failure mode.
 
 ## Consequences
@@ -48,7 +48,7 @@ malformed, the process refuses to boot.
 - `ConfigModule.forRoot({ ignoreEnvFile: true })`: Compose (dev) and the
   deploy environment (prod) inject variables into the process directly;
   there is no `.env` file inside the container. Local host-side runs
-  (tests) get their own strategy — see HYP-27.
+  (tests) get their own strategy - see HYP-27.
 - `TypeOrmModule` and `JwtModule` move to their `*Async` form so their
   factories can read the validated config via `ConfigService` instead of
   `process.env`.

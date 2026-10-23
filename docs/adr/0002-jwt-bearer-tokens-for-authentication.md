@@ -27,7 +27,7 @@ server-side sessions (cookie + session store).
 ## Nuance: `POST /oauth/token` is a different grant
 
 The subject's `oauth/token` (`client + secret`) is the OAuth2
-**client-credentials** grant — it authenticates a *client application* of
+**client-credentials** grant - it authenticates a *client application* of
 the API, not a browser user logging in. It is related to, but not the same
 as, `POST /auth/login`. Both will mint JWTs verified by the same strategy;
 they differ in who authenticates and how.
@@ -37,10 +37,10 @@ they differ in who authenticates and how.
 - **A JWT cannot be revoked before it expires.** Mitigations, to be
   decided at implementation:
   - short access-token TTL (~15 min) + refresh token, vs. a single longer
-    token — trade-off between UX and blast radius.
+    token - trade-off between UX and blast radius.
   - **One-click logout** (subject requirement): with a pure JWT, logout is
     client-side (discard the token). A true server-side invalidation needs
-    a token blocklist or DB-backed refresh tokens — a deliberate,
+    a token blocklist or DB-backed refresh tokens - a deliberate,
     contained break from "stateless". Decided in
     [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md): client-side
     discard, no server-side revocation.

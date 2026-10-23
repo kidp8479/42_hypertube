@@ -1,3 +1,5 @@
+// Spec for the User serialisation contract: the password hash never leaves
+// through a response body.
 import { instanceToPlain } from 'class-transformer';
 import { User } from './user.entity';
 

@@ -1,3 +1,5 @@
+// Unit spec for the env schema: a valid environment boots, a missing or
+// placeholder JWT_SECRET does not.
 import { envValidationSchema } from './env.validation';
 
 const base = {

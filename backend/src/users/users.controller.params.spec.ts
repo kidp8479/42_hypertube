@@ -1,3 +1,5 @@
+// HTTP spec for UsersController routing: :id parsing (400 on a non-numeric
+// id) and /users/me matching before :id.
 import { ExecutionContext, INestApplication } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';

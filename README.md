@@ -15,7 +15,7 @@ library) that lets a video start playing while it's still downloading.
 - **Language**: TypeScript everywhere (backend and frontend)
 - **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser e2e of the auth flow and the OAuth handshake guards, `frontend/e2e/`)
 - **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
-- **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand)
+- **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand) from the `/** */` comment every class carries (`CONTRIBUTING.md` > Doc comments)
 - **API testing**: [Bruno](https://www.usebruno.com) collection in `api/bruno/` - plain-text `.bru` files tracked in git (diffs in PRs, no account), with status/body assertions on every request. Open the folder in the Bruno app, or run it headless with `make test-api` (needs the stack up)
 - **Lint/format**: [ESLint](https://eslint.org) + [Prettier](https://prettier.io), shared config across packages
 - **Task runner**: [GNU Make](https://www.gnu.org/software/make/) wrapping the npm scripts

@@ -35,6 +35,11 @@ function readCallbackParams(params: URLSearchParams) {
   return { code, error: null };
 }
 
+/**
+ * The `/oauth/callback` page: trades the single-use code for a token and
+ * lands on `/`, or shows why the sign-in failed. It renders nothing but a
+ * status line, since the user only sees it for a moment.
+ */
 export function OAuthCallbackPage() {
   const { t } = useTranslation('auth');
   const { state, loginWithOAuthCode } = useAuth();
