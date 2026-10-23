@@ -30,6 +30,7 @@ and verify with `argon2.verify` at login.
   values and the reasoning.
 - The `User.password` column is `varchar(255)` and `select: false` - the
   argon2id encoded hash (~97 chars) fits, and it never leaves the DB by
-  accident.
+  accident. The column is nullable: an account created through OAuth has
+  no password, and linking an OAuth identity clears a local one (ADR-0007).
 - Same hashing approach is reused for password-reset tokens - to be
   recorded in its own ADR when that flow is built.

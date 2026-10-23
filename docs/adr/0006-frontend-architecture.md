@@ -52,7 +52,7 @@ it is public.
   keeps each domain's state, hooks and screens together and lets a whole
   domain be reasoned about (or removed) as a unit.
 - **Context + `useReducer` over a state library.** Auth state is one small
-  state machine with four transitions. Redux/Zustand would be a dependency
+  state machine (three states, five events). Redux/Zustand would be a dependency
   and a pattern to learn for no gain here. `useReducer` is a React fundamental
   and keeps the transition logic pure and unit-testable without React.
 - **Token in `localStorage`, read only by the wrapper.** Keeping it out of

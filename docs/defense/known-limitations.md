@@ -70,7 +70,8 @@ lets someone probe which emails have an account.
   which needs the transactional-email infra (**HYP-32**). The
   uniform-response change itself is **HYP-50**; until both land, a
   generic 409 (no SQL leak, no hint at which value clashed) is the
-  interim, and login / password-reset are already uniform.
+  interim. Login is already uniform; password reset is not built yet and
+  must land uniform too (HYP-34).
 - **Real-world:** the 201-vs-409 timing/status oracle is the enumeration
   vector; the fix is the uniform-response + email side-channel above.
 - **Cost to fix later:** medium - HYP-32 (mail infra) + HYP-50 (the
