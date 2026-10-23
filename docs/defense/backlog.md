@@ -10,11 +10,5 @@ _Currently empty - everything surfaced so far is ticketed:_
 - Structured logging (pino) -> HYP-29
 - Validated config layout -> template (added to HYP-26)
 - `main`'s non-linear history (29 diverged merge commits) -> HYP-54
-
-## Not yet ticketed
-
-- `GET /users` returns `email` / `firstName` / `lastName` for every user
-  to any authenticated caller (surfaced writing `security-checklist.md`).
-  The subject imposes the `/users` endpoint, so this is a modelling
-  decision, not a straight bug: decide whether the list representation
-  should be trimmed to public fields, then ticket or record as accepted.
+- Fields exposed by `GET /users` (email / names to any authenticated
+  caller) -> HYP-80
