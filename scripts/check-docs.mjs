@@ -7,12 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { checkDashes } from './doc-checks/dashes.mjs';
 import { checkEnv } from './doc-checks/env.mjs';
+import { checkIndexes } from './doc-checks/indexes.mjs';
 import { checkLinks } from './doc-checks/links.mjs';
 
 const CHECKS = [
   ['relative links', checkLinks],
   ['dashes', checkDashes],
   ['env variables', checkEnv],
+  ['doc indexes and renders', checkIndexes],
 ];
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
