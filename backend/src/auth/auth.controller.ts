@@ -9,11 +9,18 @@ import {
   Get,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
+import { RefreshTokenService } from './refresh-token.service';
+import {
+  clearRefreshCookie,
+  readRefreshCookie,
+  setRefreshCookie,
+} from './refresh-cookie.util';
 import { Public } from './decorators/public.decorator';
 import { OAuthCallback } from './decorators/oauth-callback.decorator';
 import { spaCallbackUrl } from './spa-callback-url.util';
@@ -21,25 +28,29 @@ import { scaledThrottleLimit } from '../config/throttle.config';
 import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
  * Authentication routes: email/password login, the 42 and GitHub OAuth
- * handshakes (public), and logout (authenticated). All
- * credential logic lives in {@link AuthService}.
+ * handshakes, the session routes (refresh, logout) - all public, since each
+ * proves itself with credentials or the refresh cookie rather than a bearer
+ * token. All credential logic lives in {@link AuthService}, the refresh-token
+ * lifecycle in {@link RefreshTokenService} (ADR-0011).
  */
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly oauthExchange: OAuthExchangeService,
+    private readonly refreshTokens: RefreshTokenService,
     private readonly configService: ConfigService,
   ) {}
 
   /**
-   * Exchanges email + password for a JWT access token. Answers 200 (not
-   * the POST default 201 - nothing is created).
+   * Exchanges email + password for a JWT access token, and starts a session:
+   * the refresh token travels in an HttpOnly cookie, never in the body.
+   * Answers 200 (not the POST default 201 - nothing is created).
    *
    * @throws {UnauthorizedException} 401 on any bad credential, with no
    * hint about which part failed (wrong password and unknown email are
@@ -51,7 +62,11 @@ export class AuthController {
   @Throttle({ default: { limit: scaledThrottleLimit(5), ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const user = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
@@ -59,23 +74,68 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return this.authService.login(user);
+    const tokens = await this.authService.login(user);
+    await this.startSession(user.id, req, res);
+    return tokens;
   }
 
   /**
-   * One-click logout. Answers 204 and does nothing server-side: the token
-   * is stateless, so "logging out" is the client discarding it, and it
-   * expires on its own after `JWT_EXPIRES_IN` (ADR-0008). The route exists
-   * so the SPA has a real endpoint to call and a revocation step can be
-   * added later without changing the contract.
+   * Trades the refresh cookie for a new access token, and rotates it: the
+   * cookie answers with the next token, the one just used is consumed.
+   * Answers 200. Public, because the cookie is the credential: the access
+   * token it replaces is usually expired by now.
    *
-   * Deliberately not `@Public()`: the global `JwtAuthGuard` answers 401 to
-   * a caller with no valid token.
+   * @throws {UnauthorizedException} 401 with no cookie, or for a token that is
+   * unknown, expired, revoked or already rotated (which also ends the whole
+   * session). The dead cookie is cleared either way.
    */
+  // Higher than login: the SPA refreshes on load, on a 401 and once per
+  // access-token lifetime, but it is no guessing target (256 random bits).
+  @Public()
+  @Throttle({ default: { limit: scaledThrottleLimit(20), ttl: 60_000 } })
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const secret = readRefreshCookie(req);
+    if (!secret) {
+      throw new UnauthorizedException();
+    }
+    try {
+      const next = await this.refreshTokens.rotate(secret);
+      setRefreshCookie(req, res, next);
+      return await this.authService.loginById(next.userId);
+    } catch (error) {
+      clearRefreshCookie(req, res);
+      throw error;
+    }
+  }
+
+  /**
+   * One-click logout: revokes the whole session the refresh cookie belongs to
+   * and clears the cookie, so the refresh token cannot be used again even if
+   * it was copied (ADR-0011). Answers 204, and also when there is nothing to
+   * revoke: logging out twice is not an error.
+   *
+   * Public on purpose: it must work after the access token expired, and the
+   * cookie is the only thing it needs. A forged logout from another site can
+   * do no more than end the caller's own session, and `SameSite=Strict`
+   * keeps the cookie from being sent with it.
+   */
+  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  logout(): void {
-    // Intentionally empty: see above, there is no server-side state to clear.
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const secret = readRefreshCookie(req);
+    if (secret) {
+      await this.refreshTokens.revokeFamilyOf(secret);
+    }
+    clearRefreshCookie(req, res);
   }
 
   /**
@@ -143,12 +203,27 @@ export class AuthController {
   @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
   @Post('oauth/exchange')
   @HttpCode(HttpStatus.OK)
-  async exchange(@Body() dto: ExchangeCodeDto) {
+  async exchange(
+    @Body() dto: ExchangeCodeDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userId = this.oauthExchange.redeem(dto.code);
     if (userId === undefined) {
       throw new UnauthorizedException();
     }
-    return this.authService.loginById(userId);
+    const tokens = await this.authService.loginById(userId);
+    await this.startSession(userId, req, res);
+    return tokens;
+  }
+
+  /** Opens a session for a user who just authenticated: the refresh cookie. */
+  private async startSession(
+    userId: number,
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    setRefreshCookie(req, res, await this.refreshTokens.issue(userId));
   }
 
   /**
