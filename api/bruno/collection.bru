@@ -10,9 +10,10 @@ docs {
   .env, see .env.example) so repeated runs don't hit 429. With the default of
   1, wait or restart the backend after 3 runs.
 
-  The `local` environment builds baseUrl from HYPERTUBE_BACKEND_PORT, read from
-  the repo .env through api/bruno/.env (a gitignored symlink: `make test-api`
-  creates it, or run `ln -s ../../.env api/bruno/.env` once).
+  The `local` environment builds baseUrl from HYPERTUBE_HTTPS_PORT: the app is
+  only reachable through the edge proxy (https://localhost:<port>/api, a
+  self-signed certificate, so the CLI runs with --insecure). `make test-api`
+  passes the port from the repo .env.
 
   Full endpoint reference: /api-docs on the backend (Swagger UI)
 }

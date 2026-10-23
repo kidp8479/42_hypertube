@@ -72,10 +72,10 @@ jobs:
       # never goes through a provider, so these are inert placeholders.
       FORTYTWO_CLIENT_ID: ci_placeholder
       FORTYTWO_CLIENT_SECRET: ci_placeholder
-      FORTYTWO_CALLBACK_URL: http://localhost:3000/auth/42/callback
+      FORTYTWO_CALLBACK_URL: https://localhost:8443/api/auth/42/callback
       GITHUB_CLIENT_ID: ci_placeholder
       GITHUB_CLIENT_SECRET: ci_placeholder
-      GITHUB_CALLBACK_URL: http://localhost:3000/auth/github/callback
+      GITHUB_CALLBACK_URL: https://localhost:8443/api/auth/github/callback
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -99,7 +99,7 @@ jobs:
       - name: Wait for the backend
         run: |
           for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/auth/login || true)
+            code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:8443/api/auth/login || true)
             [ "$code" != "000" ] && exit 0
             sleep 2
           done

@@ -11,6 +11,10 @@ COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compos
 # portably): `docker` when the Compose v2 plugin is present, `podman` otherwise.
 CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE))),docker,podman)
 
+# Host port of the edge proxy (HYP-71): the one way into the stack. Read from
+# .env like compose does, 8443 when unset.
+HTTPS_PORT := $(or $(shell sed -n 's/^HYPERTUBE_HTTPS_PORT=//p' .env 2>/dev/null | tail -1),8443)
+
 # Compose derives the project name from the directory name; volumes are then
 # named `<project>_<key>` on both docker compose and podman-compose.
 PROJECT := $(notdir $(CURDIR))
@@ -106,6 +110,7 @@ dev-frontend:
 
 up:
 	$(COMPOSE) up -d
+	@echo "App: https://localhost:$(HTTPS_PORT) (self-signed certificate)"
 
 down:
 	$(COMPOSE) down
@@ -241,18 +246,17 @@ test-frontend:
 # or `make dev-backend` + `make dev-frontend` in two shells) - this target
 # does not start it, since it needs a real Postgres behind the backend.
 test-e2e:
-	cd frontend && npm run test:e2e
+	cd frontend && E2E_BASE_URL=$${E2E_BASE_URL:-https://localhost:$(HTTPS_PORT)} npm run test:e2e
 
-# Runs the Bruno collection (assertions included) against the running
-# backend. The collection reads HYPERTUBE_BACKEND_PORT from the repo .env
-# through api/bruno/.env, a gitignored symlink created here (the Bruno app
-# needs the same link, so running this once also sets up the GUI). Needs the
-# stack up (`make up`); npx fetches the CLI on first use, so it is not a
-# project dependency. POST /users is rate-limited (10/h), a run uses 3: raise
+# Runs the Bruno collection (assertions included) against the running stack,
+# through the edge proxy (https, self-signed certificate, hence --insecure).
+# HYPERTUBE_HTTPS_PORT is passed from .env. Needs the stack up (`make up`);
+# npx fetches the CLI on first use, so it is not a project dependency. In the
+# Bruno app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
+# `local` environment. POST /users is rate-limited (10/h), a run uses 3: raise
 # THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
 test-api:
-	ln -sf ../../.env api/bruno/.env
-	cd api/bruno && npx --yes @usebruno/cli run --env local
+	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes @usebruno/cli run --env local --insecure
 
 build:
 	cd backend && npm run build
