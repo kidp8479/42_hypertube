@@ -55,6 +55,8 @@ cp .env.example .env   # first time only, fill in real values
 make up                 # Postgres on the internal network, backend on :3000, frontend on :5173
 ```
 
+The app is served through the edge proxy at **https://localhost:8443** (self-signed certificate: accept the browser warning once; `http://localhost:8080` redirects there). The direct backend and frontend ports stay published for now (`docs/adr/0009-nginx-edge-proxy-with-tls.md`).
+
 `make up` auto-detects `docker compose` vs `podman-compose` (see the Makefile) - same command works on Docker or Podman.
 
 **Without containers (backend/frontend only, no Postgres):**

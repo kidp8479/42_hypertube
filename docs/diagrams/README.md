@@ -13,6 +13,7 @@ directly, so there is nothing to export.
 |---|---|---|
 | Auth | [`auth.md`](auth.md) | overview, register (frontend), SPA session states, OAuth handshake, OAuth identity linking, OAuth callback page (frontend), logout |
 | Language | [`i18n.md`](i18n.md) | overview, which language wins, switching, registration |
+| Network | [`network.md`](network.md) | overview (edge proxy, ports, services), one request through the edge |
 
 Domains still to come, each with its own page once built: video library
 and search (HYP-13), torrent download (HYP-12), streaming and transcoding
