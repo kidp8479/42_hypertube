@@ -30,7 +30,7 @@ services:
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_NAME: ${POSTGRES_DB}
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-https://localhost:${HYPERTUBE_HTTPS_PORT:-8443}}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID}
@@ -40,8 +40,6 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
       THROTTLE_LIMIT_MULTIPLIER: ${THROTTLE_LIMIT_MULTIPLIER:-1}
-    ports:
-      - "127.0.0.1:${HYPERTUBE_BACKEND_PORT:-3000}:3000"
     volumes:
       - ./backend:/app
       # Everything the container writes lives in named volumes, never on the
@@ -64,8 +62,6 @@ services:
     build:
       context: ./frontend
       target: dev
-    ports:
-      - "127.0.0.1:${HYPERTUBE_FRONTEND_PORT:-5173}:5173"
     environment:
       # The Vite dev proxy runs inside this container, where the backend is
       # the `backend` service, not localhost (that default is for host dev).

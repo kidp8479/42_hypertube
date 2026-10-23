@@ -33,6 +33,9 @@ server {
     # backend as /<path> (the trailing slash on proxy_pass strips the prefix).
     location /api/ {
         proxy_pass http://backend:3000/;
+        # The backend never sees /api, so it is told: cookies scoped to the
+        # auth routes need the path the browser uses (ADR-0007).
+        proxy_set_header X-Forwarded-Prefix /api;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
