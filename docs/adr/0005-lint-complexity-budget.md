@@ -45,11 +45,14 @@ test structure, not slop.
 
 ## How it fits the three-layer anti-slop setup
 
-1. **teach** - the `anti-slop` skill (`.claude/skills/anti-slop/`): the same
-   budget as a checklist held in context while writing, so code clears the
-   gate on the first run.
-2. **check** - the `lint-feedback.sh` PostToolUse hook (`.claude/hooks/`):
-   runs ESLint on each file just written and feeds warnings back in-session.
+1. **teach** - a local `anti-slop` agent skill: the same budget as a
+   checklist held in context while writing, so code clears the gate on the
+   first run.
+2. **check** - a local PostToolUse hook (`lint-feedback.sh`): runs ESLint on
+   each file just written and feeds warnings back in-session.
+
+Layers 1 and 2 are agent tooling kept under `.claude/` during development;
+they are not part of the submitted tree. Layer 3 is what ships.
 3. **gate** - this ADR: the ratchet at commit / CI time.
 
 ## Consequences

@@ -1,6 +1,5 @@
-// Real-browser coverage for the register -> login flow, per
-// .claude/standards/engineering.md ("auth flows get a Playwright test
-// before merge"). Runs against an already-up stack (docker-compose or
+// Real-browser coverage for the register -> login flow ("auth flows get a
+// Playwright test before merge"). Runs against an already-up stack (docker-compose or
 // `make dev`); it does not seed or reset the database itself, so every
 // test picks a fresh unique email/username to avoid colliding with a
 // previous run's account.

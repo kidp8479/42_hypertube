@@ -57,7 +57,7 @@ jobs:
       - run: npm run test
       - run: npm run build
 
-  # Real-browser auth-flow coverage (.claude/standards/engineering.md).
+  # Real-browser auth-flow coverage (auth flows get a Playwright test).
   # Boots the actual dev stack via docker-compose - same images, same
   # proxy setup - rather than reimplementing it as separate CI services,
   # so this job exercises what a contributor's machine runs too.

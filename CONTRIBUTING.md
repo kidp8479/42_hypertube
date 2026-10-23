@@ -123,9 +123,9 @@ cyclomatic and cognitive complexity, copy-paste, repeated literals) - a
 net against AI-assistant over-code, see
 [ADR-0005](docs/adr/0005-lint-complexity-budget.md). Over budget = split
 the function or file, never disable the rule inline. The count is
-monotone: it can only go down. When writing code with an agent, the
-`anti-slop` skill (`.claude/skills/anti-slop/`) is the same budget as an
-up-front checklist.
+monotone: it can only go down. When writing code with an agent, a local
+`anti-slop` skill (agent tooling, not part of the submitted tree) holds the
+same budget as an up-front checklist.
 
 ## Onboarding: per-developer setup
 
@@ -408,8 +408,8 @@ not decoration.
   map of the repo (tree-sitter AST, no LLM, nothing leaves the machine).
   `make graphify` builds it; `graphify explain "X"`, `graphify path "A" "B"`,
   `graphify god-nodes` query it. Useful to trace impact before a change or
-  to orient a review without reading every file. Not a CI gate - install
-  and setup: `docs/graphify-setup.md` in `agentic-lab`.
+  to orient a review without reading every file. Not a CI gate; the
+  graphify CLI is installed once with `uv tool install graphifyy`.
 
 ## Security baseline (non-negotiable per the subject)
 
