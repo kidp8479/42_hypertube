@@ -1,0 +1,19 @@
+meta {
+  name: 34 Refresh after logout -> 401
+  type: http
+  seq: 34
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: refresh_token={{refreshThird}}
+}
+
+assert {
+  res.status: eq 401
+}

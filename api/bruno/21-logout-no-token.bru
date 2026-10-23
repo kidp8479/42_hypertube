@@ -1,5 +1,5 @@
 meta {
-  name: 21 Logout without token -> 401
+  name: 21 Logout with nothing -> 204
   type: http
   seq: 21
 }
@@ -10,6 +10,12 @@ post {
   auth: none
 }
 
+docs {
+  Logout is public (ADR-0011): it must work after the access token expired, and
+  logging out twice is not an error. With no refresh cookie there is nothing to
+  revoke, and it still answers 204.
+}
+
 assert {
-  res.status: eq 401
+  res.status: eq 204
 }

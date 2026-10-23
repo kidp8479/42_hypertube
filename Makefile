@@ -291,13 +291,15 @@ test-e2e:
 
 # Runs the Bruno collection (assertions included) against the running stack,
 # through the edge proxy (https, self-signed certificate, hence --insecure).
+# --disable-cookies: the refresh scenario (requests 26 to 34) sets its cookie in
+# an explicit header, a jar would send a stale one on its own.
 # HYPERTUBE_HTTPS_PORT is passed from .env. Needs the stack up (`make up`);
 # npx fetches the CLI on first use, so it is not a project dependency. In the
 # Bruno app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
 # `local` environment. POST /users is rate-limited (10/h), a run uses 3: raise
 # THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
 test-api:
-	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes @usebruno/cli run --env local --insecure
+	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes @usebruno/cli run --env local --insecure --disable-cookies
 
 build:
 	cd backend && npm run build

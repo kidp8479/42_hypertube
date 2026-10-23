@@ -1,0 +1,37 @@
+meta {
+  name: 27 Session: login starts a session
+  type: http
+  seq: 27
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "sess-{{runId}}@example.com",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+script:post-response {
+  const fromSetCookie = (res) => {
+    const cookie = (res.headers["set-cookie"] || []).find((c) => c.startsWith("refresh_token="));
+    return cookie ? cookie.split(";")[0].slice("refresh_token=".length) : undefined;
+  };
+  bru.setVar("refreshFirst", fromSetCookie(res));
+}
+
+assert {
+  res.status: eq 200
+  res.body.access_token: isString
+}
+
+tests {
+  test("sets a refresh cookie", function () {
+    expect(bru.getVar("refreshFirst")).to.be.a("string");
+  });
+}
