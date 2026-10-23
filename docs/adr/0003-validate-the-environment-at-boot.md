@@ -16,10 +16,11 @@ malformed, the process refuses to boot.
   shows up once users are affected. A boot-time check turns that into a
   crash at deploy time with a named error.
 - **`NODE_ENV` drives destructive behaviour.** `synchronize` and SQL
-  logging are gated on `NODE_ENV !== 'production'`. A typo (`NODE_ENV=prod`)
-  would leave `synchronize: true` live in production, where TypeORM can
-  drop or alter columns to match the entities. The schema only accepts
-  `development | production | test`.
+  logging were gated on `NODE_ENV !== 'production'`. A typo
+  (`NODE_ENV=prod`) would have left `synchronize: true` live in production,
+  where TypeORM can drop or alter columns to match the entities. The schema
+  only accepts `development | production | test`. (`synchronize` is now off
+  in every environment, ADR-0010; `NODE_ENV` still gates SQL logging.)
 - **Type coercion in one place.** `process.env` values are always strings;
   the schema coerces `PORT` / `DATABASE_PORT` to numbers, so the rest of
   the code stops sprinkling `Number(...)` and `?? default`.

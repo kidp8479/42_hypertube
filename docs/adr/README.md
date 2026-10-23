@@ -27,6 +27,7 @@ might ask us to justify.
 | [0007](0007-oauth-identity-linking-and-second-provider.md) | OAuth identity linking, GitHub as the second provider | accepted |
 | [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted |
 | [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted |
+| [0010](0010-typeorm-migrations-build-the-schema.md) | TypeORM migrations build the schema, `synchronize` is off | accepted |
 
 ## Planned
 
@@ -43,6 +44,5 @@ becomes a numbered ADR when the decision is actually taken - not before.
 | file retention | how "delete if unwatched for 1 month" is enforced (scheduled job) |
 | metadata provider | OMDb vs TMDb |
 | search sources | the two legal external sources retained |
-| schema management | `synchronize: true` -> TypeORM migrations, and when the cutover happens |
 | test database | isolated DB strategy for e2e tests + CI wiring (HYP-27) |
 | ORM | TypeORM over Prisma - deliberate, for the internship stack; worth stating explicitly |
