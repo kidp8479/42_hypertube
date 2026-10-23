@@ -7,8 +7,7 @@ on:
 
 jobs:
   # Doc drift (HYP-70): deterministic checks over the tracked files, no
-  # dependency to install. Not a required check on `main` until the branch
-  # protection lists it.
+  # dependency to install. A required check of `main`.
   docs:
     runs-on: ubuntu-latest
     steps:

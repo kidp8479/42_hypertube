@@ -140,6 +140,7 @@ store is only needed once more than one backend instance runs (noted in
 | gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
 | TLS terminated at the edge proxy (self-signed in dev, a mounted certificate elsewhere); HTTP redirects to HTTPS; `nosniff` and frame options at the edge; HSTS only when `PROXY_HSTS_MAX_AGE` is set. CSP and helmet remain open (HYP-49) | `proxy/`, ADR-0009 |
+| Edge proxy hardening from the web-security-review of HYP-71 (HYP-73): the HTTP redirect goes to a configured name, not the Host header; the access log keeps no query string or Referer (OAuth codes); `X-Forwarded-For` is set in every location | `proxy/templates/default.conf.template`, `proxy/snippets/`, ADR-0009 |
 | CORS locked to a single configured origin (no `*`, no credentialed requests: the JWT is a bearer header) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 
 ## 11. Schema / data integrity
