@@ -61,7 +61,8 @@ Open the `.excalidraw` file, change it, save, and re-export the PNG:
 
 ```sh
 # with the VS Code Excalidraw extension: "Export to PNG" from the editor
-# or, headless:
+# or, headless, with the repo's local excalidraw-diagrams agent skill
+# (not part of the submitted tree):
 node .claude/skills/excalidraw-diagrams/scripts/export_playwright.js \
   docs/diagrams/auth-flow.excalidraw docs/diagrams/auth-flow.png
 ```
@@ -75,7 +76,9 @@ complains about a missing browser. Run from the repo root.
 The `.py` scripts drive the repo's `excalidraw-diagrams` skill
 (`.claude/skills/excalidraw-diagrams`). They are committed so a diagram
 can be rebuilt deterministically after a code change, but they are not
-required: the `.excalidraw` file stands on its own.
+required: the `.excalidraw` file stands on its own. That skill is local
+agent tooling, absent from the submitted tree: without it, edit the
+`.excalidraw` in any Excalidraw editor and re-export the PNG.
 
 ```sh
 python3 docs/diagrams/auth-flow.py

@@ -1,4 +1,4 @@
-// Real-browser auth flow coverage, per .claude/standards/engineering.md.
+// Real-browser auth flow coverage (auth flows get a Playwright test).
 // Runs against an already-up stack (docker-compose or `make dev`) - it does
 // not start the backend/DB itself, since the app needs a real Postgres.
 import { defineConfig, devices } from '@playwright/test';

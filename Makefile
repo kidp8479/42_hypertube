@@ -65,7 +65,7 @@ help:
 	@echo "  build            - production build, backend + frontend"
 	@echo "  check-docs       - doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
-	@echo "  graphify         - build a local code graph into graphify-out/ (needs graphify installed, see docs/graphify-setup.md in agentic-lab)"
+	@echo "  graphify         - build a local code graph into graphify-out/ (needs the graphify CLI: uv tool install graphifyy)"
 	@echo ""
 	@echo "Full local gate"
 	@echo "  verify           - format-check, lint-check, typecheck, test, build, check-docs (one command, read the result)"
@@ -271,7 +271,7 @@ doc:
 
 # Local, deterministic code graph (tree-sitter AST, no LLM, nothing leaves
 # the machine). Needs the graphify CLI installed once: `uv tool install
-# graphifyy` (see docs/graphify-setup.md in agentic-lab). --code-only skips
+# graphifyy`. --code-only skips
 # docs/PDFs/images, which would need an LLM backend. Query it with
 # `graphify explain "X"`, `graphify path "A" "B"`, `graphify god-nodes`, or
 # open graphify-out/graph.html in a browser.
