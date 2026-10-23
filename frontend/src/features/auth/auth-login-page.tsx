@@ -7,6 +7,9 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
+import { Alert } from '../../ui/ui-alert';
+import { Button } from '../../ui/ui-button';
+import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-login-page.module.css';
 
@@ -56,40 +59,32 @@ export function LoginPage() {
       <h1>{t('login.title')}</h1>
 
       {justRegistered && (
-        <p className={styles.notice}>{t('login.registeredNotice')}</p>
+        <Alert tone="success">{t('login.registeredNotice')}</Alert>
       )}
 
-      <label className={styles.field}>
-        {t('fields.email')}
-        <input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          required
-        />
-      </label>
+      <Field
+        label={t('fields.email')}
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        autoComplete="email"
+        required
+      />
 
-      <label className={styles.field}>
-        {t('fields.password')}
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
-          required
-        />
-      </label>
+      <Field
+        label={t('fields.password')}
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete="current-password"
+        required
+      />
 
-      {error && (
-        <p className={styles.error} role="alert">
-          {t(error)}
-        </p>
-      )}
+      {error && <Alert tone="error">{t(error)}</Alert>}
 
-      <button type="submit" disabled={isSubmitting}>
+      <Button type="submit" variant="solid" disabled={isSubmitting}>
         {isSubmitting ? t('login.submitting') : t('login.submit')}
-      </button>
+      </Button>
 
       <OAuthButtons />
 

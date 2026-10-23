@@ -19,31 +19,15 @@ import {
 } from './auth-validation';
 import { DEFAULT_LANGUAGE } from '../../lib/languages';
 import { isSupportedLanguage } from '../../lib/language';
+import { Alert } from '../../ui/ui-alert';
+import { Button } from '../../ui/ui-button';
+import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
 // The form-level error is stored as a translation key, not a sentence, so it
 // is translated at render time and follows a language switch.
 type FormError = 'register.conflict' | 'errors.generic';
-
-/** One field's validation message, or nothing when the field is valid. */
-function FieldError({
-  field,
-  error,
-}: {
-  field: RegisterField;
-  error?: ValidationError;
-}) {
-  const { t } = useTranslation('auth');
-  if (!error) {
-    return null;
-  }
-  return (
-    <p className={styles.fieldError}>
-      {describeValidationError(field, error, t)}
-    </p>
-  );
-}
 
 /** A labelled input plus its validation message, for one register field. */
 function RegisterInput({
@@ -63,18 +47,14 @@ function RegisterInput({
 }) {
   const { t } = useTranslation('auth');
   return (
-    <>
-      <label className={styles.field}>
-        {t(`fields.${field}`)}
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(field, e.target.value)}
-          autoComplete={autoComplete}
-        />
-      </label>
-      <FieldError field={field} error={error} />
-    </>
+    <Field
+      label={t(`fields.${field}`)}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(field, e.target.value)}
+      autoComplete={autoComplete}
+      error={error && describeValidationError(field, error, t)}
+    />
   );
 }
 
@@ -184,15 +164,11 @@ export function RegisterPage() {
         error={errors.confirmPassword}
         onChange={handleChange}
       />
-      {formError && (
-        <p className={styles.error} role="alert">
-          {t(formError)}
-        </p>
-      )}
+      {formError && <Alert tone="error">{t(formError)}</Alert>}
 
-      <button type="submit" disabled={isSubmitting}>
+      <Button type="submit" variant="solid" disabled={isSubmitting}>
         {isSubmitting ? t('register.submitting') : t('register.submit')}
-      </button>
+      </Button>
 
       <OAuthButtons />
 

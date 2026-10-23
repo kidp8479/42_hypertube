@@ -12,10 +12,10 @@ export function OAuthButtons() {
   const { t } = useTranslation('auth');
   return (
     <div className={styles.providers}>
-      <a href={`${API_BASE}/auth/42/login`}>
+      <a className={styles.provider} href={`${API_BASE}/auth/42/login`}>
         {t('oauth.continueWith', { provider: '42' })}
       </a>
-      <a href={`${API_BASE}/auth/github/login`}>
+      <a className={styles.provider} href={`${API_BASE}/auth/github/login`}>
         {t('oauth.continueWith', { provider: 'GitHub' })}
       </a>
     </div>

@@ -1,13 +1,7 @@
-/* Minimal layout only - real visual design lands in a later issue. */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
   max-width: 20rem;
-  margin: 4rem auto;
-}
-
-.error {
-  margin: 0;
-  color: #b00020;
+  margin: var(--space-7) auto;
 }
