@@ -147,7 +147,7 @@ store is only needed once more than one backend instance runs (noted in
 
 | Item | State |
 |---|---|
-| `synchronize: true` (auto-schema from entities) | dev / test only, off in production (`app.module.ts`). Acceptable now; must become real TypeORM migrations before the defense - reproducible schema, no silent data loss. Decision + cutover point tracked in `docs/adr/README.md` and the project `CLAUDE.md`. |
+| Schema management | TypeORM migrations build the schema (`backend/src/migrations/`), applied at boot in every environment; `synchronize` is off everywhere (`database/database.config.ts`). The `e2e` CI job boots on an empty database and `migration:check` fails if an entity changed without a migration. ADR-0010. |
 
 ## Open gaps (summary)
 
@@ -155,7 +155,6 @@ store is only needed once more than one backend instance runs (noted in
 |---|---|---|
 | Register leaks account existence via `409` vs `201` status code | HYP-50 | medium - throttled, but real |
 | No CSP / Helmet response headers | HYP-49 (HYP-28 is an older duplicate) | medium |
-| No TypeORM migrations (still `synchronize`) | ADR-planned | medium before defense |
 | No server-side logout / token revocation | ADR-0008 (accepted) | low (short TTL) |
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |

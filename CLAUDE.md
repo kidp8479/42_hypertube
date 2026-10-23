@@ -84,10 +84,11 @@
 Project-agnostic standards: `.claude/standards/engineering.md`. Deviations
 and additions specific to this project:
 
-- `synchronize: true` (TypeORM) stays acceptable in dev while the `User`
-  schema is still moving (hashing/reset in progress, then `movies`/
-  `comments` to come) - real migrations before the defense or before there
-  is real data to preserve, not before.
+- The schema comes from TypeORM migrations only (`backend/src/migrations/`,
+  ADR-0010): `synchronize` is off everywhere and the app applies pending
+  migrations at boot. Changing an entity means `make migration-generate
+  NAME=...`, reading the generated SQL, and committing it; CI fails on an
+  entity change without a migration.
 - File naming: backend files are `<kebab-name>.<role>.ts`
   (`cookie-state.store.ts`, `fortytwo.strategy.ts`), frontend files are
   kebab-case `<feature>-<descriptor>`. Reuse an existing role suffix

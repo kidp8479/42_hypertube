@@ -338,6 +338,24 @@ names.
   For `UpdateUserDto` that is `password` and `email` (login identifier +
   reset channel) - each has a dedicated re-auth/verify endpoint.
 
+### Database schema
+
+The schema is built by migrations (`backend/src/migrations/`), applied by the
+app at boot in every environment; `synchronize` is off (ADR-0010). When you
+change an entity:
+
+1. `make migration-generate NAME=add-movies` writes the migration from the
+   difference between the entities and the database (the stack must be up).
+2. **Read the generated SQL.** A column rename is generated as a drop and an
+   add, which loses the data; rewrite it as a rename by hand.
+3. Commit the migration with the entity change. `make migration-check` (and the
+   `e2e` CI job) fails if an entity changed without one.
+
+`make migration-run`, `-revert` and `-show` apply, undo the last and list them.
+A database created before the migrations existed has the tables but no record
+of the baseline: run `make migration-adopt` once, or `make wipe-db` for a
+fresh one (it destroys the data).
+
 ### HTTP status codes
 
 Rely on Nest's default success code for the verb (`GET`/`PATCH`/`DELETE` -> 200,

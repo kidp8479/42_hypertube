@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { envValidationSchema } from './config/env.validation';
 import { scaledThrottleLimit } from './config/throttle.config';
+import { databaseOptions } from './database/database.config';
 
 /**
  * Root module: validated config, the database connection, the global guards
@@ -30,19 +31,13 @@ import { scaledThrottleLimit } from './config/throttle.config';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DATABASE_HOST'),
-        port: config.get<number>('DATABASE_PORT'),
-        username: config.get<string>('DATABASE_USER'),
-        password: config.get<string>('DATABASE_PASSWORD'),
-        database: config.get<string>('DATABASE_NAME'),
+        // Connection, entities and migrations: shared with the TypeORM CLI.
+        // The schema comes from the migrations, never from `synchronize`.
+        ...databaseOptions((key) => config.get<string>(key)),
         autoLoadEntities: true,
         // Log every generated SQL statement in dev - useful while learning
         // the ORM and for spotting N+1 queries. Silent in production.
         logging: config.get<string>('NODE_ENV') !== 'production',
-        // Auto-syncs the schema from entities - convenient in dev, but can
-        // drop/alter columns (and their data) without asking. Never in prod.
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
     // Baseline abuse ceiling for every route (per client IP, in-process
