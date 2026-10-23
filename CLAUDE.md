@@ -22,7 +22,8 @@
 - Decided: backend **NestJS** + **TypeORM** (PostgreSQL); frontend
   **React**.
 - Not settled: torrent handling, transcoding. Auth: JWT bearer (ADR-0002),
-  argon2id (ADR-0001), OAuth 42 + GitHub (ADR-0007).
+  argon2id (ADR-0001), OAuth 42 + GitHub (ADR-0007), rotating refresh
+  token in an HttpOnly cookie (ADR-0011).
 
 ## Eliminatory constraints (0 if violated)
 

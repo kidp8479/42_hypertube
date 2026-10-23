@@ -1,6 +1,6 @@
 # Logout is client-side: discard the token, keep the TTL short
 
-**Date:** 2026-10-16 · **Status:** accepted
+**Date:** 2026-10-16 · **Status:** accepted, revocation superseded by [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)
 
 The subject requires a one-click logout. Hypertube implements it as
 `POST /auth/logout` (an authenticated no-op that answers `204`) plus the
