@@ -21,8 +21,9 @@ server-side sessions (cookie + session store).
 - **Stateless verification.** No Redis/DB round-trip to check a session on
   every request; the signature and `exp` claim are enough. Simpler to run
   in containers.
-- **Matches the target internship stack** (`@nestjs/passport` + `passport-jwt`
-  + `@nestjs/jwt`), which is a deliberate learning goal for this project.
+- **Matches the target internship stack** (`@nestjs/passport` 
+and `passport-jwt` and `@nestjs/jwt`), which is a deliberate learning goal 
+for this project.
 
 ## Nuance: `POST /oauth/token` is a different grant
 
