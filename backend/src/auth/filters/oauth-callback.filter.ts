@@ -52,7 +52,7 @@ export class OAuthCallbackFilter implements ExceptionFilter {
       this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
       { error: this.reason(exception, req) },
     );
-    clearStateCookie(res);
+    clearStateCookie(req, res);
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.redirect(url);
   }

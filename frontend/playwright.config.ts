@@ -3,7 +3,7 @@
 // not start the backend/DB itself, since the app needs a real Postgres.
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:5173';
+const baseURL = process.env.E2E_BASE_URL ?? 'https://localhost:8443';
 
 // The edge proxy (HYP-71) serves https://localhost with a self-signed
 // certificate. Only that local origin is trusted, never an arbitrary host.

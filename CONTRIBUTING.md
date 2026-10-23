@@ -139,19 +139,20 @@ be reused against another dev's `localhost`.
    (see the comments in the file for what each expects).
 2. **42 OAuth app** - register one at
    https://profile.intra.42.fr/oauth/applications/new:
-   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/42/callback`
-     (`3000` unless you changed it in `.env`). It must match
-     `FORTYTWO_CALLBACK_URL` exactly: if you change the port later, add
-     the new URI here too, or 42 answers "The redirect uri included is
-     not valid".
+   - Redirect URI: `https://localhost:<HYPERTUBE_HTTPS_PORT>/api/auth/42/callback`
+     (`8443` unless you changed it in `.env`): the app is only reachable
+     through the edge proxy, which serves HTTPS and the API under `/api`
+     (ADR-0009). It must match `FORTYTWO_CALLBACK_URL` exactly: if you
+     change the port later, add the new URI here too, or 42 answers "The
+     redirect uri included is not valid".
    - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
      `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
      redirect URI above.
 3. **GitHub OAuth app** - register one at
    https://github.com/settings/developers ("New OAuth App"):
-   - Homepage URL: `http://localhost:<HYPERTUBE_FRONTEND_PORT>` (`5173`
+   - Homepage URL: `https://localhost:<HYPERTUBE_HTTPS_PORT>` (`8443`
      by default)
-   - Redirect URI: `http://localhost:<HYPERTUBE_BACKEND_PORT>/auth/github/callback`
+   - Redirect URI: `https://localhost:<HYPERTUBE_HTTPS_PORT>/api/auth/github/callback`
      (GitHub keeps a single URI per app, so edit it when the port
      changes; leave "Allow wildcard matching" off - one exact URI is enough and keeps
      the smallest possible redirect surface)
@@ -233,10 +234,10 @@ OOM-killed there. Same for `make lint` / `make typecheck` / `make format`.
 `api/bruno/` is a [Bruno](https://www.usebruno.com) collection: numbered
 `.bru` files that share runtime variables, so the order matters. Add a
 request (with its `assert` block for the status code) alongside each new
-endpoint. `make test-api` runs it headless against a running backend.
-The collection takes the backend port from `.env` via a gitignored
-symlink `api/bruno/.env` (created by `make test-api`; in the Bruno app,
-run that target once first). `POST /users` is capped at 10 per hour per
+endpoint. `make test-api` runs it headless against the running stack,
+through the edge proxy (`https://localhost:<HYPERTUBE_HTTPS_PORT>/api`, a
+self-signed certificate, so the CLI runs with `--insecure`); the port comes
+from `.env`. `POST /users` is capped at 10 per hour per
 IP and one run uses 3, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
 `.env` for dev; it is forced to 1 when `NODE_ENV=production`.
 

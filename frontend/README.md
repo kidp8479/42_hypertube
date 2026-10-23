@@ -23,10 +23,11 @@ Files are kebab-case `<feature>-<descriptor>`, tests `.test.ts(x)`, styles
 
 ## API access
 
-The browser only talks to its own origin: the Vite dev server proxies
-`/api/*` to the backend and strips the prefix (`vite.config.ts`). The
-target is `http://localhost:3000` for host dev and
-`VITE_API_PROXY_TARGET=http://backend:3000` inside docker-compose.
+The browser only talks to its own origin and the API lives under `/api`. In
+the compose stack the edge proxy (nginx, `proxy/`, ADR-0009) serves the app
+on `https://localhost:8443` and routes `/api/*` to the backend, stripping the
+prefix. For host dev (`make dev-frontend`) the Vite dev server does the same
+(`vite.config.ts`) towards `http://localhost:3000`.
 
 ## Scripts
 
@@ -36,6 +37,6 @@ Run from the repo root through `make`:
 |---|---|
 | `make dev-frontend` | `dev` (Vite dev server on :5173) |
 | `make test-frontend` | `test` (Vitest, jsdom) |
-| `make test-e2e` | `test:e2e` (Playwright; needs the stack already up, `E2E_BASE_URL` overrides the default `http://localhost:5173`) |
+| `make test-e2e` | `test:e2e` (Playwright; needs the stack already up, `E2E_BASE_URL` overrides the default `https://localhost:8443`, the edge proxy) |
 | `make lint-check-frontend` | `lint:check` (`--max-warnings 0`, ADR-0005) |
 | `make typecheck-frontend` | `typecheck` |

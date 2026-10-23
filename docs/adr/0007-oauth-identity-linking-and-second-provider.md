@@ -175,3 +175,22 @@ error would strand the user on a bare `{"statusCode":401}` page.
   the callback URL holds the provider's `code` and `state`. The filter
   sets it itself, since a decorator `@Header` is not applied once the
   guard or handler has thrown.
+
+## Amendment 2026-10-23: the state cookie behind the edge proxy (HYP-71)
+
+Supersedes `Path=/auth` and "`Secure` in production only" above. Behind the
+edge proxy (ADR-0009) the browser reaches the auth routes under `/api`
+(`/api/auth/42/callback`), which nginx strips before Nest sees them. A cookie
+set with `Path=/auth` is never sent back to a path under `/api/auth`, so the
+state check would fail on every login.
+
+- The Path follows what the browser sees: the proxy sets
+  `X-Forwarded-Prefix: /api`, the cookie gets `Path=/api/auth`, and it is
+  cleared with the same path. Without the header (direct backend, host dev)
+  it stays `/auth`. Only a plain path (`/a/b-c`) is accepted from the header,
+  since the value ends up in `Set-Cookie`.
+- The cookie is `Secure` in production and whenever the request reached the
+  backend over HTTPS (`req.secure`, which `trust proxy` derives from
+  `X-Forwarded-Proto`), so a dev stack behind the TLS proxy gets it too.
+- The callback URLs registered at the providers are the proxy's HTTPS ones,
+  and `FRONTEND_ORIGIN` is the proxy's origin, where the SPA callback page is.

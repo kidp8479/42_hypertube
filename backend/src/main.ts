@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { QueryFailedFilter } from './common/filters/query-failed.filter';
+import { trustEdgeProxy } from './config/trust-proxy.config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 /**
  * Backend entry point: builds the Nest app, registers the global pipe,
@@ -12,8 +14,11 @@ import { QueryFailedFilter } from './common/filters/query-failed.filter';
  * Everything that applies to every route is set here and nowhere else.
  */
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
+
+  // Behind the edge proxy: real client IP for the rate limiter, req.secure.
+  trustEdgeProxy(app);
 
   // Close DB connections and run module teardown on SIGTERM/SIGINT
   // (what `docker stop` sends) instead of dropping them.
