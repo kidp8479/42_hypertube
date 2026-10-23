@@ -6,11 +6,13 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { checkDashes } from './doc-checks/dashes.mjs';
+import { checkEnv } from './doc-checks/env.mjs';
 import { checkLinks } from './doc-checks/links.mjs';
 
 const CHECKS = [
   ['relative links', checkLinks],
   ['dashes', checkDashes],
+  ['env variables', checkEnv],
 ];
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
