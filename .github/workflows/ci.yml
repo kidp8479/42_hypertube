@@ -105,6 +105,10 @@ jobs:
           echo "Backend never answered - dumping compose logs" >&2
           docker compose logs
           exit 1
+      # The stack booted on an empty database, so the migrations just built the
+      # whole schema; this fails if an entity changed without a migration.
+      - name: Check the migrations match the entities
+        run: docker compose exec -T backend npm run migration:check
       - name: Run the e2e suite
         working-directory: frontend
         run: npm run test:e2e

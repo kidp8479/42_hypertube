@@ -25,6 +25,8 @@ PROJECT := $(notdir $(CURDIR))
         up down ps re \
         logs logs-backend logs-frontend logs-db \
         sh-backend sh-frontend psql be fe \
+        migration-generate migration-run migration-revert migration-show \
+        migration-check migration-adopt \
         clean fclean wipe-db \
         format format-backend format-frontend \
         format-check format-check-backend format-check-frontend \
@@ -54,6 +56,12 @@ help:
 	@echo "  psql            - psql prompt on the dev database"
 	@echo "  be CMD=\"...\"     - run a command in the backend container (e.g. npx tsc --noEmit)"
 	@echo "  fe CMD=\"...\"     - run a command in the frontend container"
+	@echo ""
+	@echo "Database migrations (in the backend container, ADR-0010)"
+	@echo "  migration-generate NAME=add-x - write a migration from the entity changes"
+	@echo "  migration-run / -revert / -show - apply, undo the last, list"
+	@echo "  migration-check  - fail if an entity changed without a migration (CI runs it)"
+	@echo "  migration-adopt  - mark the baseline as applied on a database created before migrations"
 	@echo ""
 	@echo "Cleanup"
 	@echo "  clean           - stop and remove containers (keeps volumes + images)"
@@ -185,6 +193,39 @@ wipe-db:
 	$(COMPOSE) down
 	-$(CONTAINER) volume rm $(PROJECT)_db_data
 	@echo "Database gone. 'make up' recreates a fresh one."
+
+# ---------------------------------------------------------------------------- #
+# Database migrations (ADR-0010)                                               #
+# ---------------------------------------------------------------------------- #
+# The schema comes from backend/src/migrations only, applied at boot. They run
+# in the backend container (the database is only reachable from there); the
+# directory is bind-mounted, so a generated file appears on the host. TypeORM
+# names the file <timestamp>-<name>.ts: it is renamed to the *.migration.ts
+# role the app looks for, and formatted.
+
+migration-generate:
+	@test -n "$(NAME)" || { echo "usage: make migration-generate NAME=add-movies"; exit 1; }
+	$(COMPOSE) exec backend npm run migration:generate -- src/migrations/$(NAME)
+	@f=$$(ls -t backend/src/migrations/*-$(NAME).ts | head -1) && mv "$$f" "$${f%.ts}.migration.ts" \
+	  && cd backend && npx prettier --write src/migrations >/dev/null && echo "Review the new migration in backend/src/migrations/ before committing it."
+
+migration-run:
+	$(COMPOSE) exec backend npm run migration:run
+
+migration-revert:
+	$(COMPOSE) exec backend npm run migration:revert
+
+migration-show:
+	$(COMPOSE) exec backend npm run migration:show
+
+migration-check:
+	$(COMPOSE) exec backend npm run migration:check
+
+# A database created by the old `synchronize` already has the baseline's
+# tables: record the baseline as applied without running it. Only for a
+# database that predates the migrations (a fresh one runs the baseline itself).
+migration-adopt:
+	$(COMPOSE) exec backend npm run migration:run -- --fake
 
 # ---------------------------------------------------------------------------- #
 # Code quality - run on the host (fast; matches what the pre-commit hook uses) #
