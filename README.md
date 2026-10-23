@@ -60,7 +60,7 @@ make up                 # Postgres on the internal network, backend on :3000, fr
 **Without containers (backend/frontend only, no Postgres):**
 
 ```sh
-make install         # install backend + frontend dependencies, set up git hooks
+make install         # install root tooling (TypeScript LSP only) + backend + frontend dependencies, set up git hooks
 make dev-backend      # run the NestJS API in watch mode (http://localhost:3000)
 make dev-frontend     # run the Vite dev server (http://localhost:5173)
 ```
@@ -69,7 +69,7 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 
 | Command | Description |
 |---|---|
-| `make install` | Install backend + frontend dependencies, set up git hooks |
+| `make install` | Install root tooling (TypeScript LSP only), backend + frontend dependencies, set up git hooks |
 | `make dev-backend` | Run the NestJS API in watch mode (no containers) |
 | `make dev-frontend` | Run the Vite dev server (no containers) |
 | `make up` | Compose up (db + backend + frontend), Docker or Podman |

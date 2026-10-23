@@ -16,7 +16,7 @@ CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE))),docker,podman)
 PROJECT := $(notdir $(CURDIR))
 
 .PHONY: help \
-        install install-backend install-frontend hooks-install \
+        install install-tooling install-backend install-frontend hooks-install \
         dev-backend dev-frontend \
         up down ps re \
         logs logs-backend logs-frontend logs-db \
@@ -32,7 +32,7 @@ PROJECT := $(notdir $(CURDIR))
 
 help:
 	@echo "Setup"
-	@echo "  install         - install backend + frontend dependencies, set up git hooks"
+	@echo "  install         - install root tooling (TypeScript LSP only), backend + frontend dependencies, set up git hooks"
 	@echo ""
 	@echo "Local dev (no containers)"
 	@echo "  dev-backend     - backend in watch mode, NO DATABASE (db isn't exposed to"
@@ -73,7 +73,12 @@ help:
 # Setup                                                                        #
 # ---------------------------------------------------------------------------- #
 
-install: install-backend install-frontend hooks-install
+install: install-tooling install-backend install-frontend hooks-install
+
+# Root install is editor tooling only: it gives the TypeScript LSP a compiler
+# to find at the workspace root. backend/ and frontend/ build with their own.
+install-tooling:
+	npm install
 
 install-backend:
 	cd backend && npm install
