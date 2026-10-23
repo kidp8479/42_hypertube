@@ -1,0 +1,33 @@
+meta {
+  name: 24 42 OAuth login -> 302 to 42 with the state cookie
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/auth/42/login
+  body: none
+  auth: none
+}
+
+docs {
+  Start of the 42 handshake (ADR-0007): public route, the browser is sent to
+  42's authorize page and a one-shot nonce cookie is set, which the callback
+  must match (login CSRF guard). Redirects are not followed so the 302 itself
+  can be asserted.
+}
+
+settings {
+  followRedirects: false
+}
+
+assert {
+  res.status: eq 302
+  res.headers.location: contains https://api.intra.42.fr/oauth/authorize
+}
+
+tests {
+  test("binds the flow to the browser with the state cookie", function () {
+    expect(res.getHeader("set-cookie").join(";")).to.contain("oauth_state=");
+  });
+}
