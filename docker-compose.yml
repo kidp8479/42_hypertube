@@ -77,8 +77,33 @@ services:
       - backend
     restart: unless-stopped
 
+  # Edge proxy (HYP-71): TLS, routing and edge headers in front of the two
+  # services above. Only the host-side ports are configurable; inside, nginx
+  # listens on 8080 (redirect) and 8443 (TLS).
+  proxy:
+    build:
+      context: ./proxy
+    environment:
+      # Where the HTTP -> HTTPS redirect sends the browser: the port published below.
+      PROXY_PUBLIC_HTTPS_PORT: ${HYPERTUBE_HTTPS_PORT:-8443}
+      # 0 = no HSTS. Set it only for a real deployment: HSTS is per host name,
+      # so on localhost it would force HTTPS onto every other local port.
+      PROXY_HSTS_MAX_AGE: ${PROXY_HSTS_MAX_AGE:-0}
+    ports:
+      - "127.0.0.1:${HYPERTUBE_HTTP_PORT:-8080}:8080"
+      - "127.0.0.1:${HYPERTUBE_HTTPS_PORT:-8443}:8443"
+    volumes:
+      # The certificate lives here: mount a real tls.crt / tls.key to replace
+      # the self-signed one.
+      - proxy_certs:/etc/nginx/certs
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
 volumes:
   db_data:
+  proxy_certs:
   backend_node_modules:
   backend_dist:
   frontend_node_modules:
