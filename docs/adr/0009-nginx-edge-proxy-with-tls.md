@@ -59,6 +59,22 @@ the Vite dev proxy) and `/api-docs` to the backend.
   browser sees (`/api/auth`), and the cookie is `Secure` whenever the request
   came in over HTTPS (ADR-0007).
 
+- **The redirect never trusts the Host header.** The HTTP to HTTPS redirect
+  goes to `PROXY_SERVER_NAME` (default `localhost`) and the published HTTPS
+  port; building it from `$host` let a client make the proxy redirect to any
+  site (found by the security review, HYP-73).
+- **The access log has no query string and no Referer.** An OAuth callback
+  carries the provider's `code` and `state` in its query, and the SPA's
+  `/oauth/callback?code=...` page would repeat our single-use exchange code in
+  the Referer of every asset request. The `log_format` keeps the path only.
+  Residual: nginx's *error* log always quotes the request line, so a callback
+  that fails upstream (backend down) still writes its query there. The codes
+  are single-use and short-lived, and this only happens on a proxy error.
+- **`X-Forwarded-For` is set in every location** through one shared snippet
+  (`proxy/snippets/proxy-headers.conf`), not only on `/api/`: the backend takes
+  the address nginx appended, so no location may forward the client's header
+  as it is.
+
 ## Consequences
 
 - **A browser warning** on the self-signed certificate, once per browser.

@@ -3,17 +3,30 @@
 
 server_tokens off;
 
-# Plain HTTP only redirects. The public HTTPS port is the one published on the
-# host (it may not be 443), so the redirect target comes from the environment.
+# The access log keeps the path, never the query string or the Referer: an
+# OAuth callback carries the provider's `code` and `state` in its query, and
+# the SPA's /oauth/callback page carries our own single-use exchange code,
+# which every asset request would repeat in its Referer.
+log_format noquery '$remote_addr [$time_local] "$request_method $uri" $status '
+                   '$body_bytes_sent "$http_user_agent"';
+# `access_log` is set in each server below, not here: at this level it would
+# add to the image's default log (full request line, Referer) instead of
+# replacing it.
+
+# Plain HTTP only redirects. The target is the configured public name, never
+# the Host header (a client could otherwise make us redirect to any site), and
+# the HTTPS port published on the host, which may not be 443.
 server {
     listen 8080;
     server_name _;
-    return 301 https://$host:${PROXY_PUBLIC_HTTPS_PORT}$request_uri;
+    access_log /dev/stdout noquery;
+    return 301 https://${PROXY_SERVER_NAME}:${PROXY_PUBLIC_HTTPS_PORT}$request_uri;
 }
 
 server {
     listen 8443 ssl;
     server_name _;
+    access_log /dev/stdout noquery;
 
     ssl_certificate     /etc/nginx/certs/tls.crt;
     ssl_certificate_key /etc/nginx/certs/tls.key;
@@ -33,20 +46,16 @@ server {
     # backend as /<path> (the trailing slash on proxy_pass strips the prefix).
     location /api/ {
         proxy_pass http://backend:3000/;
+        include /etc/nginx/snippets/proxy-headers.conf;
         # The backend never sees /api, so it is told: cookies scoped to the
         # auth routes need the path the browser uses (ADR-0007).
         proxy_set_header X-Forwarded-Prefix /api;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Swagger UI and its schema live at the backend root, not under /api.
     location /api-docs {
         proxy_pass http://backend:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        include /etc/nginx/snippets/proxy-headers.conf;
     }
 
     # Everything else is the SPA. The upgrade headers carry Vite's HMR
@@ -54,9 +63,8 @@ server {
     location / {
         proxy_pass http://frontend:5173;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
+        include /etc/nginx/snippets/proxy-headers.conf;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }

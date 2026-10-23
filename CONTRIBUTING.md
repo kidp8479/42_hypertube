@@ -32,7 +32,7 @@ before merging it.
 
 **This is enforced, not just a convention to remember.** Branch
 protection on `main` requires every status check (`backend`, `frontend`,
-`e2e`, `scan`) to be re-run against the *current* `main` before the merge
+`e2e`, `scan`, `docs`) to be re-run against the *current* `main` before the merge
 button is even clickable (`required_status_checks.strict`) - a stale PR
 cannot be merged, full stop. This is what actually stops divergent merges
 from recurring - not the rule by itself.
