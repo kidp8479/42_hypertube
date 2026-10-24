@@ -119,8 +119,7 @@ store is only needed once more than one backend instance runs (noted in
 | Control | Where | Proof |
 |---|---|---|
 | `PATCH /users/:id` and `DELETE /users/:id` return `403` unless `req.user.id === :id` | `users.controller.ts` `update()` / `remove()` | `users.controller.spec.ts` |
-| Reading another profile (`GET /users/:id`) stays allowed, per the subject | `users.controller.ts` | |
-| `GET /users` returns every user's `email`, `firstName`, `lastName` (hash excluded) to any authenticated caller | `users.service.ts` `findAll()` | **decision, not a bug**: the subject imposes `/users`. Whether the list should be trimmed to public fields is open - `docs/defense/backlog.md` |
+| Any profile can be read, but the email stays private (subject III.1, III.4): `GET /users` gives `id` and `username` only, `GET /users/:id` gives `id`, `username` and `profilePicture` to anyone but the owner, who gets the full profile | `users.controller.ts` `findAll()` / `findOne()`, `dto/user-summary.dto.ts`, `dto/public-user.dto.ts` | `users.controller.fields.spec.ts`, Bruno 08 and 10 |
 
 ## 9. Error handling / information leakage
 
@@ -159,7 +158,6 @@ store is only needed once more than one backend instance runs (noted in
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |
-| `GET /users` exposes all basic profile fields to any member | backlog | low - review |
 | Two concurrent first-time OAuth callbacks can race on user creation (409 or orphan user) | HYP-55 | low - needs a double-click on a first login |
 
 ## Notes

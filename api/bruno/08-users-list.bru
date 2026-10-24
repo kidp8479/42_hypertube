@@ -19,8 +19,13 @@ assert {
   res.body: isArray
 }
 
+docs {
+  Each entry is id and username only (subject III.4): no email, no names,
+  never the password hash.
+}
+
 tests {
-  test("no user in the list exposes a password hash", function () {
-    res.body.forEach((u) => expect(u).to.not.have.property("password"));
+  test("each entry is id and username only", function () {
+    res.body.forEach((u) => expect(Object.keys(u).sort()).to.eql(["id", "username"]));
   });
 }
