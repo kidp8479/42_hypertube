@@ -24,9 +24,8 @@ export class CreateUserDto {
   @MaxLength(255)
   readonly email!: string;
 
-  // Trimmed but not lower-cased: the username is display text and its
-  // case is preserved. Case-insensitive uniqueness is a separate question
-  // (see backlog).
+  // Trimmed but not lower-cased: the username is display text and its case
+  // is preserved. Uniqueness ignores the case (`UQ_user_username_lower`).
   @Trim()
   @IsString()
   @Length(3, 30)
