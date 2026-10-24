@@ -36,8 +36,8 @@ export const authFr: typeof authEn = {
     submitting: 'Connexion...',
     registeredNotice: 'Compte créé. Veuillez vous connecter.',
     badCredentials: 'E-mail ou mot de passe invalide.',
-    noAccount: 'Pas encore de compte ?',
-    register: 'S’inscrire',
+    forgotPassword: 'Mot de passe oublié ?',
+    createAccount: 'Créer un compte',
   },
   home: {
     signedIn: 'Connecté en tant que <strong>{{username}}</strong> ({{email}})',

@@ -4,6 +4,13 @@
   align-content: start;
 }
 
+.label {
+  color: var(--color-muted);
+  font: 500 var(--text-xs) var(--font-mono);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
 .input {
   width: 100%;
   padding: var(--space-3);
@@ -26,6 +33,19 @@
 }
 
 .error {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
   color: var(--color-alert);
   font-size: var(--text-sm);
+}
+
+.icon {
+  flex: none;
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+  margin-top: var(--space-1);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--border-width);
 }

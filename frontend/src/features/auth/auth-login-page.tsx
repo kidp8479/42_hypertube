@@ -68,6 +68,7 @@ export function LoginPage() {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         autoComplete="email"
+        invalid={error !== null}
         required
       />
 
@@ -77,6 +78,7 @@ export function LoginPage() {
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="current-password"
+        invalid={error !== null}
         required
       />
 
@@ -88,9 +90,13 @@ export function LoginPage() {
 
       <OAuthButtons />
 
-      <p>
-        {t('login.noAccount')} <Link to="/register">{t('login.register')}</Link>
-      </p>
+      <div className={styles.links}>
+        {/* Not wired yet: password reset is HYP-34. Kept for the layout. */}
+        <a href="#forgot-password" onClick={(event) => event.preventDefault()}>
+          {t('login.forgotPassword')}
+        </a>
+        <Link to="/register">{t('login.createAccount')}</Link>
+      </div>
     </form>
   );
 }

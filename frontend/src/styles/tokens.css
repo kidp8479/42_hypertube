@@ -44,6 +44,7 @@
   --leading-body: 1.5;
   --leading-title: 1.2;
   --tracking-label: 0.04em; /* monospace labels: buttons */
+  --tracking-caps: 0.1em; /* uppercase field labels */
 
   /* Space: a 4px base, every gap and padding is one of these. */
   --space-1: 0.25rem;
@@ -67,4 +68,5 @@
   --focus-offset: 2px;
   --target-min: 1.5rem; /* 24px, WCAG 2.2 minimum target size */
   --badge-size-sm: 1.25rem; /* the icon badge inside an alert */
+  --icon-xs: 0.75rem; /* 12px: the mark before a field error */
 }

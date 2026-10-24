@@ -172,7 +172,7 @@ export function RegisterPage() {
 
       <OAuthButtons />
 
-      <p>
+      <p className={styles.links}>
         {t('register.hasAccount')}{' '}
         <Link to="/login">{t('register.logIn')}</Link>
       </p>

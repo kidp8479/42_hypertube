@@ -21,6 +21,12 @@ describe('Field', () => {
     expect(screen.queryByText('We never share it')).not.toBeInTheDocument();
   });
 
+  it('marks the input invalid without a message of its own', () => {
+    render(<Field label="Email" invalid />);
+
+    expect(screen.getByLabelText('Email')).toBeInvalid();
+  });
+
   it('forwards native input attributes', () => {
     render(<Field label="Password" type="password" autoComplete="off" />);
 

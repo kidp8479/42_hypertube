@@ -42,7 +42,7 @@ function renderLoginPage(
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Email'), 'ada@example.com');
   await user.type(screen.getByLabelText('Password'), 'correct horse');
-  await user.click(screen.getByRole('button', { name: 'Log in' }));
+  await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }
 
 describe('LoginPage', () => {
@@ -79,12 +79,23 @@ describe('LoginPage', () => {
     );
   });
 
+  it('marks both inputs invalid after a failed attempt', async () => {
+    const { login, user } = renderLoginPage();
+    login.mockRejectedValue(new ApiError(401));
+
+    await fillAndSubmit(user);
+
+    await screen.findByRole('alert');
+    expect(screen.getByLabelText('Email')).toBeInvalid();
+    expect(screen.getByLabelText('Password')).toBeInvalid();
+  });
+
   it('redirects an already-authenticated visitor away from /login', () => {
     renderLoginPage({ status: 'authenticated', user: fakeUser });
 
     expect(screen.getByText('home page')).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Log in' }),
+      screen.queryByRole('button', { name: 'Sign in' }),
     ).not.toBeInTheDocument();
   });
 
@@ -95,7 +106,7 @@ describe('LoginPage', () => {
     await fillAndSubmit(user);
 
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Log in' })).toBeEnabled(),
+      expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled(),
     );
   });
 

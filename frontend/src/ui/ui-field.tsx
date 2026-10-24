@@ -8,6 +8,8 @@ export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
   /** Replaces the hint and marks the input invalid. */
   error?: string;
+  /** Marks the input invalid when the message lives elsewhere (a form-level alert). */
+  invalid?: boolean;
 }
 
 /**
@@ -15,24 +17,42 @@ export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
  * and the error are wired to the input (`for`, `aria-describedby`,
  * `aria-invalid`), so a screen reader announces them with the field.
  */
-export function Field({ label, hint, error, id, ...input }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  invalid,
+  id,
+  ...input
+}: FieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const messageId = `${inputId}-message`;
   const message = error ?? hint;
   return (
     <div className={styles.field}>
-      <label htmlFor={inputId}>{label}</label>
+      <label htmlFor={inputId} className={styles.label}>
+        {label}
+      </label>
       <input
         {...input}
         id={inputId}
         className={styles.input}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error || invalid ? true : undefined}
         aria-describedby={message ? messageId : undefined}
       />
-      {message && (
-        <span id={messageId} className={error ? styles.error : styles.hint}>
-          {message}
+      {error && (
+        <span id={messageId} className={styles.error}>
+          <svg viewBox="0 0 12 12" aria-hidden="true" className={styles.icon}>
+            <circle cx="6" cy="6" r="5" />
+            <path d="M6 3.2v3.4M6 8.4v.2" />
+          </svg>
+          <span>{error}</span>
+        </span>
+      )}
+      {!error && hint && (
+        <span id={messageId} className={styles.hint}>
+          {hint}
         </span>
       )}
     </div>
