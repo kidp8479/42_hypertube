@@ -131,7 +131,7 @@ describe('OAuthCallbackPage', () => {
       'This sign-in link has expired. Please try again.',
     );
     expect(
-      screen.getByRole('link', { name: 'Back to log in' }),
+      screen.getByRole('link', { name: 'Back to sign in' }),
     ).toHaveAttribute('href', '/login');
   });
 

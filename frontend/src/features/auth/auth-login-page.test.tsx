@@ -42,7 +42,7 @@ function renderLoginPage(
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Email'), 'ada@example.com');
   await user.type(screen.getByLabelText('Password'), 'correct horse');
-  await user.click(screen.getByRole('button', { name: 'Log in' }));
+  await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }
 
 describe('LoginPage', () => {
@@ -77,6 +77,19 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Please try again.',
     );
+    // The credentials are not at fault, so the inputs are not flagged.
+    expect(screen.getByLabelText('Email')).toBeValid();
+  });
+
+  it('marks both inputs invalid after a failed attempt', async () => {
+    const { login, user } = renderLoginPage();
+    login.mockRejectedValue(new ApiError(401));
+
+    await fillAndSubmit(user);
+
+    await screen.findByRole('alert');
+    expect(screen.getByLabelText('Email')).toBeInvalid();
+    expect(screen.getByLabelText('Password')).toBeInvalid();
   });
 
   it('redirects an already-authenticated visitor away from /login', () => {
@@ -84,7 +97,7 @@ describe('LoginPage', () => {
 
     expect(screen.getByText('home page')).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Log in' }),
+      screen.queryByRole('button', { name: 'Sign in' }),
     ).not.toBeInTheDocument();
   });
 
@@ -95,7 +108,7 @@ describe('LoginPage', () => {
     await fillAndSubmit(user);
 
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Log in' })).toBeEnabled(),
+      expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled(),
     );
   });
 

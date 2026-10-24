@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { OAuthCodeRejectedError } from './auth-actions';
+import { Alert } from '../../ui/ui-alert';
 import { useAuth } from './auth-context';
 import styles from './auth-oauth-callback-page.module.css';
 
@@ -87,9 +88,7 @@ export function OAuthCallbackPage() {
       <h1>{t('oauthCallback.title')}</h1>
       {error ? (
         <>
-          <p className={styles.error} role="alert">
-            {t(`oauthCallback.errors.${error}`)}
-          </p>
+          <Alert tone="error">{t(`oauthCallback.errors.${error}`)}</Alert>
           <p>
             <Link to="/login">{t('oauthCallback.backToLogin')}</Link>
           </p>

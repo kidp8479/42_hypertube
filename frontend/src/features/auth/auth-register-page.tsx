@@ -19,31 +19,15 @@ import {
 } from './auth-validation';
 import { DEFAULT_LANGUAGE } from '../../lib/languages';
 import { isSupportedLanguage } from '../../lib/language';
+import { Alert } from '../../ui/ui-alert';
+import { Button } from '../../ui/ui-button';
+import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-register-page.module.css';
 
 // The form-level error is stored as a translation key, not a sentence, so it
 // is translated at render time and follows a language switch.
 type FormError = 'register.conflict' | 'errors.generic';
-
-/** One field's validation message, or nothing when the field is valid. */
-function FieldError({
-  field,
-  error,
-}: {
-  field: RegisterField;
-  error?: ValidationError;
-}) {
-  const { t } = useTranslation('auth');
-  if (!error) {
-    return null;
-  }
-  return (
-    <p className={styles.fieldError}>
-      {describeValidationError(field, error, t)}
-    </p>
-  );
-}
 
 /** A labelled input plus its validation message, for one register field. */
 function RegisterInput({
@@ -52,6 +36,8 @@ function RegisterInput({
   autoComplete,
   value,
   error,
+  hint,
+  placeholder,
   onChange,
 }: {
   field: RegisterField;
@@ -59,22 +45,22 @@ function RegisterInput({
   autoComplete: string;
   value: string;
   error?: ValidationError;
+  hint?: string;
+  placeholder?: string;
   onChange: (field: RegisterField, value: string) => void;
 }) {
   const { t } = useTranslation('auth');
   return (
-    <>
-      <label className={styles.field}>
-        {t(`fields.${field}`)}
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(field, e.target.value)}
-          autoComplete={autoComplete}
-        />
-      </label>
-      <FieldError field={field} error={error} />
-    </>
+    <Field
+      label={t(`fields.${field}`)}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(field, e.target.value)}
+      autoComplete={autoComplete}
+      hint={hint}
+      placeholder={placeholder}
+      error={error && describeValidationError(field, error, t)}
+    />
   );
 }
 
@@ -133,73 +119,78 @@ export function RegisterPage() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <h1>{t('register.title')}</h1>
+    <main>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <h1>{t('register.title')}</h1>
 
-      <RegisterInput
-        field="email"
-        type="email"
-        autoComplete="email"
-        value={values.email}
-        error={errors.email}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="username"
-        type="text"
-        autoComplete="username"
-        value={values.username}
-        error={errors.username}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="firstName"
-        type="text"
-        autoComplete="given-name"
-        value={values.firstName}
-        error={errors.firstName}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="lastName"
-        type="text"
-        autoComplete="family-name"
-        value={values.lastName}
-        error={errors.lastName}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="password"
-        type="password"
-        autoComplete="new-password"
-        value={values.password}
-        error={errors.password}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="confirmPassword"
-        type="password"
-        autoComplete="new-password"
-        value={values.confirmPassword}
-        error={errors.confirmPassword}
-        onChange={handleChange}
-      />
-      {formError && (
-        <p className={styles.error} role="alert">
-          {t(formError)}
+        <div className={styles.row}>
+          <RegisterInput
+            field="firstName"
+            type="text"
+            autoComplete="given-name"
+            value={values.firstName}
+            error={errors.firstName}
+            onChange={handleChange}
+          />
+          <RegisterInput
+            field="lastName"
+            type="text"
+            autoComplete="family-name"
+            value={values.lastName}
+            error={errors.lastName}
+            onChange={handleChange}
+          />
+        </div>
+        <RegisterInput
+          field="username"
+          type="text"
+          autoComplete="username"
+          value={values.username}
+          error={errors.username}
+          hint={t('hints.username')}
+          onChange={handleChange}
+        />
+        <RegisterInput
+          field="email"
+          type="email"
+          autoComplete="email"
+          value={values.email}
+          error={errors.email}
+          placeholder={t('placeholders.email')}
+          onChange={handleChange}
+        />
+        <div className={styles.row}>
+          <RegisterInput
+            field="password"
+            type="password"
+            autoComplete="new-password"
+            value={values.password}
+            error={errors.password}
+            hint={t('hints.password')}
+            onChange={handleChange}
+          />
+          <RegisterInput
+            field="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            value={values.confirmPassword}
+            error={errors.confirmPassword}
+            onChange={handleChange}
+          />
+        </div>
+        {formError && <Alert tone="error">{t(formError)}</Alert>}
+
+        <Button type="submit" variant="solid" disabled={isSubmitting}>
+          {isSubmitting ? t('register.submitting') : t('register.submit')}
+        </Button>
+
+        <OAuthButtons />
+
+        <p className={styles.links}>
+          {t('register.hasAccount')}{' '}
+          <Link to="/login">{t('register.logIn')}</Link>
         </p>
-      )}
-
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? t('register.submitting') : t('register.submit')}
-      </button>
-
-      <OAuthButtons />
-
-      <p>
-        {t('register.hasAccount')}{' '}
-        <Link to="/login">{t('register.logIn')}</Link>
-      </p>
-    </form>
+      </form>
+    </main>
   );
 }

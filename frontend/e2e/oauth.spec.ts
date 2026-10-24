@@ -66,10 +66,10 @@ test.describe('/oauth/callback page', () => {
     await page.goto('/api/auth/42/callback?code=any-code&state=forged');
 
     await expect(page).toHaveURL(/\/oauth\/callback\?error=failed$/);
-    await expect(page.getByRole('alert')).toHaveText(
+    await expect(page.getByRole('alert')).toContainText(
       'Sign-in failed. Please try again.',
     );
-    await page.getByRole('link', { name: 'Back to log in' }).click();
+    await page.getByRole('link', { name: 'Back to sign in' }).click();
     await expect(page).toHaveURL(/\/login$/);
     expect(consoleIssues).toEqual([]);
   });

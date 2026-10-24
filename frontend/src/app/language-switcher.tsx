@@ -44,7 +44,7 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div className={styles.switcher}>
+    <header className={styles.switcher}>
       <label>
         {t('language.label')}{' '}
         <select
@@ -58,6 +58,6 @@ export function LanguageSwitcher() {
           ))}
         </select>
       </label>
-    </div>
+    </header>
   );
 }

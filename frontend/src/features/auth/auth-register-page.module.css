@@ -1,25 +1,30 @@
-/* Minimal layout only - real visual design lands in a later issue. */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  max-width: 20rem;
-  margin: 4rem auto;
+  gap: var(--space-4);
+  max-width: 28rem;
+  margin: var(--space-7) auto;
 }
 
-.field {
+.links {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-base);
 }
 
-.error {
-  margin: 0;
-  color: #b00020;
+/* A standalone link is a tap target: 24px tall at least (WCAG 2.2). */
+.links a {
+  display: inline-block;
+  padding-block: var(--space-1);
+  min-height: var(--target-min);
 }
 
-.fieldError {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #b00020;
+/* Pairs share a row when there is room, stack on a phone. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
 }

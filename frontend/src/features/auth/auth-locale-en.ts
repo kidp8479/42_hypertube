@@ -9,6 +9,13 @@ export const authEn = {
     firstName: 'First name',
     lastName: 'Last name',
   },
+  hints: {
+    username: '3 to 30 characters',
+    password: '8 to 100 characters',
+  },
+  placeholders: {
+    email: 'ada@example.com',
+  },
   errors: {
     generic: 'Something went wrong. Please try again.',
   },
@@ -20,21 +27,21 @@ export const authEn = {
     mismatch: 'Passwords do not match',
   },
   register: {
-    title: 'Register',
+    title: 'Create your account',
     submit: 'Register',
     submitting: 'Registering...',
     hasAccount: 'Already have an account?',
-    logIn: 'Log in',
+    logIn: 'Sign in',
     conflict: 'An account with this email or username already exists.',
   },
   login: {
-    title: 'Log in',
-    submit: 'Log in',
-    submitting: 'Logging in...',
+    title: 'Sign in',
+    submit: 'Sign in',
+    submitting: 'Signing in...',
     registeredNotice: 'Account created. Please sign in.',
     badCredentials: 'Invalid email or password.',
-    noAccount: 'No account yet?',
-    register: 'Register',
+    forgotPassword: 'Forgot password?',
+    createAccount: 'Create an account',
   },
   home: {
     signedIn: 'Signed in as <strong>{{username}}</strong> ({{email}})',
@@ -46,7 +53,7 @@ export const authEn = {
   oauthCallback: {
     title: 'Sign in',
     signingIn: 'Signing you in...',
-    backToLogin: 'Back to log in',
+    backToLogin: 'Back to sign in',
     errors: {
       cancelled: 'Sign-in was cancelled.',
       email_unverified:

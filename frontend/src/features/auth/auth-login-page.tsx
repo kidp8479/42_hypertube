@@ -7,6 +7,9 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api';
 import { useAuth } from './auth-context';
+import { Alert } from '../../ui/ui-alert';
+import { Button } from '../../ui/ui-button';
+import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import styles from './auth-login-page.module.css';
 
@@ -52,50 +55,54 @@ export function LoginPage() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <h1>{t('login.title')}</h1>
+    <main>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <h1>{t('login.title')}</h1>
 
-      {justRegistered && (
-        <p className={styles.notice}>{t('login.registeredNotice')}</p>
-      )}
+        {justRegistered && (
+          <Alert tone="success">{t('login.registeredNotice')}</Alert>
+        )}
 
-      <label className={styles.field}>
-        {t('fields.email')}
-        <input
+        <Field
+          label={t('fields.email')}
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           autoComplete="email"
+          placeholder={t('placeholders.email')}
+          invalid={error === 'login.badCredentials'}
           required
         />
-      </label>
 
-      <label className={styles.field}>
-        {t('fields.password')}
-        <input
+        <Field
+          label={t('fields.password')}
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="current-password"
+          invalid={error === 'login.badCredentials'}
           required
         />
-      </label>
 
-      {error && (
-        <p className={styles.error} role="alert">
-          {t(error)}
-        </p>
-      )}
+        {error && <Alert tone="error">{t(error)}</Alert>}
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? t('login.submitting') : t('login.submit')}
-      </button>
+        <Button type="submit" variant="solid" disabled={isSubmitting}>
+          {isSubmitting ? t('login.submitting') : t('login.submit')}
+        </Button>
 
-      <OAuthButtons />
+        <OAuthButtons />
 
-      <p>
-        {t('login.noAccount')} <Link to="/register">{t('login.register')}</Link>
-      </p>
-    </form>
+        <div className={styles.links}>
+          {/* Not wired yet: password reset is HYP-34. Kept for the layout. */}
+          <a
+            href="#forgot-password"
+            onClick={(event) => event.preventDefault()}
+          >
+            {t('login.forgotPassword')}
+          </a>
+          <Link to="/register">{t('login.createAccount')}</Link>
+        </div>
+      </form>
+    </main>
   );
 }
