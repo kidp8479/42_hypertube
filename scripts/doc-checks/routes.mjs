@@ -20,6 +20,10 @@ export const PLANNED = new Set([
   'GET /comments',
   'GET /comments/:p',
   'GET /movies/:p/comments',
+  'POST /comments',
+  'POST /movies/:p/comments',
+  'PATCH /comments/:p',
+  'DELETE /comments/:p',
   'POST /auth/reset-password',
 ]);
 
