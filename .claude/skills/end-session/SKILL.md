@@ -27,7 +27,10 @@ survive between the home and school machines. This skill produces both.
    - Rewrite the Linear "Session Handoff" doc to the current state only
      (open PRs, pending outside the repo, next steps, undecided items).
      Never append a dated section: the history is the daily-log channel,
-     and an appended doc grows past what one read can load.
+     and an appended doc grows past what one read can load. If the doc
+     already holds appended history, first attach its old content to the
+     doc as an archive file (`prepare_file_upload`, PUT, link it), then
+     rewrite.
 5. Do **not** commit code. Do not push.
 
 ## Why a skill
