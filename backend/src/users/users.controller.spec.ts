@@ -42,10 +42,6 @@ describe('UsersController', () => {
     users = module.get(UsersService);
   });
 
-  it('is defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('ownership on :id', () => {
     it('update rejects a mismatched user with 403 and never calls the service', () => {
       expect(() => controller.update(2, { firstName: 'x' }, ada)).toThrow(

@@ -75,10 +75,6 @@ describe('UsersService', () => {
   });
 
   // --- tests ---
-  it('is defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('create', () => {
     it('hashes the password before it reaches the repository', async () => {
       // Echo the input back, like the real repository would - enough to

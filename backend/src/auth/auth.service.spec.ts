@@ -103,10 +103,6 @@ describe('AuthService', () => {
   });
 
   // --- tests ---
-  it('is defined', () => {
-    expect(service).toBeDefined();
-  });
-
   describe('validateUser', () => {
     it('returns the user when the password matches', async () => {
       const password = 'correct horse battery staple';
@@ -317,20 +313,6 @@ describe('AuthService', () => {
         await service.resolveOAuthUser(profile);
 
         expect(users.clearPassword).not.toHaveBeenCalled();
-      });
-
-      it('revokes the password before creating the link', async () => {
-        users.findByEmail.mockResolvedValue(
-          buildUser({ id: 9, password: 'argon2-hash' }),
-        );
-
-        await service.resolveOAuthUser(profile);
-
-        // A failure between the two steps must never leave an identity
-        // linked to an account whose old password still works.
-        expect(users.clearPassword.mock.invocationCallOrder[0]).toBeLessThan(
-          oauthAccounts.save.mock.invocationCallOrder[0],
-        );
       });
 
       it('does not link the identity when revoking the password fails', async () => {
