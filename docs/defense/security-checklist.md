@@ -164,5 +164,6 @@ store is only needed once more than one backend instance runs (noted in
 
 - The subject is dated (v7.1). Reconfirm the exact eliminatory wording on
   the intra before the final defense.
-- Re-run the `web-security-review` skill against this file before HYP-16
-  is closed.
+- Last `web-security-review` run over the auth surface:
+  [`2026-10-24-auth-web-security-review.md`](../reviews/2026-10-24-auth-web-security-review.md).
+  Run it again before HYP-16 is closed.
