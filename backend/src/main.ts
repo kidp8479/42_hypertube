@@ -3,8 +3,9 @@ import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor } from '@nestjs/common';
 import { QueryFailedFilter } from './common/filters/query-failed.filter';
+import { globalValidationPipe } from './common/pipes/global-validation.pipe';
 import { trustEdgeProxy } from './config/trust-proxy.config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -26,13 +27,7 @@ async function bootstrap() {
 
   // Validates every incoming body/query against its DTO (class-validator)
   // before the handler runs: the "validate all forms" security constraint.
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // strips fields not declared in the DTO
-      forbidNonWhitelisted: true, // ...and returns 400 if any are sent
-      transform: true, // turns the JSON payload into a DTO class instance
-    }),
-  );
+  app.useGlobalPipes(globalValidationPipe());
 
   // Strips @Exclude()-marked fields (e.g. User.password) from every
   // response body. Relies on handlers returning class instances, which

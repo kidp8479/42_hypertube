@@ -16,11 +16,13 @@ auth:bearer {
 
 body:json {
   {
-    "firstName": "Ada K."
+    "firstName": "Ada K.",
+    "preferredLanguage": "fr"
   }
 }
 
 assert {
   res.status: eq 200
   res.body.firstName: eq Ada K.
+  res.body.preferredLanguage: eq fr
 }
