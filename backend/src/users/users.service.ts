@@ -37,8 +37,9 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  /** Every user, id and username only: the list never needs more (subject III.4). */
   findAll() {
-    return this.usersRepository.find();
+    return this.usersRepository.find({ select: { id: true, username: true } });
   }
 
   /**

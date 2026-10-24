@@ -14,7 +14,15 @@ auth:bearer {
   token: {{token}}
 }
 
+docs {
+  Ada reads her own profile, so the email is there. Another user's profile
+  carries id, username and picture only: covered by
+  backend/src/users/users.controller.fields.spec.ts, since the collection has
+  no second account alive at this point.
+}
+
 assert {
   res.status: eq 200
   res.body.id: eq {{adaId}}
+  res.body.email: eq ada-{{runId}}@example.com
 }

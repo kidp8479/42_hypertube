@@ -20,7 +20,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | Constraint | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
 | No plaintext passwords in DB | HYP-10 | `users.service.ts` hashes with argon2id before insert (`argon2.config.ts`, ADR-0001/0004) | `users.service.spec.ts` asserts stored value != plaintext and `argon2.verify` matches | done |
-| No SQL injection possible | HYP-10 | TypeORM repository + parameterised query builders only; `:id` via `ParseIntPipe` | code review; no string concatenation with input anywhere | done |
+| No SQL injection possible | HYP-10 | TypeORM repository + parameterised query builders only; `:id` via `ParseIdPipe` | code review; no string concatenation with input anywhere | done |
 | No HTML/JS injection | HYP-10 / HYP-45 | backend returns JSON only; React auto-escapes; no `dangerouslySetInnerHTML` | `web-security-review` (HYP-10, HYP-45) | partial - CSP still todo (HYP-49) |
 | All forms and uploads validated | HYP-10 | global `ValidationPipe` (`whitelist` + `forbidNonWhitelisted` + `transform`); class-validator DTOs | DTO specs; `forbidNonWhitelisted` returns 400 on unknown fields | done (uploads: HYP-38) |
 | `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks secret scan in CI (`scan`, a required check on `main`) | done |

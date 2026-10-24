@@ -6,12 +6,12 @@ import {
   Body,
   Patch,
   Param,
-  ParseIntPipe,
   Delete,
   ForbiddenException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
+import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 import { scaledThrottleLimit } from '../config/throttle.config';
 import {
   CurrentUser,
@@ -20,6 +20,8 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserSummaryDto } from './dto/user-summary.dto';
+import { PublicUserDto } from './dto/public-user.dto';
 
 /**
  * Account CRUD (`/users`). Registration is public; every mutating route on
@@ -38,32 +40,40 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  // Every user, as id and username only (subject III.4).
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    const users = await this.usersService.findAll();
+    return users.map((user) => new UserSummaryDto(user));
   }
 
   // The caller's own profile. Declared before the ':id' route on purpose:
   // Nest matches routes in declaration order, so with ':id' first a request
-  // to /users/me would bind ":id" = "me" and ParseIntPipe would 400 before
+  // to /users/me would bind ":id" = "me" and ParseIdPipe would 400 before
   // this handler ran.
   @Get('me')
   findMe(@CurrentUser() user: AuthUser) {
     return this.usersService.findOne(user.id);
   }
 
-  // ParseIntPipe rejects a non-numeric :id with 400 before the service
-  // runs, so no query is ever built from `NaN`.
+  // Any profile can be read, but only the owner sees all of it: someone
+  // else gets the public fields, never the email (subject III.1, III.4).
+  // ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
+  // service runs, so no query is ever built from it.
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  async findOne(
+    @Param('id', ParseIdPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const found = await this.usersService.findOne(id);
+    return user.id === id ? found : new PublicUserDto(found);
   }
 
   // A user may only edit or delete their own profile: 403 otherwise, per
-  // the subject. Reading another profile (GET :id) stays allowed.
+  // the subject.
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIdPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: AuthUser,
   ) {
@@ -74,7 +84,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+  remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     if (user.id !== id) {
       throw new ForbiddenException();
     }
