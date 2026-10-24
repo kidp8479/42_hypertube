@@ -4,6 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
+import { FindOperator } from 'typeorm';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,6 +19,16 @@ type RepositoryMock = {
   delete: jest.Mock;
   update: jest.Mock;
 };
+
+// The username each `findOneBy` call looked for, in order. The lookup is a
+// raw operator (a case-insensitive comparison), so the name sits in its
+// parameters rather than in the `where` object itself.
+function lookedUpUsernames(findOneBy: jest.Mock): unknown[] {
+  const calls = findOneBy.mock.calls as [{ username: FindOperator<string> }][];
+  return calls.map(
+    ([where]) => where.username.objectLiteralParameters?.username as unknown,
+  );
+}
 
 // A valid registration payload. Override just the fields a test cares about.
 const buildCreateUserDto = (
@@ -112,7 +123,7 @@ describe('UsersService', () => {
 
       const user = await service.createFromOAuth(oauthProfile);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ username: 'ada' });
+      expect(lookedUpUsernames(repository.findOneBy)).toEqual(['ada']);
       expect(user).toMatchObject({
         email: 'ada@example.com',
         username: 'ada',
@@ -130,13 +141,25 @@ describe('UsersService', () => {
 
       const user = await service.createFromOAuth(oauthProfile);
 
-      expect(repository.findOneBy).toHaveBeenNthCalledWith(1, {
-        username: 'ada',
-      });
-      expect(repository.findOneBy).toHaveBeenNthCalledWith(2, {
-        username: 'ada1',
-      });
+      expect(lookedUpUsernames(repository.findOneBy)).toEqual(['ada', 'ada1']);
       expect(user.username).toBe('ada1');
+    });
+
+    it('treats a username differing only by case as taken', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+
+      await service.createFromOAuth(oauthProfile);
+
+      // The unique index is on LOWER(username): the lookup must compare the
+      // same way, or it calls `Ada` free for `ada` and the insert then fails.
+      const [[where]] = repository.findOneBy.mock.calls as [
+        [{ username: FindOperator<string> }],
+      ];
+      expect(where.username.getSql?.('"user"."username"')).toBe(
+        'LOWER("user"."username") = LOWER(:username)',
+      );
     });
 
     it('falls back to a random suffix once the numeric attempts are exhausted', async () => {
