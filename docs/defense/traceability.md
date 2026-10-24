@@ -6,7 +6,9 @@ as it merges. This is the document that lets an evaluator tick their grid
 without reading the codebase - and it is where the subject's hard
 constraints live once `CLAUDE.md` is removed for the defense.
 
-Source: `pdf/en.subject_hypertube.pdf` (v7.1) in the veille folder - reconfirm
+Sources: the subject (v7.1) and the evaluation scale (marking sheet), kept
+in the git-ignored `pdf/` folder. The marking sheet is stricter than the
+subject in places; a row says so when it is the source. Reconfirm both
 against the intra before the final defense.
 
 State: **done** / **partial** / **todo**.
@@ -25,17 +27,24 @@ control, its code path, its proof, and the accepted gaps) lives in
 | All forms and uploads validated | HYP-10 | global `ValidationPipe` (`whitelist` + `forbidNonWhitelisted` + `transform`); class-validator DTOs | DTO specs; `forbidNonWhitelisted` returns 400 on unknown fields | done (uploads: HYP-38) |
 | `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks secret scan in CI (`scan`, a required check on `main`) | done |
 | No console error/warning (browser or server) during the defense | HYP-45 | clean-browser check on the auth flow; the only console line is the browser's own network log of a deliberate 401 | headless-Chromium walk in the HYP-45 PR; `docs/defense/known-limitations.md` | partial - re-check per feature |
-| Torrent downloaded "by hand" (no streaming-from-torrent library) | HYP-12 | n/a | n/a | todo |
+| Torrent downloaded "by hand" (no streaming-from-torrent library); the evaluator asks which libraries are used | HYP-12 | n/a | n/a | todo |
 | Legal, rights-free sources only; >= 2 external search sources | HYP-13 | n/a | n/a | todo |
+| No HTTP 5xx response during the defense (marking sheet: graded Crash, like a console error) | HYP-16 | expected failures answer a 4xx; a search source that is down degrades to partial results, never a 502 / 504 | n/a | todo - re-check per feature |
+| `AUTHORS` file at the repository root (marking sheet, preliminaries) | HYP-18 | `AUTHORS` | file present | done |
 
-## Auth
+## Auth and users
 
 | Requirement | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
+| Registration asks for email, username, first name, last name and password | HYP-10 | `CreateUserDto`, `POST /users` | `users.service.spec.ts`, Bruno, `frontend/e2e/auth.spec.ts` | done |
+| Profile picture at registration (marking sheet), upload validated | HYP-38 | n/a | n/a | todo |
+| Password strength: a common French word is refused (marking sheet) | HYP-37 | n/a | n/a | todo |
+| Edit my email, profile picture and information | HYP-84 / HYP-39 (API) / HYP-87 (page) | `PATCH /users/:id` (own profile only, 403 otherwise) takes username, first name, last name, language; email and password: HYP-84 | `users.controller.spec.ts`, Bruno | partial |
+| View another user's profile: username and picture, never the email | HYP-80 (API) / HYP-87 (page) | `GET /users/:id` returns `PublicUserDto` to a non-owner; the owner also gets the email | `users.controller.fields.spec.ts`, Bruno | partial - page todo |
 | Email + password, password hashed | HYP-10 | `POST /users` (register), `POST /auth/login` | `auth.service.spec.ts`, `users.service.spec.ts` | done |
 | OAuth "42 strategy" + >= 1 other provider | HYP-11 / HYP-53 / HYP-57 | `FortyTwoStrategy` + `GithubStrategy` (`auth/strategies/`), identity linking in `AuthService.resolveOAuthUser` (ADR-0007); callback -> single-use exchange code -> `POST /auth/oauth/exchange` | `fortytwo.strategy.spec.ts`, `github.strategy.spec.ts`, `auth.service.spec.ts`, `oauth-exchange.service.spec.ts`; Bruno 17-20; `frontend/e2e/oauth.spec.ts`; SPA side (`auth-oauth-buttons.tsx`, `/oauth/callback` page, HYP-57) in `auth-oauth-callback-page.test.tsx` | done |
 | Reset password by email | HYP-34 (needs HYP-32 mail infra) | n/a | n/a | todo |
-| One-click logout | HYP-35 / HYP-45 (frontend) | `POST /auth/logout` (204, public, revokes the refresh-token session and clears the cookie, ADR-0011), then frontend `logout()` clears token + query cache -> guard redirects | `auth.session.spec.ts`, Bruno 33-34, `auth-provider.test.tsx` logout cases | done - the 15 minute access token still expires on its own, see `known-limitations.md` |
+| One-click logout, from any page | HYP-35 / HYP-45 (frontend) / HYP-19 (header on every page) | `POST /auth/logout` (204, public, revokes the refresh-token session and clears the cookie, ADR-0011), then frontend `logout()` clears token + query cache -> guard redirects | `auth.session.spec.ts`, Bruno 33-34, `auth-provider.test.tsx` logout cases | done - the 15 minute access token still expires on its own, see `known-limitations.md` |
 | Language choice, default English | HYP-36 / HYP-56 | `User.preferredLanguage` (`en` / `fr`, default `en`); frontend `react-i18next` with English as default and fallback, language resolved before the first render (account, then manual choice, then browser, then English), switcher saving to `localStorage` and to the account via `PATCH /users/:id` (`docs/diagrams/i18n.md`) | `lib/i18n.test.ts`, `lib/language.test.ts`, `language-switcher.test.tsx`, `language-sync.test.tsx` | done |
 | `GET /users/me` current-user shortcut | HYP-44 | `UsersController.findMe` | unit + HTTP routing test | done |
 | Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | Vitest specs under `frontend/src/`; ADR-0006 | done |
@@ -48,15 +57,34 @@ control, its code path, its proof, and the accepted gaps) lives in
 | `POST /oauth/token` (client + secret -> token) | HYP-15 | n/a | n/a | todo |
 | Imposed endpoints (`/users`, `/users/:id`, `/movies`, `/movies/:id`, `/comments`, `/comments/:id`, `/movies/:movie_id/comments`) | HYP-15 | `/users`, `/users/:id` exist | n/a | partial |
 | Correct HTTP codes (403 on editing another profile, etc.) | HYP-10 | `PATCH`/`DELETE /users/:id` -> 403 when `user.id !== :id` | HTTP-level guard tests | partial - full table in `rest-proof.md` (todo) |
+| `GET /movies`, `GET /movies/:id` need a token (a user's, or a client-credentials token from `POST /oauth/token`): "any user" of III.4 is any API client holding a token, while the library stays for connected users | HYP-15 | default-deny `JwtAuthGuard`, no `@Public()` on movie data | n/a | todo |
+| `PATCH` / `DELETE /comments/:id` are the author's only (403 otherwise); `PATCH` takes the documented `comment` and `username`; author and date of a new comment are set by the server | HYP-15 | n/a | n/a | todo |
+| Extra route beyond the subject's list: `DELETE /users/:id` (own account only, 403 otherwise) | HYP-10 | `UsersController` | HTTP-level guard tests | done - listed in `rest-proof.md` (todo) |
 | RESTful proof for the defense | HYP-40 | Swagger at `/api-docs` | n/a | partial - `rest-proof.md` todo |
+
+## Layout and compatibility
+
+| Requirement | Issue | State |
+|---|---|---|
+| Header, main section and footer on every page; a newcomer finds register and search quickly | HYP-19 | todo |
+| Works on Firefox and Chrome (subject: latest versions; marking sheet: Firefox >= 41, Chrome >= 46) | HYP-19 | todo |
+| Usable on a phone and on small resolutions | HYP-19 | partial - auth pages checked at 320 px (HYP-66) |
 
 ## Video library and player
 
 | Requirement | Issue | State |
 |---|---|---|
-| Search >= 2 legal sources, thumbnail grid, infinite scroll, sort/filter | HYP-13 | todo |
-| Video page: player, summary, cast, comments, subtitles, transcoding | HYP-14 | todo |
-| Background torrent download, keep file, delete if unwatched 1 month | HYP-12 / HYP-14 | todo |
+| Library and video page reachable by connected users only | HYP-13 / HYP-14 | todo (`RequireAuth` exists) |
+| Search queries >= 2 legal sources, keeps only videos, results sorted by name | HYP-13 | todo |
+| Default view: most popular videos of the external sources, sorted by a named criterion | HYP-13 | todo |
+| Thumbnail: name, year, rating, cover; watched and unwatched clearly different | HYP-13 | todo |
+| Infinite scroll (no "next page" link); sort and filter by name, genre, rating, year | HYP-13 | todo |
+| Video page: player, summary, cast, year, length, rating, cover; comments listed and posted | HYP-14 | todo |
+| Background, non-blocking torrent download; stream starts before the download ends | HYP-12 / HYP-14 | todo |
+| Magnet links: the marking sheet's mkv magnet (*TPB AFK*, Creative Commons) streams | HYP-12 / HYP-14 | todo |
+| Downloaded file kept, never downloaded twice, deleted if unwatched for a month | HYP-14 | todo |
+| English subtitles, plus the user's language when it differs from the video's, selectable in the player | HYP-14 | todo |
+| On-the-fly conversion when the browser cannot play the file (mkv at least) | HYP-14 | todo |
 
 ## Notes
 

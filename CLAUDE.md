@@ -7,10 +7,11 @@
   sub-category Web (threshold: min 15,000 XP / min 2 projects - Hypertube
   alone already exceeds the XP threshold, a 2nd web project will follow,
   probably Red-tetris, to reach the project count).
-- Subject PDF: `pdf/en.subject_hypertube.pdf` in
-  `/home/kidp/42/veille-42-projets/` (version 7.1, dated - reconfirm the
-  exact rules on the intra before the final defense; that file is a
-  working summary, not exhaustive).
+- Subject PDF `pdf/en.subject_hypertube.pdf` (version 7.1) and the
+  evaluation scale `pdf/hypertube.markingsheet.pdf`, in the git-ignored
+  `pdf/` folder. The marking sheet is stricter than the subject in places.
+  Reconfirm both on the intra before the final defense. Every requirement
+  is mapped in `docs/defense/traceability.md`.
 - Post-tronc-commun student, Paris campus, targeting an internship on
   React/NestJS/TypeORM. Project chosen because its subject imposes no
   framework constraint (unlike Matcha/Camagru, which impose a
