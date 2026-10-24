@@ -62,7 +62,7 @@ export default tseslint.config(
   },
   {
     // Tests legitimately repeat literals and run long.
-    files: ['**/*.spec.ts', 'test/**/*.ts'],
+    files: ['**/*.spec.ts'],
     rules: {
       'max-lines': 'off',
       'max-lines-per-function': 'off',
