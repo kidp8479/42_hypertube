@@ -95,14 +95,19 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Start the stack
         run: docker compose up -d --build
+      # The proxy answers 502/503/504 while the backend is still booting (and
+      # applying its migrations): only an answer from the backend itself counts.
+      # GET on the login route is a 404 from Nest once it is up.
       - name: Wait for the backend
         run: |
           for i in $(seq 1 30); do
             code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:8443/api/auth/login || true)
-            [ "$code" != "000" ] && exit 0
-            sleep 2
+            case "$code" in
+              000|502|503|504) sleep 2 ;;
+              *) exit 0 ;;
+            esac
           done
-          echo "Backend never answered - dumping compose logs" >&2
+          echo "Backend not up behind the proxy after 60 s - dumping compose logs" >&2
           docker compose logs
           exit 1
       # The stack booted on an empty database, so the migrations just built the
