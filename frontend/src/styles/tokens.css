@@ -32,8 +32,8 @@
   --color-mint: #7fc79a; /* 8.78 / 7.96: the brand, success, secondary accent */
   --color-alert: #ff6b81; /* 6.39 / 5.79: errors only, never an accent */
 
-  /* Type. IBM Plex is named first but not bundled: no web font request, the
-     system stacks are the fallback. */
+  /* Type. IBM Plex is self-hosted (@fontsource, imported in main.tsx), so no
+     request leaves for a font CDN; the system stacks are the fallback. */
   --font-sans:
     'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
