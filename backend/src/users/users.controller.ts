@@ -20,6 +20,8 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserSummaryDto } from './dto/user-summary.dto';
+import { PublicUserDto } from './dto/public-user.dto';
 
 /**
  * Account CRUD (`/users`). Registration is public; every mutating route on
@@ -38,9 +40,11 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  // Every user, as id and username only (subject III.4).
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    const users = await this.usersService.findAll();
+    return users.map((user) => new UserSummaryDto(user));
   }
 
   // The caller's own profile. Declared before the ':id' route on purpose:
@@ -52,15 +56,21 @@ export class UsersController {
     return this.usersService.findOne(user.id);
   }
 
+  // Any profile can be read, but only the owner sees all of it: someone
+  // else gets the public fields, never the email (subject III.1, III.4).
   // ParseIntPipe rejects a non-numeric :id with 400 before the service
   // runs, so no query is ever built from `NaN`.
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const found = await this.usersService.findOne(id);
+    return user.id === id ? found : new PublicUserDto(found);
   }
 
   // A user may only edit or delete their own profile: 403 otherwise, per
-  // the subject. Reading another profile (GET :id) stays allowed.
+  // the subject.
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
