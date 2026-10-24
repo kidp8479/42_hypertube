@@ -32,7 +32,7 @@ export function Field({
   const inputId = id ?? generatedId;
   const messageId = `${inputId}-message`;
   const message = error || hint;
-  // The caller's own description (rules, format) stays; ours is appended.
+  // The caller's own description (rules, format) comes first, then ours.
   const describedBy =
     [callerDescribedBy, message ? messageId : undefined]
       .filter(Boolean)

@@ -221,7 +221,7 @@ migration-show:
 migration-check:
 	$(COMPOSE) exec backend npm run migration:check
 
-# A database created by the old `synchronize` already has the baseline's
+# A database created before the migrations existed (by `synchronize`) has the baseline's
 # tables: record the baseline as applied without running it. Only for a
 # database that predates the migrations (a fresh one runs the baseline itself).
 migration-adopt:

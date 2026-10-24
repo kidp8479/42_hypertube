@@ -56,10 +56,10 @@ export async function exchangeOAuthCode(code: string): Promise<void> {
 }
 
 /**
- * Tells the backend the user is signing out (`POST /auth/logout`, ADR-0008).
- * The server keeps no session, so this clears nothing there; the local
- * sign-out is {@link logoutLocal}. Must be called before it: `apiFetch` reads
- * the token synchronously, and `logoutLocal` removes it.
+ * Tells the backend the user is signing out (`POST /auth/logout`, ADR-0011):
+ * it revokes the session the refresh cookie belongs to and clears the cookie.
+ * The local sign-out is {@link logoutLocal}, called after this one: `apiFetch`
+ * reads the token synchronously, and `logoutLocal` removes it.
  */
 export async function logoutRequest(): Promise<void> {
   await apiFetch('/auth/logout', { method: 'POST' });

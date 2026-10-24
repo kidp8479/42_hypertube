@@ -168,9 +168,8 @@ be reused against another dev's `localhost`.
 
 ## Dev environment gotchas
 
-Recurring local-setup traps, collected here so they get fixed once
-instead of rediscovered every few sessions (they used to live only in
-Slack `#hypertube-daily-log` recaps).
+Recurring local-setup traps, collected here so they are fixed once
+instead of rediscovered every few sessions.
 
 - **The backend container's `node_modules` is a separate named volume**
   (`backend_node_modules:/app/node_modules` in `docker-compose.yml`),
@@ -397,6 +396,13 @@ the class comment says what the *class* is for.
 Syntax: `/** */` on declarations (class, method, function, exported
 constant), because Compodoc reads it. `//` for comments inside a function
 body or on a call (ex: the bootstrap in `main.ts`).
+
+A comment states how the code behaves now, as a plain fact a reader with no
+context can use. It never corrects an earlier claim ("not X, actually Y",
+"no longer", "the old ...") and never tells a history: when a sentence turns
+out wrong, rewrite it as the true statement. History belongs in the commit
+message and in an ADR. A negation is fine when it is itself a property
+("never logged", "not a fetch").
 
 Prose carries the intent. JSDoc tags are added **only when they state
 something the TypeScript signature does not**:

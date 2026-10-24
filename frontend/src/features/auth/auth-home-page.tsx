@@ -1,7 +1,6 @@
-// Protected `/` route: the placeholder landing page shown once logged in.
-// Real content (the video library) lands in a later issue - for now it only
+// Protected `/` route: the placeholder landing page shown once logged in. It
 // proves the round trip works: it reads the bootstrapped user off the context
-// and offers a way back out.
+// and offers a way back out. The video library (HYP-13) takes its place.
 import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '../../ui/ui-button';
 import { useAuth } from './auth-context';

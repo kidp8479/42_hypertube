@@ -90,7 +90,7 @@ it is public.
 - The 401-anywhere path is centralised: the singleton `QueryClient`'s cache
   `onError` routes a 401 to a handler `AuthProvider` registers, which clears
   the token and flags the session expired; `RequireAuth` then redirects.
-- Not covered here: the one-click logout token strategy (decided in
-  [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md)), and the
+- Not covered here: the logout and refresh strategy (decided in
+  [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)), and the
   eventual styling-system decision (CSS Modules is the current default, not
   yet ADR-worthy).

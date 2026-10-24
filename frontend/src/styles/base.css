@@ -1,6 +1,6 @@
 /*
  * Base styles (HYP-66): what every page inherits before any component adds
- * its own. Replaces the Vite template stylesheet. Reads tokens.css only.
+ * its own. Reads tokens.css only.
  */
 *,
 *::before,
