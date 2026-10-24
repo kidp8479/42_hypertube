@@ -1,3 +1,5 @@
+// Shared form field: label, input, hint and error wired together for
+// assistive technology, so no page rebuilds that by hand.
 import { useId, type InputHTMLAttributes } from 'react';
 import styles from './ui-field.module.css';
 

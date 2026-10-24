@@ -1,3 +1,4 @@
+// Shared button: the one place the button look (solid / outline) is defined.
 import type { ButtonHTMLAttributes } from 'react';
 import styles from './ui-button.module.css';
 

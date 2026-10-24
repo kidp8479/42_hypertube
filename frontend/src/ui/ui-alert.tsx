@@ -1,3 +1,4 @@
+// Shared boxed message for form-level errors and confirmations.
 import type { ReactNode } from 'react';
 import styles from './ui-alert.module.css';
 
