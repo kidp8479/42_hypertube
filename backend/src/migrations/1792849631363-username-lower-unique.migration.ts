@@ -2,10 +2,10 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Makes usernames unique whatever their case (`Ada` and `ada` clash). The
- * existing case-sensitive `UNIQUE ("username")` stays: it is harmless next to
- * this index. TypeORM cannot model a functional index, so it is written by
- * hand and the entity declares it with `synchronize: false` (HYP-33).
+ * Makes usernames unique whatever their case (`Ada` and `ada` clash), next to
+ * the case-sensitive `UNIQUE ("username")` of the baseline. Written by hand:
+ * TypeORM cannot model a functional index, and `make migration-check` ignores
+ * an expression index, so the entity does not declare it (HYP-33).
  */
 export class UsernameLowerUnique1792849631363 implements MigrationInterface {
   name = 'UsernameLowerUnique1792849631363';
