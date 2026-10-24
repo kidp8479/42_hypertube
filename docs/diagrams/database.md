@@ -27,21 +27,3 @@ flowchart LR
     class boot,run,schema,ci,check ext
     class fail bad
 ```
-
-## 1. A database that predates the migrations
-
-A database created before the migrations existed (by `synchronize`) has the baseline's tables,
-so running the baseline fails with "already exists". It is adopted once:
-
-```mermaid
-flowchart TD
-    A["existing database<br/>(tables, no migrations table)"] --> B{"first boot"}
-    B --> C["baseline tries to CREATE the tables"]
-    C --> D["error: type or table already exists"]
-    D --> E["make migration-adopt<br/>(migration:run --fake)"]
-    E --> F["baseline recorded as applied,<br/>nothing executed"]
-    F --> G["next boot: no pending migration"]
-    A -. "or make wipe-db" .-> H["fresh database,<br/>the baseline builds it"]
-```
-
-A fresh database needs nothing: the baseline runs at the first boot.
