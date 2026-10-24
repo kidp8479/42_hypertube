@@ -34,7 +34,7 @@ future query loads it anyway.
 |---|---|
 | All data access goes through the TypeORM repository / query builder; no string concatenation with user input | `users.service.ts` is the only module that touches the repo (`UsersService` doc comment enforces this by convention) |
 | Parameterised `where` in the one hand-written query | `findByEmail()`: `.where('user.email = :email', { email })` |
-| Numeric route params validated before any query is built | `users.controller.ts` `@Param('id', ParseIntPipe)` - a non-numeric `:id` is 400 before the service runs, so no query is built from `NaN` | 
+| Numeric route params validated before any query is built | `users.controller.ts` `@Param('id', ParseIdPipe)` (`common/pipes/parse-id.pipe.ts`) - a non-numeric or out-of-range `:id` is 400 before the service runs, so no query is built from `NaN` | 
 | Proof | `users.controller.params.spec.ts`; code review - grep for template strings in `.where(` / `.query(` returns nothing |
 
 ## 3. No HTML / JS injection
