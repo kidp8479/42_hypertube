@@ -34,8 +34,8 @@ Testing for why not inside the container):
 | `make typecheck-backend` | `typecheck` |
 | `make doc` | `doc` (Compodoc into `docs/backend/`, gitignored) |
 
-`npm run test:e2e` (Jest + supertest) also exists in `package.json`; the
-real-browser suite lives in `frontend/e2e/` (`make test-e2e`).
+The end-to-end suite runs in a real browser and lives in `frontend/e2e/`
+(`make test-e2e`).
 
 Once the stack is up, Swagger is served at `/api-docs` and the Bruno
 collection in `api/bruno/` runs with `make test-api`.
