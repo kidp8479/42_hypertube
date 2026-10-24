@@ -1,5 +1,5 @@
-// HTTP spec for UsersController routing: :id parsing (400 on a non-numeric
-// id) and /users/me matching before :id.
+// HTTP spec for UsersController routing: :id parsing (400 on a non-numeric or
+// out-of-range id) and /users/me matching before :id.
 import { ExecutionContext, INestApplication } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
@@ -20,7 +20,7 @@ const stubAuthGuard = {
   },
 };
 
-// Drives the real HTTP pipeline so route matching and the ParseIntPipe on
+// Drives the real HTTP pipeline so route matching and the ParseIdPipe on
 // :id are exercised; the service is stubbed since these cases barely reach it.
 describe('UsersController path routing', () => {
   let app: INestApplication<App>;
@@ -53,6 +53,12 @@ describe('UsersController path routing', () => {
     expect(usersService.findOne).not.toHaveBeenCalled();
   });
 
+  it('rejects an id past the integer column range with 400', async () => {
+    // Postgres would refuse it ("out of range for type integer") with a 500.
+    await request(app.getHttpServer()).get('/users/99999999999').expect(400);
+    expect(usersService.findOne).not.toHaveBeenCalled();
+  });
+
   it('passes a numeric id through as a number', async () => {
     usersService.findOne.mockResolvedValue({ id: 42 });
 
@@ -67,7 +73,7 @@ describe('UsersController path routing', () => {
     await request(app.getHttpServer()).get('/users/me').expect(200);
 
     // Called with the guard-supplied user id, so "me" was never handed to
-    // ParseIntPipe as a would-be :id (that would 400).
+    // ParseIdPipe as a would-be :id (that would 400).
     expect(usersService.findOne).toHaveBeenCalledWith(7);
   });
 });

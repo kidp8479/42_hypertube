@@ -6,12 +6,12 @@ import {
   Body,
   Patch,
   Param,
-  ParseIntPipe,
   Delete,
   ForbiddenException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
+import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 import { scaledThrottleLimit } from '../config/throttle.config';
 import {
   CurrentUser,
@@ -49,7 +49,7 @@ export class UsersController {
 
   // The caller's own profile. Declared before the ':id' route on purpose:
   // Nest matches routes in declaration order, so with ':id' first a request
-  // to /users/me would bind ":id" = "me" and ParseIntPipe would 400 before
+  // to /users/me would bind ":id" = "me" and ParseIdPipe would 400 before
   // this handler ran.
   @Get('me')
   findMe(@CurrentUser() user: AuthUser) {
@@ -58,11 +58,11 @@ export class UsersController {
 
   // Any profile can be read, but only the owner sees all of it: someone
   // else gets the public fields, never the email (subject III.1, III.4).
-  // ParseIntPipe rejects a non-numeric :id with 400 before the service
-  // runs, so no query is ever built from `NaN`.
+  // ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
+  // service runs, so no query is ever built from it.
   @Get(':id')
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIdPipe) id: number,
     @CurrentUser() user: AuthUser,
   ) {
     const found = await this.usersService.findOne(id);
@@ -73,7 +73,7 @@ export class UsersController {
   // the subject.
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIdPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: AuthUser,
   ) {
@@ -84,7 +84,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: AuthUser) {
+  remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     if (user.id !== id) {
       throw new ForbiddenException();
     }
