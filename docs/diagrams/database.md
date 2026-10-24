@@ -30,7 +30,7 @@ flowchart LR
 
 ## 1. A database that predates the migrations
 
-A database created by the old `synchronize` already has the baseline's tables,
+A database created before the migrations existed (by `synchronize`) has the baseline's tables,
 so running the baseline fails with "already exists". It is adopted once:
 
 ```mermaid

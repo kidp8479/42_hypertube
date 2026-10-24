@@ -17,7 +17,7 @@ const ABSOLUTE_CAP_MS = 30 * 86_400_000;
  * retried request), not theft: it gets a new token and the family lives on.
  */
 const REUSE_LEEWAY_MS = 10_000;
-/** Expired rows are deleted once they are this old (no scheduler, see issue). */
+/** Expired rows are deleted, when a token is issued, once they are this old (there is no scheduler). */
 const PURGE_GRACE_MS = 86_400_000;
 
 /** A freshly issued token: the secret goes in the cookie, nowhere else. */

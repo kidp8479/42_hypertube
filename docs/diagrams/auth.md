@@ -161,7 +161,7 @@ flowchart TD
     R -- "401 (unknown / used / expired code)" --> EX["'This sign-in link has expired.'"]
     R -- "any other error<br/>(token rolled back)" --> EF
     R -- "ok" --> OK["dispatch login-success<br/>redirect to /"]
-    EC --> BACK["'Back to log in' link to /login"]
+    EC --> BACK["'Back to sign in' link to /login"]
     EU --> BACK
     EF --> BACK
     EX --> BACK
@@ -189,9 +189,9 @@ flowchart TD
     C -- "yes, longer ago<br/>= a copy was stolen" --> R["revoke the whole session<br/>401 (the legitimate holder too)"]
 ```
 
-Only the token's SHA-256 is stored, grouped by session (`familyId`). Until the
-SPA side lands (HYP-78) the SPA still keeps the access token in `localStorage`
-and does not refresh: the cookie is set but unused.
+Only the token's SHA-256 is stored, grouped by session (`familyId`). The SPA
+keeps the access token in `localStorage` and does not refresh yet (HYP-78): the
+cookie is set and read by the logout only.
 
 ## 7. Logout (HYP-35, HYP-77)
 

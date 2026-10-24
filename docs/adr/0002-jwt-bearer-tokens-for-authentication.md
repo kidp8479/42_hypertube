@@ -39,12 +39,12 @@ they differ in who authenticates and how.
   - short access-token TTL, 15 minutes by default (`JWT_EXPIRES_IN`), and
     a rotating refresh token keeps the session alive and makes logout real
     (ADR-0011); the access token itself stays stateless.
-  - **One-click logout** (subject requirement): with a pure JWT, logout is
-    client-side (discard the token). A true server-side invalidation needs
-    a token blocklist or DB-backed refresh tokens - a deliberate,
-    contained break from "stateless". Decided in
-    [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md): client-side
-    discard, no server-side revocation.
+  - **One-click logout** (subject requirement): `POST /auth/logout` revokes
+    the session's refresh token on the server and clears the cookie
+    ([ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md), which
+    supersedes the client-side-only logout of
+    [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md)). An access
+    token already issued stays valid until it expires, 15 minutes at most.
 - `JWT_SECRET` (and TTL config) live in `.env`, never committed.
 - Token payload stays minimal (`sub` = user id); profile data is fetched,
   not carried in the token, so stale claims can't grant access.

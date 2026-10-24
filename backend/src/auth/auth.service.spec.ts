@@ -172,7 +172,7 @@ describe('AuthService', () => {
   });
 
   describe('resolveOAuthUser', () => {
-    // Deliberately mixed-case: exercises the normalization the fix added.
+    // Deliberately mixed-case: exercises the email normalization.
     const profile: OAuthProfile = {
       provider: OAuthProvider.FORTYTWO,
       providerUserId: '12345',
@@ -209,9 +209,9 @@ describe('AuthService', () => {
 
       await service.resolveOAuthUser(profile);
 
-      // Not the raw 'Ada@Example.com' the profile carried - the fix this
-      // locks in: findByEmail must see the same casing a local account
-      // was registered with.
+      // findByEmail receives the lower-cased address, not the raw
+      // 'Ada@Example.com' of the profile: that is the casing a local account
+      // is registered with.
       expect(users.findByEmail).toHaveBeenCalledWith('ada@example.com');
       expect(users.createFromOAuth).not.toHaveBeenCalled();
       expect(oauthAccounts.save).toHaveBeenCalledWith(

@@ -1,5 +1,5 @@
-// Language picker, shown on every page. Standalone for now: the base layout
-// (HYP-19) will host it.
+// Language picker, shown on every page as its banner until the base layout
+// (HYP-19) hosts it.
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
