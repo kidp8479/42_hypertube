@@ -1,0 +1,36 @@
+meta {
+  name: 16 Register same username in another case -> 409
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "case-{{runId}}@example.com",
+    "username": "ADA-{{runId}}",
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "password": "str0ng-p4ss-phrase"
+  }
+}
+
+docs {
+  Request 02 registered `ada-<runId>`; the same name in capitals is the same
+  username (unique index on LOWER(username), HYP-33).
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("generic message, does not echo the username", function () {
+    expect(JSON.stringify(res.body)).to.not.contain("ADA-");
+  });
+}

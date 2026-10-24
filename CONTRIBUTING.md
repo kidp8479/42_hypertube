@@ -237,7 +237,7 @@ endpoint. `make test-api` runs it headless against the running stack,
 through the edge proxy (`https://localhost:<HYPERTUBE_HTTPS_PORT>/api`, a
 self-signed certificate, so the CLI runs with `--insecure`); the port comes
 from `.env`. `POST /users` is capped at 10 per hour per
-IP and one run uses 3, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
+IP and one run uses 5, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
 `.env` for dev; it is forced to 1 when `NODE_ENV=production`.
 
 ### Spec file layout
@@ -325,7 +325,8 @@ names.
   `src/common/decorators/`) before `@IsEmail()`, on every DTO that carries
   an email, so lookups and uniqueness stay case-insensitive. Other
   free-text fields that must not keep surrounding whitespace use `@Trim()`
-  from the same folder (case is preserved - it is display text).
+  from the same folder. The username keeps its case (display text) but is
+  unique whatever the case: the index is on `LOWER(username)`.
 - One doc-comment on the class explaining what the payload is for; no
   per-field comments unless a rule is non-obvious (ex: why login has no
   password policy).

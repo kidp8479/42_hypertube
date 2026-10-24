@@ -1,3 +1,4 @@
+// Migration: the refresh_token table for rotating refresh tokens (HYP-77, ADR-0011).
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class RefreshToken1792765757629 implements MigrationInterface {

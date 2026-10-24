@@ -28,6 +28,12 @@ export class User {
   @Column({ unique: true, length: 255 })
   email!: string;
 
+  /**
+   * Unique whatever the case (`Ada` and `ada` clash) through the index
+   * `UQ_user_username_lower` on `LOWER(username)`, which lives in its
+   * migration only: TypeORM cannot model it and its schema check ignores
+   * expression indexes. The case is kept for display.
+   */
   @Column({ unique: true, length: 30 })
   username!: string;
 

@@ -1,3 +1,4 @@
+// Migration: the baseline schema, as it stood when TypeORM migrations replaced synchronize (ADR-0010).
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class Baseline1792763318233 implements MigrationInterface {

@@ -296,7 +296,7 @@ test-e2e:
 # HYPERTUBE_HTTPS_PORT is passed from .env. Needs the stack up (`make up`);
 # npx fetches the CLI on first use, so it is not a project dependency. In the
 # Bruno app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
-# `local` environment. POST /users is rate-limited (10/h), a run uses 3: raise
+# `local` environment. POST /users is rate-limited (10/h), a run uses 5: raise
 # THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
 test-api:
 	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes @usebruno/cli run --env local --insecure --disable-cookies

@@ -1,7 +1,7 @@
 // Repository-backed CRUD for the users resource.
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -86,6 +86,20 @@ export class UsersService {
   }
 
   /**
+   * Whether a username is taken, whatever the case: the unique index is on
+   * `LOWER(username)` (HYP-33), so the lookup compares the same way and `Ada`
+   * counts as taken when `ada` exists.
+   */
+  private async isUsernameTaken(username: string): Promise<boolean> {
+    const existing = await this.usersRepository.findOneBy({
+      username: Raw((column) => `LOWER(${column}) = LOWER(:username)`, {
+        username,
+      }),
+    });
+    return Boolean(existing);
+  }
+
+  /**
    * Finds a username close to `base` that isn't already taken - tries
    * `base` itself, then numeric suffixes (`base1`, `base2`, ...) on
    * collision. See `MAX_USERNAME_ATTEMPTS` for the fallback once that
@@ -94,7 +108,7 @@ export class UsersService {
   private async findAvailableUsername(base: string): Promise<string> {
     let username = base.slice(0, UsersService.USERNAME_MAX_LENGTH);
     let counter = 1;
-    while (await this.usersRepository.findOneBy({ username })) {
+    while (await this.isUsernameTaken(username)) {
       if (counter > UsersService.MAX_USERNAME_ATTEMPTS) {
         username = UsersService.withSuffix(base, randomUUID().slice(0, 8));
         break;
