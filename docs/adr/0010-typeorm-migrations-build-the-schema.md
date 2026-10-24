@@ -42,10 +42,14 @@ migration captures the two existing tables (`user`, `oauth_account`).
   migration from the entity diff, renames it to the `.migration.ts` role and
   formats it. The SQL must be read before it is committed: a rename is
   generated as a drop and an add, which loses the column's data.
-- **Existing databases adopt the baseline.** A database created by the old
-  `synchronize` already has the baseline's tables, so the first boot fails with
-  "already exists". `make migration-adopt` records the baseline as applied
-  without running it. A fresh database needs nothing.
+- **A database from before the migrations is rebuilt.** A database created by
+  the old `synchronize` has the baseline's tables but no record of it, so the
+  first boot fails with "already exists". It holds dev data only: `make
+  wipe-db`, and the next boot builds it from the migrations.
+  *Amended 2026-10-24 (HYP-85):* a `make migration-adopt` target recorded the
+  baseline as applied instead, through TypeORM's `--fake`, which marks every
+  pending migration and not only the baseline. Every database of that era was
+  already migrated or disposable, so the target was removed.
 
 ## Alternatives considered
 

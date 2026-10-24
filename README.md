@@ -89,7 +89,7 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make test-e2e` | Run the Playwright e2e suite (needs the stack already up) |
 | `make test-api` | Run the Bruno collection against the running backend |
 | `make build` | Production build for backend + frontend |
-| `make migration-generate NAME=...` | Write a TypeORM migration from the entity changes (`migration-run`, `-revert`, `-show`, `-check`, `-adopt` too) |
+| `make migration-generate NAME=...` | Write a TypeORM migration from the entity changes (`migration-run`, `-revert`, `-show`, `-check` too) |
 | `make doc` | Generate the Compodoc backend docs into `docs/backend/` |
 | `make check-docs` | Doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno |
 | `make verify` | Full local gate: format-check, lint-check, typecheck, test, build, check-docs |

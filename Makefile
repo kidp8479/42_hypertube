@@ -26,7 +26,7 @@ PROJECT := $(notdir $(CURDIR))
         logs logs-backend logs-frontend logs-db \
         sh-backend sh-frontend psql be fe \
         migration-generate migration-run migration-revert migration-show \
-        migration-check migration-adopt \
+        migration-check \
         clean fclean wipe-db \
         format format-backend format-frontend \
         format-check format-check-backend format-check-frontend \
@@ -61,7 +61,6 @@ help:
 	@echo "  migration-generate NAME=add-x - write a migration from the entity changes"
 	@echo "  migration-run / -revert / -show - apply, undo the last, list"
 	@echo "  migration-check  - fail if an entity changed without a migration (CI runs it)"
-	@echo "  migration-adopt  - mark the baseline as applied on a database created before migrations"
 	@echo ""
 	@echo "Cleanup"
 	@echo "  clean           - stop and remove containers (keeps volumes + images)"
@@ -220,12 +219,6 @@ migration-show:
 
 migration-check:
 	$(COMPOSE) exec backend npm run migration:check
-
-# A database created before the migrations existed (by `synchronize`) has the baseline's
-# tables: record the baseline as applied without running it. Only for a
-# database that predates the migrations (a fresh one runs the baseline itself).
-migration-adopt:
-	$(COMPOSE) exec backend npm run migration:run -- --fake
 
 # ---------------------------------------------------------------------------- #
 # Code quality - run on the host (fast; matches what the pre-commit hook uses) #

@@ -352,9 +352,6 @@ change an entity:
    `e2e` CI job) fails if an entity changed without one.
 
 `make migration-run`, `-revert` and `-show` apply, undo the last and list them.
-A database created before the migrations existed has the tables but no record
-of the baseline: run `make migration-adopt` once, or `make wipe-db` for a
-fresh one (it destroys the data).
 
 ### HTTP status codes
 
