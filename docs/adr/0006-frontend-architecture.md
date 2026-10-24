@@ -15,7 +15,8 @@ design and grilling session before any auth screen existed:
   no domain lives in `src/lib/` (the fetch wrapper, the token accessor, the
   QueryClient); cross-cutting composition lives in `src/app/` (the provider
   stack); the shared look-and-feel components with no domain (`Button`,
-  `Field`, `Alert`) live in `src/ui/`, styled only from the design tokens. There is no `src/routes/` or `src/pages/` directory.
+  `Field`, `Alert`) live in `src/ui/`, styled only from the design tokens.
+  There is no `src/routes/` or `src/pages/` directory.
 - **Server state:** TanStack Query (`@tanstack/react-query` v5). Every read of
   backend data goes through a `useQuery`/`useMutation`; nothing backend-owned
   is mirrored into React state by hand.

@@ -77,6 +77,8 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Something went wrong. Please try again.',
     );
+    // The credentials are not at fault, so the inputs are not flagged.
+    expect(screen.getByLabelText('Email')).toBeValid();
   });
 
   it('marks both inputs invalid after a failed attempt', async () => {

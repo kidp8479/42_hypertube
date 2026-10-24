@@ -27,6 +27,19 @@ describe('Field', () => {
     expect(screen.getByLabelText('Email')).toBeInvalid();
   });
 
+  it('keeps the description the caller passes', () => {
+    render(
+      <>
+        <p id="rules">At least 8 characters</p>
+        <Field label="Password" aria-describedby="rules" error="Too short" />
+      </>,
+    );
+
+    expect(screen.getByLabelText('Password')).toHaveAccessibleDescription(
+      'At least 8 characters Too short',
+    );
+  });
+
   it('forwards native input attributes', () => {
     render(<Field label="Password" type="password" autoComplete="off" />);
 

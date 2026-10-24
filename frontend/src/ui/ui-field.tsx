@@ -25,12 +25,18 @@ export function Field({
   error,
   invalid,
   id,
+  'aria-describedby': callerDescribedBy,
   ...input
 }: FieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const messageId = `${inputId}-message`;
-  const message = error ?? hint;
+  const message = error || hint;
+  // The caller's own description (rules, format) stays; ours is appended.
+  const describedBy =
+    [callerDescribedBy, message ? messageId : undefined]
+      .filter(Boolean)
+      .join(' ') || undefined;
   return (
     <div className={styles.field}>
       <label htmlFor={inputId} className={styles.label}>
@@ -41,7 +47,7 @@ export function Field({
         id={inputId}
         className={styles.input}
         aria-invalid={error || invalid ? true : undefined}
-        aria-describedby={message ? messageId : undefined}
+        aria-describedby={describedBy}
       />
       {error && (
         <span id={messageId} className={styles.error}>

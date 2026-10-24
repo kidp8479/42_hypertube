@@ -69,7 +69,7 @@ test.describe('/oauth/callback page', () => {
     await expect(page.getByRole('alert')).toHaveText(
       'Sign-in failed. Please try again.',
     );
-    await page.getByRole('link', { name: 'Back to log in' }).click();
+    await page.getByRole('link', { name: 'Back to sign in' }).click();
     await expect(page).toHaveURL(/\/login$/);
     expect(consoleIssues).toEqual([]);
   });

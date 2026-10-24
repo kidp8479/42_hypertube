@@ -68,7 +68,7 @@ export function LoginPage() {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         autoComplete="email"
-        invalid={error !== null}
+        invalid={error === 'login.badCredentials'}
         required
       />
 
@@ -78,7 +78,7 @@ export function LoginPage() {
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="current-password"
-        invalid={error !== null}
+        invalid={error === 'login.badCredentials'}
         required
       />
 
