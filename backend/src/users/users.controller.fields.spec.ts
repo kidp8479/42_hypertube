@@ -10,7 +10,7 @@ import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { User } from './entities/user.entity';
+import { PreferredLanguage, User } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -24,19 +24,22 @@ const stubAuthGuard = {
   },
 };
 
-// A full row, as the repository returns it: every private field is set, so
-// a test fails if any of them reaches the response.
-function fullUser(id: number): User {
-  return Object.assign(new User(), {
-    id,
-    email: `user${id}@example.com`,
-    username: `user${id}`,
+// A full row, as the repository returns it: every column is set, so the
+// exact-keys assertions fail if any private one reaches the response.
+const buildUser = (overrides: Partial<User> = {}): User =>
+  Object.assign(new User(), {
+    id: 7,
+    email: 'user7@example.com',
+    username: 'user7',
     firstName: 'Ada',
     lastName: 'Lovelace',
     password: '$argon2id$v=19$m=19456,t=2,p=1$hash',
-    profilePicture: `https://example.com/${id}.png`,
+    profilePicture: 'https://example.com/7.png',
+    preferredLanguage: PreferredLanguage.FR,
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    updatedAt: new Date('2026-01-02T00:00:00Z'),
+    ...overrides,
   });
-}
 
 describe('UsersController response fields', () => {
   let app: INestApplication<App>;
@@ -67,40 +70,50 @@ describe('UsersController response fields', () => {
   });
 
   afterEach(async () => {
-    jest.clearAllMocks();
     await app.close();
   });
 
-  it('lists users with their id and username only', async () => {
-    usersService.findAll.mockResolvedValue([fullUser(7), fullUser(42)]);
+  describe('findAll', () => {
+    it('lists users with their id and username only', async () => {
+      usersService.findAll.mockResolvedValue([
+        buildUser(),
+        buildUser({ id: 42, username: 'user42' }),
+      ]);
 
-    const res = await request(app.getHttpServer()).get('/users').expect(200);
+      const res = await request(app.getHttpServer()).get('/users').expect(200);
 
-    const body = res.body as Record<string, unknown>[];
-    expect(body).toHaveLength(2);
-    body.forEach((item) =>
-      expect(Object.keys(item).sort()).toEqual(['id', 'username']),
-    );
+      const body = res.body as Record<string, unknown>[];
+      expect(body).toHaveLength(2);
+      body.forEach((item) =>
+        expect(Object.keys(item).sort()).toEqual(['id', 'username']),
+      );
+    });
   });
 
-  it("gives another user's id, username and picture, never the email", async () => {
-    usersService.findOne.mockResolvedValue(fullUser(42));
+  describe('findOne', () => {
+    it("gives another user's id, username and picture, never the email", async () => {
+      usersService.findOne.mockResolvedValue(buildUser({ id: 42 }));
 
-    const res = await request(app.getHttpServer()).get('/users/42').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/users/42')
+        .expect(200);
 
-    expect(Object.keys(res.body as object).sort()).toEqual([
-      'id',
-      'profilePicture',
-      'username',
-    ]);
-  });
+      expect(Object.keys(res.body as object).sort()).toEqual([
+        'id',
+        'profilePicture',
+        'username',
+      ]);
+    });
 
-  it('gives the owner their own profile, email included', async () => {
-    usersService.findOne.mockResolvedValue(fullUser(7));
+    it('gives the owner their own profile, email included', async () => {
+      usersService.findOne.mockResolvedValue(buildUser());
 
-    const res = await request(app.getHttpServer()).get('/users/7').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/users/7')
+        .expect(200);
 
-    expect(res.body).toMatchObject({ id: 7, email: 'user7@example.com' });
-    expect(res.body).not.toHaveProperty('password');
+      expect(res.body).toMatchObject({ id: 7, email: 'user7@example.com' });
+      expect(res.body).not.toHaveProperty('password');
+    });
   });
 });

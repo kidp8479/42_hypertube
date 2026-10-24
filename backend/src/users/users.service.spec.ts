@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake repository stays loose.
 type RepositoryMock = {
+  find: jest.Mock;
   create: jest.Mock;
   save: jest.Mock;
   findOneBy: jest.Mock;
@@ -105,6 +106,18 @@ describe('UsersService', () => {
       const user = await service.create(buildCreateUserDto());
 
       expect(user.profilePicture).toBeUndefined();
+    });
+  });
+
+  describe('findAll', () => {
+    it('reads only the id and the username of each user', async () => {
+      repository.find.mockResolvedValue([]);
+
+      await service.findAll();
+
+      expect(repository.find).toHaveBeenCalledWith({
+        select: { id: true, username: true },
+      });
     });
   });
 
