@@ -47,5 +47,5 @@
   margin-top: var(--space-1);
   fill: none;
   stroke: currentColor;
-  stroke-width: var(--border-width);
+  stroke-width: calc(var(--border-width) * 1.2);
 }

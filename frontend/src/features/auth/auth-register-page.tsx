@@ -36,6 +36,8 @@ function RegisterInput({
   autoComplete,
   value,
   error,
+  hint,
+  placeholder,
   onChange,
 }: {
   field: RegisterField;
@@ -43,6 +45,8 @@ function RegisterInput({
   autoComplete: string;
   value: string;
   error?: ValidationError;
+  hint?: string;
+  placeholder?: string;
   onChange: (field: RegisterField, value: string) => void;
 }) {
   const { t } = useTranslation('auth');
@@ -53,6 +57,8 @@ function RegisterInput({
       value={value}
       onChange={(e) => onChange(field, e.target.value)}
       autoComplete={autoComplete}
+      hint={hint}
+      placeholder={placeholder}
       error={error && describeValidationError(field, error, t)}
     />
   );
@@ -113,69 +119,78 @@ export function RegisterPage() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <h1>{t('register.title')}</h1>
+    <main>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <h1>{t('register.title')}</h1>
 
-      <RegisterInput
-        field="email"
-        type="email"
-        autoComplete="email"
-        value={values.email}
-        error={errors.email}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="username"
-        type="text"
-        autoComplete="username"
-        value={values.username}
-        error={errors.username}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="firstName"
-        type="text"
-        autoComplete="given-name"
-        value={values.firstName}
-        error={errors.firstName}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="lastName"
-        type="text"
-        autoComplete="family-name"
-        value={values.lastName}
-        error={errors.lastName}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="password"
-        type="password"
-        autoComplete="new-password"
-        value={values.password}
-        error={errors.password}
-        onChange={handleChange}
-      />
-      <RegisterInput
-        field="confirmPassword"
-        type="password"
-        autoComplete="new-password"
-        value={values.confirmPassword}
-        error={errors.confirmPassword}
-        onChange={handleChange}
-      />
-      {formError && <Alert tone="error">{t(formError)}</Alert>}
+        <div className={styles.row}>
+          <RegisterInput
+            field="firstName"
+            type="text"
+            autoComplete="given-name"
+            value={values.firstName}
+            error={errors.firstName}
+            onChange={handleChange}
+          />
+          <RegisterInput
+            field="lastName"
+            type="text"
+            autoComplete="family-name"
+            value={values.lastName}
+            error={errors.lastName}
+            onChange={handleChange}
+          />
+        </div>
+        <RegisterInput
+          field="username"
+          type="text"
+          autoComplete="username"
+          value={values.username}
+          error={errors.username}
+          hint={t('hints.username')}
+          onChange={handleChange}
+        />
+        <RegisterInput
+          field="email"
+          type="email"
+          autoComplete="email"
+          value={values.email}
+          error={errors.email}
+          placeholder={t('placeholders.email')}
+          onChange={handleChange}
+        />
+        <div className={styles.row}>
+          <RegisterInput
+            field="password"
+            type="password"
+            autoComplete="new-password"
+            value={values.password}
+            error={errors.password}
+            hint={t('hints.password')}
+            onChange={handleChange}
+          />
+          <RegisterInput
+            field="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            value={values.confirmPassword}
+            error={errors.confirmPassword}
+            onChange={handleChange}
+          />
+        </div>
+        {formError && <Alert tone="error">{t(formError)}</Alert>}
 
-      <Button type="submit" variant="solid" disabled={isSubmitting}>
-        {isSubmitting ? t('register.submitting') : t('register.submit')}
-      </Button>
+        <Button type="submit" variant="solid" disabled={isSubmitting}>
+          {isSubmitting ? t('register.submitting') : t('register.submit')}
+        </Button>
 
-      <OAuthButtons />
+        <OAuthButtons />
 
-      <p className={styles.links}>
-        {t('register.hasAccount')}{' '}
-        <Link to="/login">{t('register.logIn')}</Link>
-      </p>
-    </form>
+        <p className={styles.links}>
+          {t('register.hasAccount')}{' '}
+          <Link to="/login">{t('register.logIn')}</Link>
+        </p>
+      </form>
+    </main>
   );
 }

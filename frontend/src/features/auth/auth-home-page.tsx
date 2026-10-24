@@ -3,6 +3,7 @@
 // proves the round trip works: it reads the bootstrapped user off the context
 // and offers a way back out.
 import { Trans, useTranslation } from 'react-i18next';
+import { Button } from '../../ui/ui-button';
 import { useAuth } from './auth-context';
 import styles from './auth-home-page.module.css';
 
@@ -31,9 +32,7 @@ export function HomePage() {
           components={{ strong: <strong /> }}
         />
       </p>
-      <button type="button" onClick={logout}>
-        {t('home.logout')}
-      </button>
+      <Button onClick={logout}>{t('home.logout')}</Button>
     </main>
   );
 }

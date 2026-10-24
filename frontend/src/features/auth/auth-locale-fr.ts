@@ -11,6 +11,13 @@ export const authFr: typeof authEn = {
     firstName: 'Prénom',
     lastName: 'Nom',
   },
+  hints: {
+    username: '3 à 30 caractères',
+    password: '8 à 100 caractères',
+  },
+  placeholders: {
+    email: 'ada@example.com',
+  },
   errors: {
     generic: 'Une erreur est survenue. Veuillez réessayer.',
   },
@@ -23,7 +30,7 @@ export const authFr: typeof authEn = {
     mismatch: 'Les mots de passe ne correspondent pas',
   },
   register: {
-    title: 'Inscription',
+    title: 'Créer votre compte',
     submit: 'S’inscrire',
     submitting: 'Inscription...',
     hasAccount: 'Vous avez déjà un compte ?',

@@ -55,48 +55,54 @@ export function LoginPage() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <h1>{t('login.title')}</h1>
+    <main>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <h1>{t('login.title')}</h1>
 
-      {justRegistered && (
-        <Alert tone="success">{t('login.registeredNotice')}</Alert>
-      )}
+        {justRegistered && (
+          <Alert tone="success">{t('login.registeredNotice')}</Alert>
+        )}
 
-      <Field
-        label={t('fields.email')}
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        autoComplete="email"
-        invalid={error === 'login.badCredentials'}
-        required
-      />
+        <Field
+          label={t('fields.email')}
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          placeholder={t('placeholders.email')}
+          invalid={error === 'login.badCredentials'}
+          required
+        />
 
-      <Field
-        label={t('fields.password')}
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        autoComplete="current-password"
-        invalid={error === 'login.badCredentials'}
-        required
-      />
+        <Field
+          label={t('fields.password')}
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          invalid={error === 'login.badCredentials'}
+          required
+        />
 
-      {error && <Alert tone="error">{t(error)}</Alert>}
+        {error && <Alert tone="error">{t(error)}</Alert>}
 
-      <Button type="submit" variant="solid" disabled={isSubmitting}>
-        {isSubmitting ? t('login.submitting') : t('login.submit')}
-      </Button>
+        <Button type="submit" variant="solid" disabled={isSubmitting}>
+          {isSubmitting ? t('login.submitting') : t('login.submit')}
+        </Button>
 
-      <OAuthButtons />
+        <OAuthButtons />
 
-      <div className={styles.links}>
-        {/* Not wired yet: password reset is HYP-34. Kept for the layout. */}
-        <a href="#forgot-password" onClick={(event) => event.preventDefault()}>
-          {t('login.forgotPassword')}
-        </a>
-        <Link to="/register">{t('login.createAccount')}</Link>
-      </div>
-    </form>
+        <div className={styles.links}>
+          {/* Not wired yet: password reset is HYP-34. Kept for the layout. */}
+          <a
+            href="#forgot-password"
+            onClick={(event) => event.preventDefault()}
+          >
+            {t('login.forgotPassword')}
+          </a>
+          <Link to="/register">{t('login.createAccount')}</Link>
+        </div>
+      </form>
+    </main>
   );
 }

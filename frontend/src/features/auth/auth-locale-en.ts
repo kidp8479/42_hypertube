@@ -9,6 +9,13 @@ export const authEn = {
     firstName: 'First name',
     lastName: 'Last name',
   },
+  hints: {
+    username: '3 to 30 characters',
+    password: '8 to 100 characters',
+  },
+  placeholders: {
+    email: 'ada@example.com',
+  },
   errors: {
     generic: 'Something went wrong. Please try again.',
   },
@@ -20,7 +27,7 @@ export const authEn = {
     mismatch: 'Passwords do not match',
   },
   register: {
-    title: 'Register',
+    title: 'Create your account',
     submit: 'Register',
     submitting: 'Registering...',
     hasAccount: 'Already have an account?',
