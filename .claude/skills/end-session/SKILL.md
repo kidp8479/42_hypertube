@@ -24,8 +24,10 @@ survive between the home and school machines. This skill produces both.
    - **Next**: the one concrete next step
 4. Show the draft. On OK:
    - Post to `#<project>-daily-log` (slack MCP).
-   - Update the Linear "Session Handoff" doc (replace the "current state"
-     / "next steps" sections, keep the history).
+   - Rewrite the Linear "Session Handoff" doc to the current state only
+     (open PRs, pending outside the repo, next steps, undecided items).
+     Never append a dated section: the history is the daily-log channel,
+     and an appended doc grows past what one read can load.
 5. Do **not** commit code. Do not push.
 
 ## Why a skill
