@@ -291,8 +291,12 @@ test-e2e:
 # Bruno app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
 # `local` environment. POST /users is rate-limited (10/h), a run uses 5: raise
 # THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
+# Pinned, or each run would take whatever Bruno CLI is latest; CI runs this
+# same target. BRUNO_ARGS adds CLI flags (CI writes an HTML report).
+BRUNO_CLI := @usebruno/cli@4.2.1
+
 test-api:
-	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes @usebruno/cli run --env local --insecure --disable-cookies
+	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes $(BRUNO_CLI) run --env local --insecure --disable-cookies $(BRUNO_ARGS)
 
 build:
 	cd backend && npm run build

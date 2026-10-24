@@ -231,7 +231,8 @@ through the edge proxy (`https://localhost:<HYPERTUBE_HTTPS_PORT>/api`, a
 self-signed certificate, so the CLI runs with `--insecure`); the port comes
 from `.env`. `POST /users` is capped at 10 per hour per
 IP and one run uses 5, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
-`.env` for dev; it is forced to 1 when `NODE_ENV=production`.
+`.env` for dev; it is forced to 1 when `NODE_ENV=production`. CI runs the
+same `make test-api` in the `e2e` job, after Playwright, on every PR.
 
 ### Spec file layout
 
