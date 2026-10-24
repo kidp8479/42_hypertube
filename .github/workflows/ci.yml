@@ -75,6 +75,10 @@ jobs:
       GITHUB_CLIENT_ID: ci_placeholder
       GITHUB_CLIENT_SECRET: ci_placeholder
       GITHUB_CALLBACK_URL: https://localhost:8443/api/auth/github/callback
+      # Playwright and Bruno run from the same address in one job; the
+      # production limits (5 logins a minute, 10 registrations an hour per IP)
+      # would answer 429 halfway through.
+      THROTTLE_LIMIT_MULTIPLIER: '100'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -123,6 +127,17 @@ jobs:
         with:
           name: playwright-report
           path: frontend/playwright-report/
+          retention-days: 7
+      # Exact HTTP codes, refresh rotation and reuse detection: what the
+      # browser suite does not see. Same stack, so no second boot.
+      - name: Run the API collection (Bruno)
+        run: make test-api BRUNO_ARGS="--reporter-html bruno-report.html"
+      - name: Upload the Bruno report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bruno-report
+          path: api/bruno/bruno-report.html
           retention-days: 7
       - name: Tear down the stack
         if: always()

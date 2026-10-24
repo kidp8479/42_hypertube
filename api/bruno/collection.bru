@@ -1,7 +1,8 @@
 docs {
   Hypertube API - request collection with assertions.
 
-  Run it top to bottom (`make test-api` or the Bruno runner): the requests
+  Run it top to bottom (`make test-api`, the Bruno runner, or the CI e2e job on
+  every PR): the requests
   are numbered and share runtime variables (runId, adaId, token). Every run
   registers a fresh user, so re-running never hits the 409 on its own data.
 
