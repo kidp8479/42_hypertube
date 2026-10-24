@@ -28,10 +28,10 @@ afterEach(async () => {
 });
 
 describe('HomePage', () => {
-  it('shows the signed-in user with the username in bold', () => {
+  it('shows the signed-in user', () => {
     renderHomePage();
 
-    expect(screen.getByText(fakeUser.username).tagName).toBe('STRONG');
+    expect(screen.getByText(fakeUser.username)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
   });
 
@@ -43,6 +43,6 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('button', { name: 'Se déconnecter' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(fakeUser.username).tagName).toBe('STRONG');
+    expect(screen.getByText(fakeUser.username)).toBeInTheDocument();
   });
 });

@@ -1,13 +1,8 @@
-// Spec for JwtAuthGuard: the @Public() bypass in isolation, then the guard
-// wired globally over HTTP (401 without a valid token, 200 with one).
-import {
-  Controller,
-  ExecutionContext,
-  Get,
-  INestApplication,
-} from '@nestjs/common';
+// Spec for JwtAuthGuard wired globally over HTTP: 401 without a valid token,
+// 200 with one, and @Public() routes open to everyone.
+import { Controller, Get, INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { APP_GUARD, Reflector } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
@@ -16,20 +11,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { Public } from '../decorators/public.decorator';
 
-const context = {
-  getHandler: () => ({}),
-  getClass: () => ({}),
-} as unknown as ExecutionContext;
-
 describe('JwtAuthGuard', () => {
-  // The non-public path is passport's own AuthGuard code; only the
-  // @Public() short-circuit is ours to unit-test.
-  it('lets a @Public() route through without touching the token', () => {
-    const reflector = { getAllAndOverride: () => true } as unknown as Reflector;
-
-    expect(new JwtAuthGuard(reflector).canActivate(context)).toBe(true);
-  });
-
   describe('wired globally over HTTP', () => {
     const secret = 'x'.repeat(32);
     let app: INestApplication<App>;

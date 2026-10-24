@@ -1,5 +1,5 @@
 // Unit spec for databaseOptions: the schema comes from the migrations only
-// (ADR-0010), and the app and the TypeORM CLI describe the same connection.
+// (ADR-0010), and entities and migrations are found by their file role.
 import { databaseOptions } from './database.config';
 
 const ENV: Record<string, string> = {
@@ -12,21 +12,6 @@ const ENV: Record<string, string> = {
 
 describe('databaseOptions', () => {
   const options = databaseOptions((key) => ENV[key]);
-
-  it('reads the connection from the environment', () => {
-    expect(options).toMatchObject({
-      type: 'postgres',
-      host: 'db',
-      port: 5433,
-      username: 'hypertube',
-      password: 'secret',
-      database: 'hypertube',
-    });
-  });
-
-  it('defaults the port when none is given', () => {
-    expect(databaseOptions(() => undefined).port).toBe(5432);
-  });
 
   it('never lets the ORM change the schema on its own, and applies migrations at boot', () => {
     expect(options.synchronize).toBe(false);

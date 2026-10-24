@@ -1,7 +1,7 @@
-// Unit spec for AuthController with mocked services: login, the two OAuth
-// callbacks, the code exchange, refresh and logout. HTTP-level behaviour
-// (guards, status codes, the cookie on the wire) is covered by the
-// neighbouring *.spec.ts files that boot the app.
+// Unit spec for AuthController with mocked services: a rejected login, the two
+// OAuth callbacks and the code exchange. The session routes (login, refresh,
+// logout) and the cookie on the wire are covered over HTTP by
+// auth.session.spec.ts.
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -29,18 +29,13 @@ const buildUser = (overrides: Partial<User> = {}): User =>
 
 const EXPIRES = new Date('2026-10-30T12:00:00.000Z');
 
-// The controller only touches the cookie header, req.headers and res.cookie()
-// / clearCookie(): a hand-built request and response are enough.
-const buildHttp = (refreshSecret?: string) => {
+// The controller only touches req.headers and res.cookie(): a hand-built
+// request and response are enough.
+const buildHttp = () => {
   const cookie = jest.fn();
-  const clearCookie = jest.fn();
-  const req = {
-    headers: {
-      cookie: refreshSecret ? `${REFRESH_COOKIE}=${refreshSecret}` : undefined,
-    },
-  } as unknown as Request;
-  const res = { cookie, clearCookie } as unknown as Response;
-  return { req, res, cookie, clearCookie };
+  const req = { headers: {} } as unknown as Request;
+  const res = { cookie } as unknown as Response;
+  return { req, res, cookie };
 };
 
 const loginDto: LoginDto = {
@@ -98,34 +93,7 @@ describe('AuthController', () => {
     refresh = module.get(RefreshTokenService);
   });
 
-  it('is defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('login', () => {
-    it('returns the access token and starts a session with a refresh cookie when credentials are valid', async () => {
-      const user = buildUser();
-      auth.validateUser.mockResolvedValue(user);
-      auth.login.mockResolvedValue({ access_token: 'signed.jwt.token' });
-      refresh.issue.mockResolvedValue({ secret: 'r1', expiresAt: EXPIRES });
-      const { req, res, cookie } = buildHttp();
-
-      const result = await controller.login(loginDto, req, res);
-
-      expect(result).toEqual({ access_token: 'signed.jwt.token' });
-      expect(auth.validateUser).toHaveBeenCalledWith(
-        loginDto.email,
-        loginDto.password,
-      );
-      expect(auth.login).toHaveBeenCalledWith(user);
-      expect(refresh.issue).toHaveBeenCalledWith(user.id);
-      expect(cookie).toHaveBeenCalledWith(
-        REFRESH_COOKIE,
-        'r1',
-        expect.objectContaining({ httpOnly: true, sameSite: 'strict' }),
-      );
-    });
-
     it('throws 401 and never mints a token or a session when credentials are rejected', async () => {
       auth.validateUser.mockResolvedValue(null);
       const { req, res, cookie } = buildHttp();
@@ -200,72 +168,6 @@ describe('AuthController', () => {
       ).rejects.toBeInstanceOf(UnauthorizedException);
       expect(auth.loginById).not.toHaveBeenCalled();
       expect(refresh.issue).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('refresh', () => {
-    it('rotates the cookie token, sets the next one and returns a new access token', async () => {
-      refresh.rotate.mockResolvedValue({
-        userId: 7,
-        secret: 'r2',
-        expiresAt: EXPIRES,
-      });
-      auth.loginById.mockResolvedValue({ access_token: 'new.jwt.token' });
-      const { req, res, cookie } = buildHttp('r1');
-
-      const result = await controller.refresh(req, res);
-
-      expect(refresh.rotate).toHaveBeenCalledWith('r1');
-      expect(cookie).toHaveBeenCalledWith(
-        REFRESH_COOKIE,
-        'r2',
-        expect.any(Object),
-      );
-      expect(auth.loginById).toHaveBeenCalledWith(7);
-      expect(result).toEqual({ access_token: 'new.jwt.token' });
-    });
-
-    it('answers 401 without touching the service when there is no cookie', async () => {
-      const { req, res } = buildHttp();
-
-      await expect(controller.refresh(req, res)).rejects.toBeInstanceOf(
-        UnauthorizedException,
-      );
-      expect(refresh.rotate).not.toHaveBeenCalled();
-    });
-
-    it('answers 401 and clears the dead cookie when the token is rejected', async () => {
-      refresh.rotate.mockRejectedValue(new UnauthorizedException());
-      const { req, res, clearCookie } = buildHttp('stale');
-
-      await expect(controller.refresh(req, res)).rejects.toBeInstanceOf(
-        UnauthorizedException,
-      );
-      expect(clearCookie).toHaveBeenCalledWith(REFRESH_COOKIE, {
-        path: '/auth',
-      });
-    });
-  });
-
-  describe('logout', () => {
-    it('revokes the session of the cookie token and clears the cookie', async () => {
-      const { req, res, clearCookie } = buildHttp('r1');
-
-      await controller.logout(req, res);
-
-      expect(refresh.revokeFamilyOf).toHaveBeenCalledWith('r1');
-      expect(clearCookie).toHaveBeenCalledWith(REFRESH_COOKIE, {
-        path: '/auth',
-      });
-    });
-
-    it('still succeeds, and clears the cookie, when there is nothing to revoke', async () => {
-      const { req, res, clearCookie } = buildHttp();
-
-      await expect(controller.logout(req, res)).resolves.toBeUndefined();
-
-      expect(refresh.revokeFamilyOf).not.toHaveBeenCalled();
-      expect(clearCookie).toHaveBeenCalled();
     });
   });
 });

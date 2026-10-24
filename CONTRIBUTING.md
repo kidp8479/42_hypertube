@@ -256,8 +256,6 @@ describe('FooService', () => {
   beforeEach(async () => { /* compile TestingModule, grab service + mocks */ });
 
   // tests, grouped by method
-  it('is defined', () => { ... });
-
   describe('methodUnderTest', () => {
     it('does X when Y', async () => {
       // arrange
@@ -270,7 +268,8 @@ describe('FooService', () => {
 
 - **Setup lives in the hooks, tests are the `it()`s.** The `beforeEach`
   block is the boundary: everything above it is wiring, everything below
-  is a real assertion.
+  is a real assertion. No `it('is defined')`: if the wiring breaks, every
+  other test of the file fails first.
 - **One `describe` per method under test**, nested in the class-level
   `describe`. `it('...')` labels read as sentences
   (`methodUnderTest does X when Y`).
