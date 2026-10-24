@@ -191,13 +191,6 @@ instead of rediscovered every few sessions.
   root-owned** on a fresh `docker compose up`, breaking `tsc --watch`
   with `EACCES`. Fix: `docker compose exec -u root backend chown -R
   node:node /app/dist`, then restart the `backend` service.
-- **Prettier's config isn't visible from inside either container** (the
-  root `.prettierrc` isn't in the build context) - running `npm run
-  lint`/`format` via `make sh-backend`/`sh-frontend` reformats every
-  file to the tool's own defaults (e.g. double quotes) instead of
-  respecting the repo's style. Always run `format`/`lint`/`typecheck`/
-  `test` **host-side** (plain `make format`, `make lint`, etc.), never
-  inside a container shell. Tracked for a real fix in `HYP-47`.
 
 ## Dependency updates (Dependabot)
 
