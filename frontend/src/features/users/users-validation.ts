@@ -20,9 +20,22 @@ export type CredentialsField =
   'email' | 'password' | 'confirmPassword' | 'currentPassword';
 export type CredentialsValues = Record<CredentialsField, string>;
 
-// 500 is the column length. Like the backend's @IsUrl, only https with a
-// named host and a TLD of 2 letters or more (`https://localhost/a.png` is
-// refused there).
+// 500 is the column length. Like the backend's @IsUrl: https only, no
+// whitespace, and a host made of letter, digit and hyphen labels that ends in
+// a TLD of 2 letters or more (`https://localhost/a.png` and
+// `https://my_host.example.com/a.png` are refused there).
+const HOST_LABEL = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/i;
+const TLD = /^([a-z]{2,}|xn--[a-z0-9-]+)$/i;
+
+function isPictureHost(hostname: string): boolean {
+  const labels = hostname.split('.');
+  return (
+    labels.length > 1 &&
+    labels.every((label) => HOST_LABEL.test(label)) &&
+    TLD.test(labels[labels.length - 1])
+  );
+}
+
 function validateProfilePicture(url: string): ValidationError | undefined {
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
@@ -31,8 +44,8 @@ function validateProfilePicture(url: string): ValidationError | undefined {
   if (trimmedUrl.length > 500) {
     return { code: 'tooLong', max: 500 };
   }
-  const parsed = URL.parse(trimmedUrl);
-  return parsed?.protocol === 'https:' && /\.[a-z]{2,}$/i.test(parsed.hostname)
+  const parsed = /\s/.test(trimmedUrl) ? null : URL.parse(trimmedUrl);
+  return parsed?.protocol === 'https:' && isPictureHost(parsed.hostname)
     ? undefined
     : { code: 'invalidUrl' };
 }

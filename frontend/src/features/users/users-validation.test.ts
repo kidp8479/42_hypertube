@@ -27,13 +27,27 @@ describe('validateInfo', () => {
     expect(validateInfo({ ...saved, profilePicture: '' }, saved)).toEqual({});
   });
 
-  it('refuses a picture address that is not https or has no TLD', () => {
+  it('accepts the picture addresses @IsUrl accepts', () => {
+    for (const profilePicture of [
+      'https://example.com:8080/a.png',
+      'https://example.com/a%20b.png',
+      'https://bücher.example/a.png',
+    ]) {
+      expect(validateInfo({ ...info, profilePicture }, info)).toEqual({});
+    }
+  });
+
+  it('refuses a picture address that @IsUrl would refuse', () => {
     for (const profilePicture of [
       'http://example.com/a.png',
       'javascript:alert(1)',
       'not a url',
       'https://localhost/a.png',
       'https://example.c/a.png',
+      'https://example.com/my photo.png',
+      'https://my_host.example.com/a.png',
+      'https://a..com/a.png',
+      'https://-a.example.com/a.png',
     ]) {
       expect(validateInfo({ ...info, profilePicture }, info)).toEqual({
         profilePicture: { code: 'invalidUrl' },
