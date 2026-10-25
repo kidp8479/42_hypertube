@@ -28,7 +28,10 @@ export type ValidationError =
   | { code: 'mismatch' }
   | { code: 'containsAt' }
   | { code: 'invalidUrl' };
-export type RegisterErrors = Partial<Record<RegisterField, ValidationError>>;
+export type FieldErrors<F extends AccountField> = Partial<
+  Record<F, ValidationError>
+>;
+export type RegisterErrors = FieldErrors<RegisterField>;
 
 // Deliberately loose (something@something.tld, a TLD of 2 characters or
 // more like @IsEmail asks): a stricter pattern would reject valid addresses,
@@ -105,35 +108,35 @@ export function validateConfirmPassword(
   return undefined;
 }
 
+/** Keeps the failed checks of a form, keyed by field. */
+export function collectErrors<F extends AccountField>(
+  checks: Array<[F, ValidationError | undefined]>,
+): FieldErrors<F> {
+  const errors: FieldErrors<F> = {};
+  for (const [field, error] of checks) {
+    if (error) {
+      errors[field] = error;
+    }
+  }
+  return errors;
+}
+
 /**
  * Runs every register-form rule; an empty object means the form may be sent.
  * Values are checked trimmed, as `registerRequest` sends them.
  */
 export function validateRegister(values: RegisterValues): RegisterErrors {
-  const errors: RegisterErrors = {};
-
-  const rules: Array<{
-    field: RegisterField;
-    error: ValidationError | undefined;
-  }> = [
-    { field: 'email', error: validateEmail(values.email) },
-    { field: 'username', error: validateUsername(values.username) },
-    { field: 'firstName', error: validateName(values.firstName) },
-    { field: 'lastName', error: validateName(values.lastName) },
-    { field: 'password', error: validatePassword(values.password) },
-    {
-      field: 'confirmPassword',
-      error: validateConfirmPassword(values.password, values.confirmPassword),
-    },
-  ];
-
-  for (const rule of rules) {
-    if (rule.error) {
-      errors[rule.field] = rule.error;
-    }
-  }
-
-  return errors;
+  return collectErrors<RegisterField>([
+    ['email', validateEmail(values.email)],
+    ['username', validateUsername(values.username)],
+    ['firstName', validateName(values.firstName)],
+    ['lastName', validateName(values.lastName)],
+    ['password', validatePassword(values.password)],
+    [
+      'confirmPassword',
+      validateConfirmPassword(values.password, values.confirmPassword),
+    ],
+  ]);
 }
 
 /**

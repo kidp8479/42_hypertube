@@ -8,11 +8,13 @@ import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { useAuth } from '../auth/auth-context';
 import type { User } from '../auth/auth-types';
-import { describeValidationError } from '../auth/auth-validation';
+import {
+  describeValidationError,
+  type FieldErrors,
+} from '../auth/auth-validation';
 import { updateProfile, type ProfileChanges } from './users-actions';
 import {
   validateInfo,
-  type FieldErrors,
   type InfoField,
   type InfoValues,
 } from './users-validation';

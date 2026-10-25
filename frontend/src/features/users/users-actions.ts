@@ -4,7 +4,6 @@ import type { User } from '../auth/auth-types';
 
 /** Another user's profile as `GET /users/:id` returns it: never the email. */
 export interface PublicUser {
-  id: number;
   username: string;
   profilePicture: string | null;
 }

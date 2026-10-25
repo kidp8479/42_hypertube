@@ -2,12 +2,13 @@
 // so a field is checked the same way everywhere. UpdateUserDto stays the
 // authority.
 import {
+  collectErrors,
   validateConfirmPassword,
   validateEmail,
   validateName,
   validatePassword,
   validateUsername,
-  type AccountField,
+  type FieldErrors,
   type ValidationError,
 } from '../auth/auth-validation';
 
@@ -19,15 +20,9 @@ export type CredentialsField =
   'email' | 'password' | 'confirmPassword' | 'currentPassword';
 export type CredentialsValues = Record<CredentialsField, string>;
 
-export type FieldErrors<F extends AccountField> = Partial<
-  Record<F, ValidationError>
->;
-
 // 500 is the column length. Like the backend's @IsUrl, only https with a
 // named host and a TLD of 2 letters or more (`https://localhost/a.png` is
 // refused there).
-const PICTURE_HOST = /\.[a-z]{2,}$/i;
-
 function validateProfilePicture(url: string): ValidationError | undefined {
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
@@ -37,7 +32,7 @@ function validateProfilePicture(url: string): ValidationError | undefined {
     return { code: 'tooLong', max: 500 };
   }
   const parsed = URL.parse(trimmedUrl);
-  return parsed?.protocol === 'https:' && PICTURE_HOST.test(parsed.hostname)
+  return parsed?.protocol === 'https:' && /\.[a-z]{2,}$/i.test(parsed.hostname)
     ? undefined
     : { code: 'invalidUrl' };
 }
@@ -48,18 +43,6 @@ function validateCurrentPassword(value: string): ValidationError | undefined {
     return { code: 'required' };
   }
   return value.length > 100 ? { code: 'tooLong', max: 100 } : undefined;
-}
-
-function collect<F extends AccountField>(
-  checks: Array<[F, ValidationError | undefined]>,
-): FieldErrors<F> {
-  const errors: FieldErrors<F> = {};
-  for (const [field, error] of checks) {
-    if (error) {
-      errors[field] = error;
-    }
-  }
-  return errors;
 }
 
 /**
@@ -78,7 +61,7 @@ export function validateInfo(
     ['lastName', validateName(values.lastName)],
     ['profilePicture', validateProfilePicture(values.profilePicture)],
   ];
-  return collect(
+  return collectErrors(
     checks.filter(([field]) => values[field].trim() !== saved[field]),
   );
 }
@@ -91,7 +74,7 @@ export function validateCredentials(
   values: CredentialsValues,
 ): FieldErrors<CredentialsField> {
   const changingPassword = values.password !== '';
-  return collect<CredentialsField>([
+  return collectErrors<CredentialsField>([
     ['email', validateEmail(values.email)],
     [
       'password',
