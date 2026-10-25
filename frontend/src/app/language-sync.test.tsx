@@ -18,6 +18,7 @@ function wrapperFor(state: AuthState) {
           login: vi.fn(),
           loginWithOAuthCode: vi.fn(),
           logout: vi.fn(),
+          updateUser: vi.fn(),
         }}
       >
         {children}

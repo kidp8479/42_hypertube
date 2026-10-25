@@ -11,6 +11,8 @@ export const authFr: typeof authEn = {
     identifier: 'Nom d’utilisateur ou e-mail',
     firstName: 'Prénom',
     lastName: 'Nom',
+    currentPassword: 'Mot de passe actuel',
+    profilePicture: 'URL de la photo de profil',
   },
   hints: {
     username: '3 à 30 caractères, sans @',
@@ -30,6 +32,7 @@ export const authFr: typeof authEn = {
     tooLong: 'Le champ « {{field}} » doit contenir au plus {{max}} caractères',
     mismatch: 'Les mots de passe ne correspondent pas',
     containsAt: 'Le champ « {{field}} » ne peut pas contenir @',
+    invalidUrl: 'Saisissez une adresse en https://',
   },
   register: {
     title: 'Créer votre compte',

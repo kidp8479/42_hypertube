@@ -21,7 +21,8 @@ export type AuthAction =
   | { type: 'bootstrap-anonymous' }
   | { type: 'login-success'; user: User }
   | { type: 'session-expired' }
-  | { type: 'logout' };
+  | { type: 'logout' }
+  | { type: 'user-updated'; user: User };
 
 /** Starting point before the bootstrap has settled. */
 export const initialState: AuthState = { status: 'loading', user: null };
@@ -32,6 +33,8 @@ export const initialState: AuthState = { status: 'loading', user: null };
  *
  * The bootstrap events only decide the initial state: once a login has moved
  * on from `'loading'`, a startup check that settles late must not override it.
+ * Likewise `user-updated` (a saved profile edit) only applies while signed
+ * in: an edit that answers after a logout must not sign the user back in.
  */
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
@@ -49,6 +52,10 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
       return { status: 'anonymous', user: null };
     case 'logout':
       return { status: 'anonymous', user: null };
+    case 'user-updated':
+      return state.status === 'authenticated'
+        ? { status: 'authenticated', user: action.user }
+        : state;
     default:
       return state;
   }

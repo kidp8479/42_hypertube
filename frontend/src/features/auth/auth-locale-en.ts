@@ -9,6 +9,8 @@ export const authEn = {
     identifier: 'Username or email',
     firstName: 'First name',
     lastName: 'Last name',
+    currentPassword: 'Current password',
+    profilePicture: 'Profile picture URL',
   },
   hints: {
     username: '3 to 30 characters, no @',
@@ -27,6 +29,7 @@ export const authEn = {
     tooLong: '{{field}} must be at most {{max}} characters long',
     mismatch: 'Passwords do not match',
     containsAt: '{{field}} cannot contain @',
+    invalidUrl: 'Enter an https:// address',
   },
   register: {
     title: 'Create your account',

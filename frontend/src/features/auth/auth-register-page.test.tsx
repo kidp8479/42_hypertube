@@ -34,6 +34,7 @@ function renderRegisterPage(
     login: vi.fn(),
     loginWithOAuthCode: vi.fn(),
     logout: vi.fn(),
+    updateUser: vi.fn(),
   };
   render(
     <AuthContext.Provider value={value}>

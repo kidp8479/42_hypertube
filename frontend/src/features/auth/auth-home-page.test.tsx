@@ -14,6 +14,7 @@ function renderHomePage() {
         login: vi.fn(),
         loginWithOAuthCode: vi.fn(),
         logout: vi.fn(),
+        updateUser: vi.fn(),
       }}
     >
       <HomePage />

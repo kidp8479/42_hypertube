@@ -17,6 +17,7 @@ function renderGuard(state: AuthState) {
     login: vi.fn(),
     loginWithOAuthCode: vi.fn(),
     logout: vi.fn(),
+    updateUser: vi.fn(),
   };
   return render(
     <AuthContext.Provider value={value}>

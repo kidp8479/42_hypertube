@@ -5,32 +5,33 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../features/auth/auth-context';
 import type { User } from '../features/auth/auth-types';
 import { Button } from '../ui/ui-button';
+import { UserAvatar } from '../features/users/users-avatar';
 import { LanguageSwitcher } from './language-switcher';
 
 const ROW = 'flex items-center gap-2 border-b border-line py-2 sm:gap-3';
 
 /**
- * Who is signed in: a round initial and the username. On a phone only the
- * initial shows; the username stays for screen readers.
+ * Who is signed in, as the link to their profile: the avatar and the
+ * username. On a phone only the avatar shows; the username stays for screen
+ * readers.
  */
-function AccountBadge({ user }: { user: User }) {
+function AccountLink({ user }: { user: User }) {
   return (
-    <span className="flex items-center gap-2">
-      <span
-        aria-hidden="true"
-        className="inline-flex size-6 items-center justify-center rounded-round border border-edge font-mono text-xs uppercase"
-      >
-        {user.username.charAt(0)}
-      </span>
+    <Link to="/profile" className="flex items-center gap-2 no-underline">
+      <UserAvatar username={user.username} picture={user.profilePicture} />
       <span className="sr-only sm:not-sr-only">{user.username}</span>
-    </span>
+    </Link>
   );
 }
 
+const SECTION =
+  'border-b border-transparent py-1 font-mono text-xs tracking-label text-muted uppercase no-underline aria-[current=page]:border-orange aria-[current=page]:text-ink';
+
 /**
  * The app header (HYP-19). Signed out it holds the brand and the language
- * picker; signed in it adds the account, the one-click logout and a second row
- * of section links, so each is one click away from any page.
+ * picker; signed in it adds the account (a link to the profile), the
+ * one-click logout and a second row of section links, so each is one click
+ * away from any page.
  */
 export function AppHeader() {
   const { t } = useTranslation('common');
@@ -52,7 +53,7 @@ export function AppHeader() {
           <LanguageSwitcher />
           {user && (
             <>
-              <AccountBadge user={user} />
+              <AccountLink user={user} />
               <Button className="px-3 py-1 whitespace-nowrap" onClick={logout}>
                 {t('header.logout')}
               </Button>
@@ -62,12 +63,11 @@ export function AppHeader() {
       </div>
       {user && (
         <nav aria-label={t('header.sections')} className={ROW}>
-          <NavLink
-            to="/"
-            end
-            className="border-b border-transparent py-1 font-mono text-xs tracking-label text-muted uppercase no-underline aria-[current=page]:border-orange aria-[current=page]:text-ink"
-          >
+          <NavLink to="/" end className={SECTION}>
             {t('header.library')}
+          </NavLink>
+          <NavLink to="/profile" className={SECTION}>
+            {t('header.profile')}
           </NavLink>
         </nav>
       )}

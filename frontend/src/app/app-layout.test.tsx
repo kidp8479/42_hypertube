@@ -16,7 +16,13 @@ function renderLayout(state: AuthState) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider
-        value={{ state, login: vi.fn(), loginWithOAuthCode: vi.fn(), logout }}
+        value={{
+          state,
+          login: vi.fn(),
+          loginWithOAuthCode: vi.fn(),
+          logout,
+          updateUser: vi.fn(),
+        }}
       >
         <MemoryRouter initialEntries={['/']}>
           <Routes>
@@ -58,7 +64,12 @@ describe('AppLayout', () => {
       user: fakeUser,
     });
 
-    expect(screen.getByText(fakeUser.username)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: fakeUser.username }),
+    ).toHaveAttribute('href', '/profile');
+    expect(
+      screen.getByRole('link', { name: 'My profile' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Library' })).toHaveAttribute(
       'aria-current',
       'page',

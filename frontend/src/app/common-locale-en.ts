@@ -7,6 +7,7 @@ export const commonEn = {
     logout: 'Log out',
     sections: 'Sections',
     library: 'Library',
+    profile: 'My profile',
   },
   loading: 'Loading…',
   notFound: {

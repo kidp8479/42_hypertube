@@ -39,6 +39,7 @@ function renderCallbackPage(
       login: vi.fn(),
       loginWithOAuthCode,
       logout: vi.fn(),
+      updateUser: vi.fn(),
     };
     const app = (
       <AuthContext.Provider value={value}>

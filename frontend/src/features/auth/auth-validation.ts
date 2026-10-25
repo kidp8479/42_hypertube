@@ -1,6 +1,7 @@
-// Client-side rules for the register form. They only save a round trip: the
-// backend DTO (CreateUserDto) stays the authority, so the length limits below
-// mirror its @Length / @MaxLength values and must move with them.
+// Client-side rules for the account forms (register here, the profile page
+// reuses the field rules). They only save a round trip: the backend DTOs
+// (CreateUserDto, UpdateUserDto) stay the authority, so the length limits
+// below mirror their @Length / @MaxLength values and must move with them.
 import type { TFunction } from 'i18next';
 
 export type RegisterField =
@@ -11,6 +12,8 @@ export type RegisterField =
   | 'firstName'
   | 'lastName';
 export type RegisterValues = Record<RegisterField, string>;
+/** Every account field a message can name: the register ones and the profile ones. */
+export type AccountField = RegisterField | 'currentPassword' | 'profilePicture';
 
 /**
  * Why a field failed: a code plus the parameters a message needs, never a
@@ -23,14 +26,15 @@ export type ValidationError =
   | { code: 'tooShort'; min: number }
   | { code: 'tooLong'; max: number }
   | { code: 'mismatch' }
-  | { code: 'containsAt' };
+  | { code: 'containsAt' }
+  | { code: 'invalidUrl' };
 export type RegisterErrors = Partial<Record<RegisterField, ValidationError>>;
 
 // Deliberately loose (something@something.tld): a stricter pattern would
 // reject valid addresses, and the backend's @IsEmail has the final say.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateEmail(email: string): ValidationError | undefined {
+export function validateEmail(email: string): ValidationError | undefined {
   const trimmedEmail = email.trim();
   if (trimmedEmail === '') {
     return { code: 'required' };
@@ -44,7 +48,9 @@ function validateEmail(email: string): ValidationError | undefined {
   return undefined;
 }
 
-function validateUsername(username: string): ValidationError | undefined {
+export function validateUsername(
+  username: string,
+): ValidationError | undefined {
   const trimmedUsername = username.trim();
   if (trimmedUsername === '') {
     return { code: 'required' };
@@ -62,7 +68,7 @@ function validateUsername(username: string): ValidationError | undefined {
   return undefined;
 }
 
-function validateName(value: string): ValidationError | undefined {
+export function validateName(value: string): ValidationError | undefined {
   const trimmedValue = value.trim();
   if (trimmedValue === '') {
     return { code: 'required' };
@@ -73,7 +79,9 @@ function validateName(value: string): ValidationError | undefined {
   return undefined;
 }
 
-function validatePassword(password: string): ValidationError | undefined {
+export function validatePassword(
+  password: string,
+): ValidationError | undefined {
   if (password.length < 8) {
     return { code: 'tooShort', min: 8 };
   }
@@ -83,7 +91,7 @@ function validatePassword(password: string): ValidationError | undefined {
   return undefined;
 }
 
-function validateConfirmPassword(
+export function validateConfirmPassword(
   password: string,
   confirmPassword: string,
 ): ValidationError | undefined {
@@ -133,7 +141,7 @@ export function validateRegister(values: RegisterValues): RegisterErrors {
  * the caller re-renders when the language changes.
  */
 export function describeValidationError(
-  field: RegisterField,
+  field: AccountField,
   error: ValidationError,
   t: TFunction<'auth'>,
 ): string {
@@ -151,5 +159,7 @@ export function describeValidationError(
       return t('validation.containsAt', { field: fieldLabel });
     case 'mismatch':
       return t('validation.mismatch');
+    case 'invalidUrl':
+      return t('validation.invalidUrl');
   }
 }
