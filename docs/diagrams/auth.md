@@ -52,7 +52,8 @@ Blue: the SPA (`frontend/src/features/auth`). Violet: the backend
 What the overview hides, each covered below or in the ADRs: rate limits
 (`security-checklist.md` section 7), the uniform 401 on login, the 403 on
 another user's row, the SPA's session states and `RequireAuth` (section 2),
-how the SPA keeps the session across a reload and a 401 (section 8).
+how the SPA keeps the session across a reload and a 401 (section 8), changing
+the email or the password (section 9).
 
 ## 1. Register, frontend side (HYP-46)
 
@@ -132,7 +133,10 @@ flowchart TD
     B --> C{"(provider, providerUserId)<br/>already linked?"}
     C -- yes --> L["sign in as that user<br/>(exchange code, see 3)"]
     C -- no --> E{"local user with<br/>this email?"}
-    E -- yes --> G["link identity to that user;<br/>revoke its local password, if it has one"]
+    E -- yes --> V{"its email<br/>verified?"}
+    V -- yes --> G["link identity to that user"]
+    V -- no --> K["claim it first: drop the password,<br/>revoke every session and the other links,<br/>mark the email verified"]
+    K --> G
     E -- no --> F["create a new user"]
     F --> H["link identity to the new user"]
     G --> L
@@ -140,6 +144,11 @@ flowchart TD
     F & G & H -. "unique violation" .-> C2["another request inserted first:<br/>run the resolution once more<br/>(a second violation is a 409)"]
     C2 --> C
 ```
+
+An account's email is verified when a provider vouched for it: created or
+linked through OAuth. A local registration or an email change leaves it
+unverified, and the next provider sign-in with that email claims the account
+for its verified owner (ADR-0007, amendment 2026-10-25).
 
 ## 5. OAuth callback page, frontend side (HYP-57)
 
@@ -261,3 +270,38 @@ sequenceDiagram
   and a logout must revoke the cookie the refresh rotates in.
 - **The auth routes are never retried**: their 401 is the answer (bad
   credentials, a dead cookie).
+
+## 9. Changing the email or the password (HYP-84)
+
+`PATCH /users/:id` takes the subject's username, email, password and profile
+picture URL, on one's own profile only (403 otherwise). An email or password
+change re-authenticates and ends every other session.
+
+```mermaid
+flowchart TD
+    A["PATCH /users/:id"] --> O{"own profile?"}
+    O -- no --> X403["403"]
+    O -- yes --> C{"email or password<br/>changes?"}
+    C -- no --> S["save"] --> R200["200"]
+    C -- yes --> P{"account has<br/>a password?"}
+    P -- "no (OAuth-only, or claimed)" --> X400a["400: set one through<br/>the password reset"]
+    P -- yes --> Q{"currentPassword?"}
+    Q -- missing --> X400["400"]
+    Q -- wrong --> X403b["403"]
+    Q -- right --> H["hash a new password,<br/>mark a new email unverified"]
+    H --> S2{"save: email taken?"}
+    S2 -- yes --> X409["409, nothing revoked"]
+    S2 -- no --> V["revoke every refresh-token family,<br/>issue a new one for the caller"]
+    V --> R200b["200 + new refresh cookie"]
+```
+
+- The email is compared normalised: sending the current one back is no change.
+- An account without a password cannot change either: an access token still
+  alive after a claim (section 4) would otherwise set a password on the
+  account its owner just took back. It sets one through the password reset,
+  which proves it owns the email (HYP-34).
+- A wrong `currentPassword` is a 403, not a 401: the request is refused, the
+  session stays, and the SPA does not refresh for nothing.
+- The route is throttled (10 per minute), since it checks a password.
+- The caller's own cookie never reaches `/users` (it is scoped to the auth
+  routes), hence "revoke all, then issue one" rather than "all but this one".

@@ -209,4 +209,15 @@ describe('RefreshTokenService', () => {
       expect(repo.update).not.toHaveBeenCalled();
     });
   });
+
+  describe('revokeAllForUser', () => {
+    it('revokes every live token of that user, whatever the family', async () => {
+      await service.revokeAllForUser(7);
+
+      expect(repo.update).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 7 }),
+        { revokedAt: NOW },
+      );
+    });
+  });
 });

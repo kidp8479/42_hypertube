@@ -20,6 +20,10 @@ body:json {
   }
 }
 
+script:post-response {
+  bru.setVar("sessId", res.body.id);
+}
+
 docs {
   Requests 26 to 34 walk a session through its life on their own user: login,
   refresh (rotation), reuse of a rotated token, logout (ADR-0011).

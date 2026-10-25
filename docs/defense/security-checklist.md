@@ -55,7 +55,7 @@ future query loads it anyway.
 | Email normalised + validated; length-capped | `@NormalizeEmail()` + `@IsEmail()` + `@MaxLength(255)` | `common/decorators/normalize-email.decorator.spec.ts` |
 | Strings trimmed at the edge | `@Trim()` on `username` | `common/decorators/trim.decorator.spec.ts` |
 | Registration password length 8-100; login password only size-capped (no policy hint to an attacker, accepts any legacy value) | `create-user.dto.ts` vs `login.dto.ts` | DTO specs |
-| `email` / `password` cannot be changed by `PATCH /users/:id` | `update-user.dto.ts` omits both from the partial type | `update-user.dto.ts` doc comment |
+| `PATCH /users/:id` changes the email or the password only with `currentPassword` (400 missing, 403 wrong), never on an account without a password (400, reset flow); a new password is hashed with argon2id; a new email is unverified; `profilePicture` must be an https URL | `users.service.ts` `update()`, `dto/update-user.dto.ts` | `users.service.spec.ts`, `users.controller.update.spec.ts`, Bruno 37-39, 43 |
 | File-upload validation | avatar upload not built | **gap - HYP-38** |
 | Password strength meter (zxcvbn or blocklist) | not built | **gap - HYP-37** |
 
@@ -73,6 +73,8 @@ the id checked for ownership comes from the verified token
 | `JWT_SECRET` >= 32 chars, and the `.env.example` placeholder is rejected at boot | `config/env.validation.ts` | `config/env.validation.spec.ts` |
 | Signing key asserted present at startup, not lazily | `jwt.strategy.ts` `config.getOrThrow('JWT_SECRET')` | |
 | One-click logout: `POST /auth/logout` (public, driven by the refresh cookie) revokes the whole session and clears the cookie, then the SPA discards its token and query cache | `auth.controller.ts`, `refresh-token.service.ts`, `frontend/src/features/auth/` | `auth/auth.session.spec.ts`, `auth.controller.spec.ts`, Bruno 33-34, `frontend/src/features/auth/auth-provider.test.tsx` |
+| An email or password change revokes every refresh-token family of the user and issues a new one to the caller only; a taken email (409) revokes nothing | `users.controller.ts` `update()` | `users.controller.update.spec.ts`, Bruno 39-42; ADR-0011 |
+| Auto-linking a provider to an unverified account claims it first: password removed, every session revoked, other provider links deleted, email marked verified | `auth.service.ts` `resolveOAuthUser()` | `auth.service.spec.ts`; ADR-0007 |
 | Refresh tokens: 256 random bits in an `HttpOnly`, `SameSite=Strict`, `Secure` cookie scoped to the auth routes, only their SHA-256 stored, rotated on every use; a consumed token used again (after a 10 s tolerance) revokes its whole session; 7 days sliding, 30 days at most from the login | `auth/refresh-token.service.ts`, `auth/refresh-cookie.util.ts`, `auth/entities/refresh-token.entity.ts` | `refresh-token.service.spec.ts`, `refresh-cookie.util.spec.ts`, `auth.session.spec.ts`, Bruno 26-34; ADR-0011 |
 | Access token revocation before its expiry | stateless on purpose, nothing can renew it after a logout | **accepted limit** - 15 minutes, ADR-0011, `docs/defense/known-limitations.md` |
 | Access token in memory only, never in `localStorage`: a reload restores it from the refresh cookie, a 401 refreshes once (single flight) and retries | `frontend/src/lib/token.ts`, `frontend/src/lib/api.ts` | `lib/api.test.ts`, `auth-provider.test.tsx`, `frontend/e2e/session.spec.ts` |
@@ -158,6 +160,7 @@ store is only needed once more than one backend instance runs (noted in
 | Login is throttled per IP only, while usernames (the login key since HYP-91) are listed to every signed-in user | HYP-94 | medium - password spraying from many IPs |
 | No CSP / Helmet response headers | HYP-49 (HYP-28 is an older duplicate) | medium |
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
+| An email change is not verified | HYP-39 | low - it takes `currentPassword`, and the new email stays unverified, so the provider owner of that address claims the account |
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |
 

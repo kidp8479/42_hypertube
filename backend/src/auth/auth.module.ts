@@ -3,8 +3,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenModule } from './refresh-token.module';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';
@@ -33,7 +32,8 @@ import { GithubStrategy } from './strategies/github.strategy';
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forFeature([OAuthAccount, RefreshToken]),
+    RefreshTokenModule,
+    TypeOrmModule.forFeature([OAuthAccount]),
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -48,7 +48,6 @@ import { GithubStrategy } from './strategies/github.strategy';
   providers: [
     AuthService,
     OAuthExchangeService,
-    RefreshTokenService,
     JwtStrategy,
     FortyTwoStrategy,
     GithubStrategy,

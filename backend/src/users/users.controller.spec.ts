@@ -2,9 +2,11 @@
 // and findMe. Service calls are mocked.
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import type { Request } from 'express';
 import { AuthUser } from '../auth/decorators/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 
 // Mirrors the methods stubbed in the test module below, so a new test can
 // reach for any of them with types intact.
@@ -35,6 +37,7 @@ describe('UsersController', () => {
             remove: jest.fn(),
           },
         },
+        { provide: RefreshTokenService, useValue: {} },
       ],
     }).compile();
 
@@ -43,15 +46,17 @@ describe('UsersController', () => {
   });
 
   describe('ownership on :id', () => {
-    it('update rejects a mismatched user with 403 and never calls the service', () => {
-      expect(() => controller.update(2, { firstName: 'x' }, ada)).toThrow(
-        ForbiddenException,
-      );
+    it('update rejects a mismatched user with 403 and never calls the service', async () => {
+      await expect(
+        controller.update(2, { firstName: 'x' }, ada, {} as Request),
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(users.update).not.toHaveBeenCalled();
     });
 
-    it('update proceeds when the id is the caller', () => {
-      void controller.update(1, { firstName: 'Ada K.' }, ada);
+    it('update proceeds when the id is the caller', async () => {
+      users.update.mockResolvedValue({ user: {}, credentialsChanged: false });
+
+      await controller.update(1, { firstName: 'Ada K.' }, ada, {} as Request);
 
       expect(users.update).toHaveBeenCalledWith(1, { firstName: 'Ada K.' });
     });

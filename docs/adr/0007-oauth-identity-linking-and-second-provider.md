@@ -40,7 +40,8 @@ provider vouches that email is verified.
   different casing than a locally-registered account would otherwise
   dodge the case-insensitive match and create a duplicate account. Missed
   on the first pass, fixed once noticed.
-- **Linking revokes the local password.** The verified-email rule covers
+- **Linking revokes the local password** (widened by the 2026-10-25 HYP-84
+  amendment: linking now claims any unverified account). The verified-email rule covers
   the provider side only: local registration does not verify the email,
   so an attacker can pre-register a victim's address with a password of
   their own. When the real owner later signs in through a provider and is
@@ -214,3 +215,34 @@ state check would fail on every login.
   free username. A lost race on the link insert takes the same rerun,
   which finds the winner's link. A second violation is rethrown and
   becomes the 409.
+
+## Amendment 2026-10-25: linking claims an unverified account (HYP-84)
+
+Supersedes "Linking revokes the local password" above. `PATCH /users/:id` now
+accepts a new email (the subject's API documents it), unverified until HYP-39.
+That opened a variant the password revocation did not cover: an attacker signs
+up through their own GitHub (no password), changes the account's email to the
+victim's, and when the victim signs in with 42 the identity is linked into an
+account the attacker still enters through GitHub.
+
+- `User.emailVerified`: `true` for an account created or linked through a
+  provider, `false` after a local registration or an email change. Existing
+  accounts are verified when they have an OAuth link (migration).
+- Auto-linking to an **unverified** account claims it first, before the link:
+  the password is removed, every refresh-token family is revoked, the other
+  provider links are deleted, and the email is marked verified. The holder of
+  the verified email ends up the only way in, which also closes the original
+  variant's surviving sessions (a pre-registered password's sessions used to
+  outlive the revocation).
+- Auto-linking to a **verified** account keeps the plain link: a provider
+  already vouched for that email, so its password and sessions stay.
+- The claimed account has no password, and an account without one cannot
+  change its email or password through `PATCH /users/:id` (400): an access
+  token still alive after the claim cannot set credentials on it. What such a
+  token can still do for up to 15 minutes is edit the profile or delete the
+  account, the access-token limit ADR-0011 already accepts.
+- The cost for a legitimate user: changing one's email, then signing in with
+  a provider at the new address, claims one's own account (password, sessions
+  and other links revoked). The password reset sets a new password.
+- A completed password reset (HYP-34) proves ownership of the email the same
+  way, and must claim the account too.

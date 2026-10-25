@@ -78,3 +78,15 @@ console). With no cookie at all the route now answers **204 with no body**: no
 session to renew is the normal state, not a failure. A cookie that is sent but
 not accepted (unknown, expired, revoked, reused) still answers 401 and is
 cleared.
+
+## Amendment 2026-10-25: a credential change ends the other sessions (HYP-84)
+
+Changing the email or the password through `PATCH /users/:id` revokes every
+refresh-token family of the user, then sets a new refresh cookie for the
+caller: a session opened with the old credentials does not survive. The route
+never sees the caller's own cookie (it is scoped to the auth routes), so
+"every session but this one" is done as "every session, then a new one". The
+change itself needs `currentPassword` (an account without a password cannot
+change either), so a stolen access token alone cannot use it to take the
+account over. Access tokens
+already issued still live up to 15 minutes (`known-limitations.md`).

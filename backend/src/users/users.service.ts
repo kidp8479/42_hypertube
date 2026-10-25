@@ -1,5 +1,10 @@
 // Repository-backed CRUD for the users resource.
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Raw, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,6 +14,12 @@ import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
 import { ARGON2_OPTIONS } from '../auth/argon2.config';
+
+/** What a profile update did: the saved row, and whether the email or the password changed. */
+export interface ProfileUpdate {
+  user: User;
+  credentialsChanged: boolean;
+}
 
 /**
  * Data access for {@link User} rows. Wraps the TypeORM repository so the
@@ -82,7 +93,10 @@ export class UsersService {
    * the entity - comes back alongside the normal columns; a plain
    * `findOneBy` would omit it.
    */
-  private findWithPassword(where: string, params: Record<string, string>) {
+  private findWithPassword(
+    where: string,
+    params: Record<string, string | number>,
+  ) {
     return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
@@ -163,33 +177,88 @@ export class UsersService {
       lastName: profile.lastName.slice(0, UsersService.NAME_MAX_LENGTH),
       password: null,
       profilePicture: null,
+      emailVerified: true,
     });
     return this.usersRepository.save(user);
   }
 
   /**
-   * Removes the stored password hash, leaving the account reachable only
-   * through its linked OAuth identities until a new password is set. A
-   * targeted `update` rather than `save`: `password` is excluded from
-   * default selects, so a loaded entity would not carry it anyway.
+   * Hands an unverified account to the holder of its email: removes the
+   * password hash and marks the email verified (`AuthService.
+   * resolveOAuthUser`). A targeted `update` rather than `save`: `password`
+   * is excluded from default selects, so a loaded entity would not carry it.
    */
-  async clearPassword(id: number): Promise<void> {
-    await this.usersRepository.update(id, { password: null });
+  async claimEmail(id: number): Promise<void> {
+    await this.usersRepository.update(id, {
+      password: null,
+      emailVerified: true,
+    });
   }
 
   /**
-   * Applies a partial update by id and returns the saved row. Goes
-   * through `preload` + `save` (not `repository.update`) because `preload`
-   * resolves to `undefined` for an unknown id, which is what lets us answer
-   * 404 instead of silently updating nothing. Throws
-   * {@link NotFoundException} (404) when the id matches no row.
+   * Applies a partial update by id. A new password is hashed, a new email
+   * is marked unverified, and either change first checks `currentPassword`
+   * (see `confirmCredentialChange`). The email is compared normalised, so
+   * sending the current one back is no change. A taken email or username
+   * fails the save with a unique violation (409 through
+   * `QueryFailedFilter`), before anything else happened.
+   *
+   * @throws {NotFoundException} 404 when the id matches no row.
    */
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.usersRepository.preload({ id, ...updateUserDto });
+  async update(id: number, dto: UpdateUserDto): Promise<ProfileUpdate> {
+    const { currentPassword, password, ...profile } = dto;
+    const user = await this.findWithPassword('user.id = :id', { id });
     if (!user) {
       throw new NotFoundException(`User ${id} not found`);
     }
-    return this.usersRepository.save(user);
+    const emailChanged =
+      profile.email !== undefined && profile.email !== user.email;
+    const credentialsChanged = emailChanged || password !== undefined;
+    if (credentialsChanged) {
+      await this.confirmCredentialChange(user.password, currentPassword);
+    }
+
+    Object.assign(user, profile);
+    if (password !== undefined) {
+      user.password = await argon2.hash(password, ARGON2_OPTIONS);
+    }
+    if (emailChanged) {
+      user.emailVerified = false;
+    }
+    return { user: await this.usersRepository.save(user), credentialsChanged };
+  }
+
+  /**
+   * Re-authentication for an email or password change: the account's
+   * current password must come with it, so a stolen access token cannot
+   * take the account over. An account without a password (OAuth-only, or
+   * just claimed by its email's owner) has nothing to confirm with, so it
+   * cannot change either here: it sets a password through the reset flow,
+   * which proves it owns the email. Otherwise an access token still alive
+   * after a claim could set a password on the claimed account.
+   *
+   * @throws {BadRequestException} 400 when the account has no password, or
+   * when `currentPassword` is missing.
+   * @throws {ForbiddenException} 403 when it is wrong: the request is
+   * refused, the session stays valid (a 401 would make the SPA refresh).
+   */
+  private async confirmCredentialChange(
+    hash: string | null,
+    currentPassword: string | undefined,
+  ): Promise<void> {
+    if (hash === null) {
+      throw new BadRequestException(
+        'this account has no password: set one through the password reset first',
+      );
+    }
+    if (currentPassword === undefined) {
+      throw new BadRequestException(
+        'currentPassword is required to change the email or the password',
+      );
+    }
+    if (!(await argon2.verify(hash, currentPassword))) {
+      throw new ForbiddenException();
+    }
   }
 
   /**

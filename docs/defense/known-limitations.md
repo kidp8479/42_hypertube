@@ -103,3 +103,17 @@ was already copied still works until it expires, 15 minutes by default
 - **Real-world:** the same trade-off, most production systems accept it.
 - **Cost to fix later:** low to medium. A `jti` blocklist read by `JwtAuthGuard`;
   lowering `JWT_EXPIRES_IN` shrinks the window.
+
+## An email change is not verified
+
+`PATCH /users/:id` takes a new email without checking that the user owns it.
+
+- **Why:** verifying an address needs the transactional email (HYP-32), and
+  the confirmed change-email flow is HYP-39. Until then the subject's
+  documented field works, behind `currentPassword`, and the risk is
+  contained: the new email is marked unverified, so the first provider
+  sign-in with that address claims the account for its verified owner
+  (ADR-0007, amendment 2026-10-25).
+- **Real-world:** an email change is normally confirmed from the new address.
+- **Cost to fix later:** medium, with HYP-39 (a confirmation link to the new
+  address).
