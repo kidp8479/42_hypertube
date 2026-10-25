@@ -23,13 +23,13 @@ import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
-import { AUTH_LINKS } from './auth-form-classes';
+import { AUTH_COLUMN, AUTH_LINKS } from './auth-form-classes';
 
 // The form-level error is stored as a translation key, not a sentence, so it
 // is translated at render time and follows a language switch.
 type FormError = 'register.conflict' | 'errors.generic';
 
-const FORM = 'mx-auto my-12 flex max-w-md flex-col gap-4';
+const FORM = `${AUTH_COLUMN} max-w-md`;
 // Pairs share a row when there is room, stack on a phone.
 const ROW = 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4';
 

@@ -56,6 +56,12 @@ class can only use a project token. There is no JavaScript config: the
 - A token added to `tokens.css` is a new class at once. One removed is not a
   build error: the classes using it silently generate nothing, so grep for
   them first.
+- Tailwind's reset (preflight) leaves `h2`-`h6` at the body size and strips
+  list markers; `base.css` only sizes `h1`. A page that adds a section title
+  or a bulleted list styles it with classes.
+- The shared focus ring is in the base layer, so a utility wins over it: an
+  `outline-hidden` or `outline-*` class removes the keyboard focus indicator
+  (WCAG 2.4.7). Never put one on a focusable element.
 - Vitest no longer processes CSS (the `css: true` option was there for CSS
   Modules imports).
 - The new dependency needs `npm ci` in the frontend container after the pull

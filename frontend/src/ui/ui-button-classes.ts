@@ -6,13 +6,13 @@ export type ButtonVariant = 'solid' | 'outline';
 
 // Disabled stays readable: muted text on an edge-coloured border.
 const BASE =
-  'min-h-target cursor-pointer border border-ink px-4 py-3 text-center font-mono text-sm leading-label font-medium tracking-label no-underline disabled:cursor-not-allowed disabled:border-edge disabled:bg-transparent disabled:text-muted';
+  'min-h-target cursor-pointer border px-4 py-3 text-center font-mono text-sm leading-label font-medium tracking-label no-underline disabled:cursor-not-allowed disabled:border-edge disabled:bg-transparent disabled:text-muted';
 
-// Colours live only here, never in BASE: two utilities setting the same
+// Resting colours live only here, never in BASE: two utilities setting the same
 // property on one element resolve by stylesheet order, not class order.
 const VARIANTS: Record<ButtonVariant, string> = {
-  outline: 'text-ink hover:not-disabled:bg-ink/8',
-  solid: 'bg-ink text-bg hover:not-disabled:bg-ink-hover',
+  outline: 'border-ink text-ink hover:not-disabled:bg-ink/8',
+  solid: 'border-ink bg-ink text-bg hover:not-disabled:bg-ink-hover',
 };
 
 /** The class list that makes an element look like a button of `variant`. */
