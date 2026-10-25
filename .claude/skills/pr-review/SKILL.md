@@ -133,6 +133,16 @@ Constraints from the user:
 - Do **not** offer to push fixes.
 - Lead with what was tested (browser steps, e2e), then the short list of
   worth-fixing findings, then one purely informational paragraph if any.
+- Prefix each finding with a Conventional Comments label, so the author
+  sees at a glance what blocks:
+
+  | Label | Blocks merge? |
+  |---|---|
+  | `issue:` | yes, comes with a suggested fix |
+  | `question:` | needs an answer before merge |
+  | `suggestion:` | no, recommended |
+  | `nitpick:` | no, optional |
+  | `praise:` | no, worth saying when something is done well |
 - No em dash: spaced hyphen, colon, or parentheses.
 
 Show the draft. Wait for the user's OK.

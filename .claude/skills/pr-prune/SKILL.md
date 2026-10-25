@@ -28,6 +28,8 @@ looks at it. See `agentic-workflow-reference.md` action item 7b.
    - unused exports, dead branches, parameters nothing reads
    - comments or types that only explain complexity the diff itself added
    - logic duplicated from something that already exists elsewhere
+   - pass-through wrappers that only rename or reorder parameters
+   - a local helper left in place next to the shared one that replaced it
 3. **It reports, it does not edit.** A list: file:line, what, why it looks
    removable. Read-only subagent (no `Edit`/`Write` tools).
 4. **Show the user the list.** Get an OK per item, or as a batch for the
