@@ -72,7 +72,7 @@ test.describe('register -> login', () => {
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByText(username)).toBeVisible();
+    await expect(page.getByRole('main').getByText(username)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
 
     expect(consoleIssues, consoleIssues.join('\n')).toEqual([]);

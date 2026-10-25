@@ -3,32 +3,9 @@
 // cookie, a 401 is renewed in place, logout ends the session for good, and a
 // signed-out visit stays silent in the console.
 // Each test registers its own account through the API, like auth.spec.ts.
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
-
-const PASSWORD = 'correct horse battery';
-
-async function signUpAndSignIn(page: Page) {
-  const suffix = `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
-  const username = `e2es${suffix}`;
-  const created = await page.request.post('/api/users', {
-    data: {
-      email: `e2e-session-${suffix}@example.com`,
-      username,
-      firstName: 'E2E',
-      lastName: 'Session',
-      password: PASSWORD,
-    },
-  });
-  expect(created.ok()).toBe(true);
-
-  await page.goto('/login');
-  await page.getByLabel('Username or email').fill(username);
-  await page.getByLabel('Password').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
-  return username;
-}
+import { signUpAndSignIn } from './sign-up';
 
 test.describe('session lifetime', () => {
   test('a signed-out visit logs nothing at all in the console', async ({
@@ -60,7 +37,7 @@ test.describe('session lifetime', () => {
     await page.reload();
 
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByText(username)).toBeVisible();
+    await expect(page.getByRole('main').getByText(username)).toBeVisible();
     const stored = await page.evaluate(() => JSON.stringify(localStorage));
     expect(stored).not.toMatch(/token|eyJ/);
     expect(consoleIssues, consoleIssues.join('\n')).toEqual([]);
@@ -89,7 +66,7 @@ test.describe('session lifetime', () => {
 
     await page.reload();
 
-    await expect(page.getByText(username)).toBeVisible();
+    await expect(page.getByRole('main').getByText(username)).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
     expect(refused).toBe(true);
     // One refresh restores the session on load, a second renews the 401.

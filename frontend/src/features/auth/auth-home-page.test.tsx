@@ -32,7 +32,6 @@ describe('HomePage', () => {
     renderHomePage();
 
     expect(screen.getByText(fakeUser.username)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
   });
 
   it('re-renders in French when the language changes', async () => {
@@ -40,9 +39,7 @@ describe('HomePage', () => {
 
     await act(() => i18n.changeLanguage('fr'));
 
-    expect(
-      screen.getByRole('button', { name: 'Se déconnecter' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Connecté/)).toBeInTheDocument();
     expect(screen.getByText(fakeUser.username)).toBeInTheDocument();
   });
 });

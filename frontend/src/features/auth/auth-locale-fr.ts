@@ -50,7 +50,6 @@ export const authFr: typeof authEn = {
   },
   home: {
     signedIn: 'Connecté en tant que <strong>{{username}}</strong> ({{email}})',
-    logout: 'Se déconnecter',
   },
   oauth: {
     continueWith: 'Continuer avec {{provider}}',
