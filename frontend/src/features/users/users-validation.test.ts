@@ -21,14 +21,10 @@ describe('validateInfo', () => {
     );
   });
 
-  it('accepts an empty picture (no picture) and an https address', () => {
-    expect(validateInfo(info, info)).toEqual({});
-    expect(
-      validateInfo(
-        { ...info, profilePicture: 'https://example.com/a.png' },
-        info,
-      ),
-    ).toEqual({});
+  it('accepts an emptied picture (it removes the picture)', () => {
+    const saved = { ...info, profilePicture: 'https://example.com/a.png' };
+
+    expect(validateInfo({ ...saved, profilePicture: '' }, saved)).toEqual({});
   });
 
   it('refuses a picture address that is not https or has no TLD', () => {
