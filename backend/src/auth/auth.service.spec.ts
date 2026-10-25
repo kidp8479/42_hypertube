@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 // the fake stays loose.
 type UsersServiceMock = {
   findByEmail: jest.Mock;
+  findForLogin: jest.Mock;
   findOne: jest.Mock;
   createFromOAuth: jest.Mock;
   clearPassword: jest.Mock;
@@ -71,6 +72,7 @@ describe('AuthService', () => {
           provide: UsersService,
           useValue: {
             findByEmail: jest.fn(),
+            findForLogin: jest.fn(),
             findOne: jest.fn(),
             createFromOAuth: jest.fn(),
             clearPassword: jest.fn(),
@@ -106,27 +108,27 @@ describe('AuthService', () => {
     it('returns the user when the password matches', async () => {
       const password = 'correct horse battery staple';
       const user = buildUser({ password: await argon2.hash(password) });
-      users.findByEmail.mockResolvedValue(user);
+      users.findForLogin.mockResolvedValue(user);
 
-      const result = await service.validateUser(user.email, password);
+      const result = await service.validateUser(user.username, password);
 
       expect(result).toBe(user);
-      expect(users.findByEmail).toHaveBeenCalledWith(user.email);
+      expect(users.findForLogin).toHaveBeenCalledWith(user.username);
     });
 
     it('returns null when the password is wrong', async () => {
       const user = buildUser({ password: await argon2.hash('the real one') });
-      users.findByEmail.mockResolvedValue(user);
+      users.findForLogin.mockResolvedValue(user);
 
-      const result = await service.validateUser(user.email, 'a guess');
+      const result = await service.validateUser(user.username, 'a guess');
 
       expect(result).toBeNull();
     });
 
-    it('returns null when the email is unknown', async () => {
-      users.findByEmail.mockResolvedValue(null);
+    it('returns null when no account matches', async () => {
+      users.findForLogin.mockResolvedValue(null);
 
-      const result = await service.validateUser('nobody@example.com', 'x');
+      const result = await service.validateUser('nobody', 'x');
 
       expect(result).toBeNull();
     });

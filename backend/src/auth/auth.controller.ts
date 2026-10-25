@@ -48,12 +48,12 @@ export class AuthController {
   ) {}
 
   /**
-   * Exchanges email + password for a JWT access token, and starts a session:
+   * Exchanges a username or email + password for a JWT access token, and starts a session:
    * the refresh token travels in an HttpOnly cookie, never in the body.
    * Answers 200 (not the POST default 201 - nothing is created).
    *
    * @throws {UnauthorizedException} 401 on any bad credential, with no
-   * hint about which part failed (wrong password and unknown email are
+   * hint about which part failed (wrong password and unknown account are
    * indistinguishable, see {@link AuthService.validateUser}).
    */
   // Brute-force ceiling: 5 attempts per minute per IP, well below what a
@@ -68,7 +68,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.authService.validateUser(
-      loginDto.email,
+      loginDto.identifier,
       loginDto.password,
     );
     if (!user) {

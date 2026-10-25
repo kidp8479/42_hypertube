@@ -77,7 +77,7 @@ r401 = d.box(840, 640, "401 Unauthorized", color="red", width=210, height=56)
 sign = d.box(1130, 470, "sign JWT (sub: id)\n+ refresh cookie", color="green", width=200, height=64)
 tok = d.box(1130, 340, "access_token in body\nrefresh_token in an\nHttpOnly cookie", color="green", width=200, height=84)
 
-d.arrow_between(cli, login, "email + password", from_side="bottom", to_side="top")
+d.arrow_between(cli, login, "username or email + password", from_side="bottom", to_side="top")
 d.arrow_between(login, valid, from_side="bottom", to_side="top")
 d.arrow_between(valid, dec1, from_side="bottom", to_side="top")
 d.arrow_between(dec1, r401, "no", from_side="bottom", to_side="top")
@@ -88,7 +88,7 @@ d.arrow_between(tok, cli, "200", from_side="top", to_side="right")
 d.text_box(
     830,
     730,
-    "Wrong password and unknown email are indistinguishable:\n"
+    "Wrong password and unknown account are indistinguishable:\n"
     "same body, same timing (argon2id + constant-time dummy hash).\n"
     "Rate limit: 5 attempts / min / IP.",
     font_size=13,

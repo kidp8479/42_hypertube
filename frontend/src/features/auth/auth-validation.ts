@@ -22,7 +22,8 @@ export type ValidationError =
   | { code: 'invalidEmail' }
   | { code: 'tooShort'; min: number }
   | { code: 'tooLong'; max: number }
-  | { code: 'mismatch' };
+  | { code: 'mismatch' }
+  | { code: 'containsAt' };
 export type RegisterErrors = Partial<Record<RegisterField, ValidationError>>;
 
 // Deliberately loose (something@something.tld): a stricter pattern would
@@ -53,6 +54,10 @@ function validateUsername(username: string): ValidationError | undefined {
   }
   if (trimmedUsername.length > 30) {
     return { code: 'tooLong', max: 30 };
+  }
+  // The login field reads a value with @ as an email.
+  if (trimmedUsername.includes('@')) {
+    return { code: 'containsAt' };
   }
   return undefined;
 }
@@ -138,6 +143,8 @@ export function describeValidationError(
       return t('validation.tooShort', { field: fieldLabel, min: error.min });
     case 'tooLong':
       return t('validation.tooLong', { field: fieldLabel, max: error.max });
+    case 'containsAt':
+      return t('validation.containsAt', { field: fieldLabel });
     case 'mismatch':
       return t('validation.mismatch');
   }

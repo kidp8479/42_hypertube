@@ -33,7 +33,7 @@ future query loads it anyway.
 | Control | Where |
 |---|---|
 | All data access goes through the TypeORM repository / query builder; no string concatenation with user input | `users.service.ts` is the only module that touches the repo (`UsersService` doc comment enforces this by convention) |
-| Parameterised `where` in the one hand-written query | `findByEmail()`: `.where('user.email = :email', { email })` |
+| Parameterised `where` in the hand-written queries | `UsersService.findWithPassword(where, params)`, called with `'user.email = :email'` and `'LOWER(user.username) = LOWER(:identifier)'`: the value always travels as a parameter |
 | Numeric route params validated before any query is built | `users.controller.ts` `@Param('id', ParseIdPipe)` (`common/pipes/parse-id.pipe.ts`) - a non-numeric or out-of-range `:id` is 400 before the service runs, so no query is built from `NaN` | 
 | Proof | `users.controller.params.spec.ts`; code review - grep for template strings in `.where(` / `.query(` returns nothing |
 
@@ -93,7 +93,7 @@ the id checked for ownership comes from the verified token
 
 | Surface | State | Detail |
 |---|---|---|
-| `POST /auth/login` | done | wrong password and unknown email return the same `401` with no body detail; `AuthService.validateUser` verifies against a startup-generated `dummyHash` so a missing account costs the same argon2 time as a real one |
+| `POST /auth/login` | done | wrong password and unknown username or email return the same `401` with no body detail; `AuthService.validateUser` verifies against a startup-generated `dummyHash` so a missing account costs the same argon2 time as a real one |
 | `POST /users` (register) | **partial** | `QueryFailedFilter` maps a duplicate email/username to `409 "Resource already exists"` (generic message, does not name the field) while a fresh registration returns `201`. The differing status code is still an existence oracle. The `10 / hour` throttle blunts bulk enumeration but not a targeted check. Tracked as **HYP-50** (uniform-response registration); the filter comment already flags this. |
 | `POST /auth/reset-password` | not built | must land equalised - **HYP-34** |
 
@@ -154,6 +154,7 @@ store is only needed once more than one backend instance runs (noted in
 | Gap | Ticket | Severity |
 |---|---|---|
 | Register leaks account existence via `409` vs `201` status code | HYP-50 | medium - throttled, but real |
+| Login is throttled per IP only, while usernames (the login key since HYP-91) are listed to every signed-in user | HYP-94 | medium - password spraying from many IPs |
 | No CSP / Helmet response headers | HYP-49 (HYP-28 is an older duplicate) | medium |
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | Upload validation not built | HYP-38 | n/a until uploads exist |

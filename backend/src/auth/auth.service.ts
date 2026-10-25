@@ -47,12 +47,12 @@ export class AuthService implements OnModuleInit {
 
   /**
    * Resolves to the user when the credentials match, `null` otherwise.
-   * A wrong password and an unknown email are deliberately
+   * A wrong password and an unknown username or email are deliberately
    * indistinguishable - same return value, same response time - so the
-   * endpoint can't be used to discover which emails are registered.
+   * endpoint can't be used to discover which accounts exist.
    */
-  async validateUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+  async validateUser(identifier: string, password: string) {
+    const user = await this.usersService.findForLogin(identifier);
     if (!user || user.password === null) {
       // Verify against a dummy hash so a missing account costs the same
       // time as a real one; the result is irrelevant.

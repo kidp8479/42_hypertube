@@ -42,7 +42,9 @@ test.describe('register -> login', () => {
     await expect(page).toHaveURL(/\/register$/);
   });
 
-  test('registers a new account and logs in with it', async ({ page }) => {
+  test('registers a new account and logs in with its username', async ({
+    page,
+  }) => {
     const consoleIssues = trackConsoleIssues(page);
     const suffix = uniqueSuffix();
     const email = `e2e-${suffix}@example.com`;
@@ -64,7 +66,8 @@ test.describe('register -> login', () => {
       page.getByText('Account created. Please sign in.'),
     ).toBeVisible();
 
-    await page.getByLabel('Email').fill(email);
+    // Subject III.1: the login takes the username (an email works too).
+    await page.getByLabel('Username or email').fill(username);
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Sign in' }).click();
 

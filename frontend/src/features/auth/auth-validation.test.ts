@@ -52,6 +52,7 @@ describe('validateRegister', () => {
     ['too long', 'a'.repeat(31), { code: 'tooLong', max: 30 }],
     ['boundary min ok', 'abc', undefined],
     ['boundary max ok', 'a'.repeat(30), undefined],
+    ['contains @', 'ada@home', { code: 'containsAt' }],
   ])('username: %s -> %s', (_label, username, expected) => {
     const errors = validateRegister({ ...validValues, username });
     expect(errors.username).toEqual(expected);
@@ -122,6 +123,7 @@ describe('describeValidationError', () => {
       'First name must be at most 100 characters long',
     ],
     ['confirmPassword', { code: 'mismatch' }, 'Passwords do not match'],
+    ['username', { code: 'containsAt' }, 'Username cannot contain @'],
   ])('%s: %o -> %s', (field, error, expected) => {
     expect(
       describeValidationError(field, error, i18n.getFixedT('en', 'auth')),

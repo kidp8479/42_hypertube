@@ -42,7 +42,7 @@ describe('POST /auth/login throttling', () => {
 
   it('returns 429 after 5 attempts in the window', async () => {
     const server = app.getHttpServer();
-    const body = { email: 'ada@example.com', password: 'whatever' };
+    const body = { identifier: 'ada', password: 'whatever' };
 
     for (let i = 0; i < 5; i++) {
       await request(server).post('/auth/login').send(body).expect(401);

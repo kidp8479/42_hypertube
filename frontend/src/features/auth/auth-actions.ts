@@ -22,9 +22,15 @@ async function requestToken(path: string, body: object): Promise<void> {
   setAuthToken(response.access_token);
 }
 
-/** Exchanges credentials for a token and stores it; rejects with ApiError on bad credentials (401). */
-export function loginRequest(email: string, password: string): Promise<void> {
-  return requestToken('/auth/login', { email, password });
+/**
+ * Exchanges credentials for a token and stores it; rejects with ApiError on
+ * bad credentials (401). `identifier` is a username or an email.
+ */
+export function loginRequest(
+  identifier: string,
+  password: string,
+): Promise<void> {
+  return requestToken('/auth/login', { identifier, password });
 }
 
 /**

@@ -19,7 +19,7 @@ parallelism = 1
 - **No silent drift.** The library default can change on a major bump; a
   hash's cost is a security parameter and should move only on purpose.
 - **The login timing defence depends on it.** `AuthService` verifies a
-  dummy hash for unknown emails so a missing account costs the same as a
+  dummy hash for unknown accounts so a missing account costs the same as a
   real one. That only holds if the dummy hash and real hashes share
   identical parameters - a single constant guarantees it.
 - **Reproducibility for the defense.** The values (and the reasoning for
