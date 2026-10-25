@@ -92,6 +92,7 @@ export function InfoForm({ user }: { user: User }) {
         onChange={(e) => setValues({ ...values, [field]: e.target.value })}
         hint={hint}
         error={error && describeValidationError(field, error, tAuth)}
+        invalid={field === 'username' && outcome === 'info.usernameTaken'}
       />
     );
   }

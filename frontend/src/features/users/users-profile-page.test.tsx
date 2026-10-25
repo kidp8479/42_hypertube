@@ -61,6 +61,10 @@ describe('ProfilePage information form', () => {
     expect(
       await screen.findByText('This username is already taken.'),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText('Username')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
   });
 });
 
