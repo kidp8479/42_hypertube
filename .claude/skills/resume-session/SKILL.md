@@ -22,8 +22,14 @@ projects). This skill reads them back.
    - `git fetch --all --prune`, then branch status vs `main`
      (`git log --oneline main..<branch>`, ahead / behind).
    - `gh pr list --state open` - anything waiting on review or merge.
-   - `docs/reviews/` and `docs/defense/backlog.md` for open findings.
+   - Open review findings, where the project keeps them (e.g.
+     `docs/reviews/`, a defense backlog).
    - Unpushed work: `git log <branch> ^origin/<branch>`.
+   - Shared bundle drift, if the repo has `.claude/bundle.lock`: run
+     `"${AGENTIC_LAB:-$HOME/42/WIP/42-agentic-lab}/scripts/sync-bundle.sh"
+     --check .` and report "bundle N lab commits behind" plus the files
+     that differ. No lab clone at that path (e.g. the school machine):
+     skip this line silently.
 5. **Output** a short brief:
    - Where we left off (1 to 3 lines)
    - Open threads (PRs, review findings, undecided items listed in the

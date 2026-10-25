@@ -2,7 +2,7 @@
 # PostToolUse hook (matcher "Write|Edit"): EXPERIMENTAL.
 #
 # Goal: close the slop-control loop IN SESSION. The ESLint ratchet
-# (docs/adr/0005-lint-complexity-budget.md) runs at commit / CI time;
+# (engineering.md > Slop control) runs at commit / CI time;
 # this runs the same linter on the single file the agent just wrote, so
 # it fixes the warning now instead of at commit.
 #
@@ -15,8 +15,9 @@
 #
 # Only findings on lines the agent actually touched (vs HEAD) are
 # reported. First version reported every eslint finding in the file,
-# which contradicts the ratchet design (docs/adr/0005): on a real
-# project this fired on every pre-existing warning in the file on every
+# which contradicts the ratchet design (a nonzero warning baseline is
+# tolerated): on a real project this fired on every pre-existing
+# warning in the file on every
 # edit, as if the agent had just caused it. Filtering to changed lines
 # fixes that and is more robust than tracking a running warning count,
 # which breaks across multiple edits in one session.

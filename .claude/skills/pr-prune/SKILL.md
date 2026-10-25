@@ -11,7 +11,7 @@ agent with no memory of writing it, whose only job is to find what to
 delete. `pr-review` step 7 already does a delete-oriented read, but from
 inside the reviewing agent's own context - this skill's whole value is
 the fresh-context constraint, run by the author before anyone else even
-looks at it. See `agentic-workflow-reference.md` action item 7b.
+looks at it. See agentic-lab's `docs/agentic-workflow-reference.md`, action item 7b.
 
 ## Steps
 

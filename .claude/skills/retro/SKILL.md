@@ -9,7 +9,7 @@ disable-model-invocation: true
 Named after Matt Pocock's `/retro` skill (compared against the real
 v1.3.1 implementation on 2026-10-10 - see "Compared to the original"
 below for what differs on purpose). Formalizes the loop already cited in
-`agentic-workflow-reference.md` 2.2 ("every review comment becomes a new
+agentic-lab's `docs/agentic-workflow-reference.md` 2.2 ("every review comment becomes a new
 check so the same mistake is never flagged twice") with a concrete
 trigger and procedure, instead of relying on remembering to do it by
 hand. `disable-model-invocation` so it only runs when asked, never on a
@@ -52,8 +52,8 @@ not just note "could be better"):
 1. Ask the user the window if not given (default: since the last `retro`
    run, or roughly the last 10 sessions). Sources, since conversation
    history is not retained across sessions by default on this multi-
-   machine setup: `git log`, `notes/journal.md` (`log-session`'s
-   output), the project's Slack daily-log and Session Handoff doc
+   machine setup: `git log`, a session journal if the project keeps
+   one, the project's Slack daily-log and Session Handoff doc
    (`end-session`/`resume-session`), commit messages that mention a
    correction or a dead end. (The original skill reads on-machine session
    logs directly - not available here across home/school machines, hence
@@ -87,7 +87,7 @@ recurring comment.
 3. For each theme raised **more than once**, draft the exact addition to
    `standards/engineering.md` (or the project's `CODING_STANDARDS.md` if
    it has a separate one) that would have caught it before review. Keep
-   the 150-line target in mind (`agentic-workflow-reference.md` action
+   the 150-line target in mind (agentic-lab's reference, action
    item 4) - split into a new file instead of padding one past it.
 4. Show the list with the source comments. Get an OK per item, then
    apply.
@@ -118,8 +118,8 @@ team) - not in the original, which is single-session-focused only.
 
 ## Why a skill
 
-- The loop it formalizes is already the stated goal in
-  `agentic-workflow-reference.md` - without a trigger it only happens
+- The loop it formalizes is already the stated goal in agentic-lab's
+  `docs/agentic-workflow-reference.md` - without a trigger it only happens
   when someone remembers to ask for it.
 - Fixed source list per mode so the output is reproducible instead of
   "whatever the agent happens to recall".

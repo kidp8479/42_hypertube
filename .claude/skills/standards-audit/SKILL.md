@@ -63,8 +63,8 @@ apply). Each `type:` follows Conventional Commits.
 | 2 | **secrets** | committed `.env.example` with placeholders + a comment per var; `gitleaks` scan of the working tree AND history; if a real secret is in history, tell the user to rotate it, do not just delete the line |
 | 3 | **build / deps** | `pyproject.toml` (or equivalent) with pinned ranges; split runtime-only-on-target deps into an extra (e.g. `pi`) so CI installs a clean set; lazy-import the target-only modules so the package stays importable in CI |
 | 4 | **CI** | `.github/workflows/ci.yml` (format check / lint / typecheck / test / build) + `gitleaks.yml`, both `on: [push to default, pull_request]`; `dependabot.yml` for the package ecosystem + github-actions |
-| 5 | **lint ratchet** | adopt the lint config with the same complexity budget as `notes/eslint-hardening.md` / `anti-slop` (mccabe <= 10 for Python `C90`, the ESLint budget for JS/TS); `Makefile` with `format`/`lint`/`test`/`check`; `.githooks/pre-commit` + `make install` wiring |
-| 6 | **slop** | run `slopo analyze` (see `docs/slopo-setup.md`) and review clusters with 2+ unique files before triaging by hand - it catches cross-file semantic duplication a per-file read misses; delete boilerplate (NestJS `app.controller`/`app.service`, unused scaffolding); collapse duplicated blocks into one helper; kill dead constants and single-use wrappers; `print` -> `logging`; narrow `except Exception` that silently swallows to per-cycle log-and-continue; strip JSDoc/docstrings that paraphrase the identifier |
+| 5 | **lint ratchet** | adopt the lint config with the same complexity budget as agentic-lab's `notes/eslint-hardening.md` / `anti-slop` (mccabe <= 10 for Python `C90`, the ESLint budget for JS/TS); `Makefile` with `format`/`lint`/`test`/`check`; `.githooks/pre-commit` + `make install` wiring |
+| 6 | **slop** | run `slopo analyze` (see agentic-lab's `docs/slopo-setup.md`) and review clusters with 2+ unique files before triaging by hand - it catches cross-file semantic duplication a per-file read misses; delete boilerplate (NestJS `app.controller`/`app.service`, unused scaffolding); collapse duplicated blocks into one helper; kill dead constants and single-use wrappers; `print` -> `logging`; narrow `except Exception` that silently swallows to per-cycle log-and-continue; strip JSDoc/docstrings that paraphrase the identifier |
 | 7 | **behaviour fixes surfaced by the scan** | anything the report flagged as a real bug (e.g. alert with no hysteresis spamming a webhook). One commit each, with a test. Confirm the intended behaviour with the user when the fix changes semantics. |
 | 8 | **missing tests** | one test per public unit with no coverage (client method, monitor logic, script entry point). Inject collaborators so the loop logic is testable without hardware / network. |
 | 9 | **docs** | `CONTRIBUTING.md` from the template (mirrors the standards); `README` / `SETUP` updated for the new env-driven config and `make` targets |
@@ -90,7 +90,7 @@ repos. After the branch is reviewed, route what generalised:
 |---|---|
 | A `.gitignore` line, a CI step, a `dependabot` group, a `Makefile` target, a pre-commit check that any project would want | PR on `git@github.com:kidp8479/42-project-template.git` |
 | A new *rule* (stated as a standard, not a snippet) | `agentic-lab/standards/engineering.md` (promoted from there into every project's vendored copy) |
-| A lint rule / complexity limit that proved its worth | `notes/eslint-hardening.md` (ratchet) and the `anti-slop` budget table |
+| A lint rule / complexity limit that proved its worth | agentic-lab's `notes/eslint-hardening.md` (ratchet) and the `anti-slop` budget table |
 | An agentic primitive (a hook, a subagent, a skill tweak) | its home in `agentic-lab` |
 
 Record the promotion in the rollout tracker row so the next repo starts
