@@ -125,6 +125,10 @@ and additions specific to this project:
 - DTO rules, HTTP status codes and spec layout are in `CONTRIBUTING.md`
   (API conventions, Testing). Read them before adding an endpoint or a
   spec.
+- Stack conventions (NestJS, TypeORM, React, Tailwind) are in
+  `.claude/rules/`, loaded only when the matching files are touched
+  (`paths:` frontmatter). They add to CONTRIBUTING and the ADRs, never
+  override them.
 
 ## Not yet decided / to settle at the start of the work session
 
