@@ -19,11 +19,13 @@ describe('validateInfo', () => {
     ).toEqual({});
   });
 
-  it('refuses a picture address that is not https', () => {
+  it('refuses a picture address that is not https or has no TLD', () => {
     for (const profilePicture of [
       'http://example.com/a.png',
       'javascript:alert(1)',
       'not a url',
+      'https://localhost/a.png',
+      'https://example.c/a.png',
     ]) {
       expect(validateInfo({ ...info, profilePicture })).toEqual({
         profilePicture: { code: 'invalidUrl' },

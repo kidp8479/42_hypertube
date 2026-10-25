@@ -23,7 +23,11 @@ export type FieldErrors<F extends AccountField> = Partial<
   Record<F, ValidationError>
 >;
 
-// 500 is the column length; the backend also refuses anything but https.
+// 500 is the column length. Like the backend's @IsUrl, only https with a
+// named host and a TLD of 2 letters or more (`https://localhost/a.png` is
+// refused there).
+const PICTURE_HOST = /\.[a-z]{2,}$/i;
+
 function validateProfilePicture(url: string): ValidationError | undefined {
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
@@ -32,7 +36,8 @@ function validateProfilePicture(url: string): ValidationError | undefined {
   if (trimmedUrl.length > 500) {
     return { code: 'tooLong', max: 500 };
   }
-  return URL.canParse(trimmedUrl) && new URL(trimmedUrl).protocol === 'https:'
+  const parsed = URL.parse(trimmedUrl);
+  return parsed?.protocol === 'https:' && PICTURE_HOST.test(parsed.hostname)
     ? undefined
     : { code: 'invalidUrl' };
 }
