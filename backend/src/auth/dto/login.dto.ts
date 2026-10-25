@@ -1,19 +1,24 @@
 // Validated input shape for the login endpoint.
-import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { NormalizeEmail } from '../../common/decorators/normalize-email.decorator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 /**
  * Credentials accepted at `POST /auth/login`.
+ *
+ * `identifier` is a username or an email (subject III.1 asks for the
+ * username; the email keeps working). It is told apart by `@`, which a
+ * username cannot contain, in `UsersService.findForLogin`.
  *
  * No length/complexity rules on `password` beyond a size cap: the login
  * form must accept whatever a legacy account was created with, and any
  * policy hint here would only help an attacker.
  */
 export class LoginDto {
-  @NormalizeEmail()
-  @IsEmail()
+  @Trim()
+  @IsString()
+  @IsNotEmpty()
   @MaxLength(255)
-  readonly email!: string;
+  readonly identifier!: string;
 
   @IsString()
   @IsNotEmpty()

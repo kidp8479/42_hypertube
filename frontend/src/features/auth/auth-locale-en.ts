@@ -6,11 +6,12 @@ export const authEn = {
     password: 'Password',
     confirmPassword: 'Confirm password',
     username: 'Username',
+    identifier: 'Username or email',
     firstName: 'First name',
     lastName: 'Last name',
   },
   hints: {
-    username: '3 to 30 characters',
+    username: '3 to 30 characters, no @',
     password: '8 to 100 characters',
   },
   placeholders: {
@@ -25,6 +26,7 @@ export const authEn = {
     tooShort: '{{field}} must be at least {{min}} characters long',
     tooLong: '{{field}} must be at most {{max}} characters long',
     mismatch: 'Passwords do not match',
+    containsAt: '{{field}} cannot contain @',
   },
   register: {
     title: 'Create your account',
@@ -39,7 +41,7 @@ export const authEn = {
     submit: 'Sign in',
     submitting: 'Signing in...',
     registeredNotice: 'Account created. Please sign in.',
-    badCredentials: 'Invalid email or password.',
+    badCredentials: 'Invalid username, email or password.',
     forgotPassword: 'Forgot password?',
     createAccount: 'Create an account',
   },

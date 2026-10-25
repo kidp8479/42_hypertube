@@ -105,6 +105,20 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findForLogin', () => {
+    it('looks an identifier with @ up as a normalized email', async () => {
+      const user = { id: 1 } as User;
+      const byEmail = jest
+        .spyOn(service, 'findByEmail')
+        .mockResolvedValue(user);
+
+      await expect(service.findForLogin(' Ada@Example.com ')).resolves.toBe(
+        user,
+      );
+      expect(byEmail).toHaveBeenCalledWith('ada@example.com');
+    });
+  });
+
   describe('findAll', () => {
     it('reads only the id and the username of each user', async () => {
       repository.find.mockResolvedValue([]);

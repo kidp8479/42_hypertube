@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Raw, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
@@ -45,7 +46,7 @@ export class UsersService {
   /**
    * Looks a user up by id. Throws {@link NotFoundException} (404) when
    * there is no such row - callers that need a "maybe absent" lookup
-   * (e.g. the login flow) use `findByEmail`, which returns `null`.
+   * (e.g. the login flow) use `findForLogin`, which returns `null`.
    */
   async findOne(id: number) {
     const user = await this.usersRepository.findOneBy({ id });
@@ -53,6 +54,23 @@ export class UsersService {
       throw new NotFoundException(`User ${id} not found`);
     }
     return user;
+  }
+
+  /**
+   * Looks a user up by what was typed in the login field, password hash
+   * included: an email when it contains `@` (a username cannot), otherwise
+   * a username, matched whatever the case like its uniqueness. Resolves to
+   * `null` when there is no match.
+   */
+  findForLogin(identifier: string) {
+    if (identifier.includes('@')) {
+      return this.findByEmail(normalizeEmail(identifier));
+    }
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('LOWER(user.username) = LOWER(:identifier)', { identifier })
+      .getOne();
   }
 
   /**

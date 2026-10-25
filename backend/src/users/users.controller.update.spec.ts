@@ -68,4 +68,13 @@ describe('PATCH /users/:id body', () => {
 
     expect(usersService.update).not.toHaveBeenCalled();
   });
+
+  it('rejects a username containing @ with 400: the login field reads @ as an email', async () => {
+    await request(app.getHttpServer())
+      .patch('/users/7')
+      .send({ username: 'ada@home' })
+      .expect(400);
+
+    expect(usersService.update).not.toHaveBeenCalled();
+  });
 });

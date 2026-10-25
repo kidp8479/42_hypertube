@@ -1,4 +1,4 @@
-// Public /login route: an email + password form wired to the context `login()`.
+// Public /login route: a username-or-email + password form wired to the context `login()`.
 // Redirects to `/` on success (and immediately if already authenticated), and
 // shows a single generic error on failure - the backend never says which field
 // was wrong, so neither do we.
@@ -21,7 +21,7 @@ interface LoginLocationState {
   justRegistered?: boolean;
 }
 
-/** The `/login` page: the email + password form and the OAuth buttons. */
+/** The `/login` page: the username-or-email + password form and the OAuth buttons. */
 export function LoginPage() {
   const { t } = useTranslation('auth');
   const { state, login } = useAuth();
@@ -30,7 +30,7 @@ export function LoginPage() {
   const justRegistered = (location.state as LoginLocationState | null)
     ?.justRegistered;
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<LoginError | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +45,7 @@ export function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(identifier, password);
       navigate('/', { replace: true });
     } catch (caught) {
       const is401 = caught instanceof ApiError && caught.status === 401;
@@ -64,12 +64,12 @@ export function LoginPage() {
         )}
 
         <Field
-          label={t('fields.email')}
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          placeholder={t('placeholders.email')}
+          label={t('fields.identifier')}
+          type="text"
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
+          autoComplete="username"
+          autoCapitalize="none"
           invalid={error === 'login.badCredentials'}
           required
         />

@@ -1,5 +1,5 @@
 meta {
-  name: 06 Login (public)
+  name: 06 Login with the username, any case (public)
   type: http
   seq: 6
 }
@@ -12,7 +12,7 @@ post {
 
 body:json {
   {
-    "email": "ada-{{runId}}@example.com",
+    "identifier": "ADA-{{runId}}",
     "password": "str0ng-p4ss-phrase"
   }
 }

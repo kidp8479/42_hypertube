@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Matches,
   MaxLength,
 } from 'class-validator';
 import { NormalizeEmail } from '../../common/decorators/normalize-email.decorator';
@@ -26,9 +27,12 @@ export class CreateUserDto {
 
   // Trimmed but not lower-cased: the username is display text and its case
   // is preserved. Uniqueness ignores the case (`UQ_user_username_lower`).
+  // No `@`: the login field takes a username or an email and tells them
+  // apart by it (`UsersService.findForLogin`).
   @Trim()
   @IsString()
   @Length(3, 30)
+  @Matches(/^[^@]*$/, { message: 'username must not contain @' })
   readonly username!: string;
 
   @IsString()

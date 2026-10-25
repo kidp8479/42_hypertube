@@ -40,7 +40,7 @@ function renderLoginPage(
 }
 
 async function fillAndSubmit(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText('Email'), 'ada@example.com');
+  await user.type(screen.getByLabelText('Username or email'), 'ada');
   await user.type(screen.getByLabelText('Password'), 'correct horse');
   await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }
@@ -52,7 +52,7 @@ describe('LoginPage', () => {
 
     await fillAndSubmit(user);
 
-    expect(login).toHaveBeenCalledWith('ada@example.com', 'correct horse');
+    expect(login).toHaveBeenCalledWith('ada', 'correct horse');
     expect(await screen.findByText('home page')).toBeInTheDocument();
   });
 
@@ -63,7 +63,7 @@ describe('LoginPage', () => {
     await fillAndSubmit(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Invalid email or password.',
+      'Invalid username, email or password.',
     );
     expect(screen.queryByText('home page')).not.toBeInTheDocument();
   });
@@ -78,7 +78,7 @@ describe('LoginPage', () => {
       'Something went wrong. Please try again.',
     );
     // The credentials are not at fault, so the inputs are not flagged.
-    expect(screen.getByLabelText('Email')).toBeValid();
+    expect(screen.getByLabelText('Username or email')).toBeValid();
   });
 
   it('marks both inputs invalid after a failed attempt', async () => {
@@ -88,7 +88,7 @@ describe('LoginPage', () => {
     await fillAndSubmit(user);
 
     await screen.findByRole('alert');
-    expect(screen.getByLabelText('Email')).toBeInvalid();
+    expect(screen.getByLabelText('Username or email')).toBeInvalid();
     expect(screen.getByLabelText('Password')).toBeInvalid();
   });
 

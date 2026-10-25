@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    await loginRequest(email, password);
+  const login = useCallback(async (identifier: string, password: string) => {
+    await loginRequest(identifier, password);
     dispatch({ type: 'login-success', user: await fetchSignedInUser() });
   }, []);
 

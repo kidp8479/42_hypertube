@@ -8,11 +8,12 @@ export const authFr: typeof authEn = {
     password: 'Mot de passe',
     confirmPassword: 'Confirmer le mot de passe',
     username: 'Nom d’utilisateur',
+    identifier: 'Nom d’utilisateur ou e-mail',
     firstName: 'Prénom',
     lastName: 'Nom',
   },
   hints: {
-    username: '3 à 30 caractères',
+    username: '3 à 30 caractères, sans @',
     password: '8 à 100 caractères',
   },
   placeholders: {
@@ -28,6 +29,7 @@ export const authFr: typeof authEn = {
       'Le champ « {{field}} » doit contenir au moins {{min}} caractères',
     tooLong: 'Le champ « {{field}} » doit contenir au plus {{max}} caractères',
     mismatch: 'Les mots de passe ne correspondent pas',
+    containsAt: 'Le champ « {{field}} » ne peut pas contenir @',
   },
   register: {
     title: 'Créer votre compte',
@@ -42,7 +44,7 @@ export const authFr: typeof authEn = {
     submit: 'Se connecter',
     submitting: 'Connexion...',
     registeredNotice: 'Compte créé. Veuillez vous connecter.',
-    badCredentials: 'E-mail ou mot de passe invalide.',
+    badCredentials: 'Nom d’utilisateur, e-mail ou mot de passe invalide.',
     forgotPassword: 'Mot de passe oublié ?',
     createAccount: 'Créer un compte',
   },

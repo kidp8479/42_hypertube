@@ -70,7 +70,7 @@ describe('session routes', () => {
 
       const res = await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ email: 'ada@example.com', password: 'whatever-it-is' })
+        .send({ identifier: 'ada', password: 'whatever-it-is' })
         .expect(200);
 
       expect(res.body).toEqual({ access_token: 'the.jwt' });
@@ -90,7 +90,7 @@ describe('session routes', () => {
       const res = await request(app.getHttpServer())
         .post('/auth/login')
         .set('X-Forwarded-Prefix', '/api')
-        .send({ email: 'ada@example.com', password: 'whatever-it-is' });
+        .send({ identifier: 'ada', password: 'whatever-it-is' });
 
       expect(setCookies(res)[0]).toContain('Path=/api/auth');
     });
