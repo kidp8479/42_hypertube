@@ -114,7 +114,6 @@ describe('AuthController', () => {
         provider: OAuthProvider.FORTYTWO,
         providerUserId: '12345',
         email: 'ada@example.com',
-        emailVerified: true,
         suggestedUsername: 'ada',
         firstName: 'Ada',
         lastName: 'Lovelace',

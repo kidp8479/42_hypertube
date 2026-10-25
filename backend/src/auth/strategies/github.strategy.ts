@@ -91,9 +91,9 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     profile: GithubProfile,
   ): OAuthProfile {
     if (!profile.email) {
-      // Nothing verified to link or create an account with - see
-      // AuthService.resolveOAuthUser case 3, which never trusts an absent
-      // or unverified email for account matching.
+      // Nothing verified to link or create an account with: AuthService
+      // matches accounts by this email, so it must be one GitHub verified
+      // (OAuthProfile.email).
       throw new UnverifiedEmailException();
     }
 
@@ -108,11 +108,10 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     return {
       provider: OAuthProvider.GITHUB,
       providerUserId: String(profile.id),
-      email: profile.email,
       // Only ever reached with a verified address: userProfile() keeps
       // only the primary+verified row of /user/emails, and validate()
       // refuses a profile without one.
-      emailVerified: true,
+      email: profile.email,
       suggestedUsername: profile.login,
       firstName,
       lastName,

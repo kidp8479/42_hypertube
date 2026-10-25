@@ -173,7 +173,6 @@ describe('AuthService', () => {
       provider: OAuthProvider.FORTYTWO,
       providerUserId: '12345',
       email: 'Ada@Example.com',
-      emailVerified: true,
       suggestedUsername: 'ada',
       firstName: 'Ada',
       lastName: 'Lovelace',
@@ -199,7 +198,7 @@ describe('AuthService', () => {
       expect(result).toBe(linkedUser);
     });
 
-    it('links to an existing account by normalized email when the provider vouches it', async () => {
+    it('links to an existing account by normalized email', async () => {
       oauthAccounts.findOneBy.mockResolvedValue(null);
       users.findByEmail.mockResolvedValue(buildUser({ id: 9 }));
 
@@ -219,7 +218,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('creates a fresh account when the email is verified but matches nobody', async () => {
+    it('creates a fresh account when the email matches nobody', async () => {
       oauthAccounts.findOneBy.mockResolvedValue(null);
       users.findByEmail.mockResolvedValue(null);
       users.createFromOAuth.mockResolvedValue(buildUser({ id: 11 }));
@@ -233,16 +232,6 @@ describe('AuthService', () => {
       expect(oauthAccounts.save).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 11 }),
       );
-    });
-
-    it('creates a fresh account without an email lookup when the provider does not vouch for it', async () => {
-      oauthAccounts.findOneBy.mockResolvedValue(null);
-      users.createFromOAuth.mockResolvedValue(buildUser({ id: 12 }));
-
-      await service.resolveOAuthUser({ ...profile, emailVerified: false });
-
-      expect(users.findByEmail).not.toHaveBeenCalled();
-      expect(users.createFromOAuth).toHaveBeenCalled();
     });
 
     it('recovers from a concurrent link race instead of surfacing the conflict', async () => {
@@ -264,6 +253,73 @@ describe('AuthService', () => {
       // to create (30).
       expect(users.findOne).toHaveBeenCalledWith(20);
       expect(result).toBe(winner);
+    });
+
+    describe('losing the race to create the user', () => {
+      // Both requests read "no link, no user with this email", then the
+      // other one inserts first: this one's user insert hits a unique
+      // constraint. The whole resolution runs again and sees what the
+      // winner committed.
+      beforeEach(() => {
+        users.createFromOAuth.mockRejectedValueOnce(buildUniqueViolation());
+      });
+
+      it('resolves to the winner when it already holds the link', async () => {
+        oauthAccounts.findOneBy
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ userId: 21 });
+        users.findByEmail.mockResolvedValue(null);
+        const winner = buildUser({ id: 21 });
+        users.findOne.mockResolvedValue(winner);
+
+        const result = await service.resolveOAuthUser(profile);
+
+        expect(result).toBe(winner);
+        expect(users.createFromOAuth).toHaveBeenCalledTimes(1);
+        expect(oauthAccounts.save).not.toHaveBeenCalled();
+      });
+
+      it('links to a local account registered meanwhile, revoking its password first', async () => {
+        // The winner is a local registration of the same address: the rerun
+        // must take the normal linking path, not just return that user.
+        oauthAccounts.findOneBy.mockResolvedValue(null);
+        const registered = buildUser({ id: 22, password: '$argon2id$...' });
+        users.findByEmail
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(registered);
+
+        const result = await service.resolveOAuthUser(profile);
+
+        expect(result).toBe(registered);
+        expect(users.clearPassword).toHaveBeenCalledWith(22);
+        expect(oauthAccounts.save).toHaveBeenCalledWith(
+          expect.objectContaining({ userId: 22 }),
+        );
+        expect(users.clearPassword.mock.invocationCallOrder[0]).toBeLessThan(
+          oauthAccounts.save.mock.invocationCallOrder[0],
+        );
+      });
+
+      it('runs again only once: a second unique violation is rethrown', async () => {
+        oauthAccounts.findOneBy.mockResolvedValue(null);
+        users.findByEmail.mockResolvedValue(null);
+        const second = buildUniqueViolation();
+        users.createFromOAuth.mockRejectedValueOnce(second);
+
+        await expect(service.resolveOAuthUser(profile)).rejects.toBe(second);
+        expect(users.createFromOAuth).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('rethrows a user insert failure that is not a unique violation, without running again', async () => {
+      oauthAccounts.findOneBy.mockResolvedValue(null);
+      users.findByEmail.mockResolvedValue(null);
+      users.createFromOAuth.mockRejectedValue(new Error('connection lost'));
+
+      await expect(service.resolveOAuthUser(profile)).rejects.toThrow(
+        'connection lost',
+      );
+      expect(users.createFromOAuth).toHaveBeenCalledTimes(1);
     });
 
     it('rethrows a save failure that is not a unique violation', async () => {

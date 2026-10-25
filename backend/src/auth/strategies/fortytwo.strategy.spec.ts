@@ -106,7 +106,6 @@ describe('FortyTwoStrategy', () => {
         provider: OAuthProvider.FORTYTWO,
         providerUserId: '1',
         email: 'ada@example.com',
-        emailVerified: true,
         suggestedUsername: 'ada',
         firstName: 'Ada',
         lastName: 'Lovelace',

@@ -6,6 +6,14 @@ import { QueryFailedError } from 'typeorm';
 /** Postgres error code for a unique-constraint violation. */
 export const UNIQUE_VIOLATION = '23505';
 
+/** True when `err` is a Postgres unique-constraint violation. */
+export function isUniqueViolation(err: unknown): err is QueryFailedError {
+  return (
+    err instanceof QueryFailedError &&
+    (err as QueryFailedError & { code?: string }).code === UNIQUE_VIOLATION
+  );
+}
+
 /**
  * Turns a Postgres unique-violation into a 409 instead of letting it
  * surface as an unhandled 500 that also dumps the SQL error to the logs
@@ -19,8 +27,7 @@ export const UNIQUE_VIOLATION = '23505';
 @Catch(QueryFailedError)
 export class QueryFailedFilter extends BaseExceptionFilter {
   catch(exception: QueryFailedError, host: ArgumentsHost) {
-    const code = (exception as QueryFailedError & { code?: string }).code;
-    if (code === UNIQUE_VIOLATION) {
+    if (isUniqueViolation(exception)) {
       super.catch(new ConflictException('Resource already exists'), host);
       return;
     }

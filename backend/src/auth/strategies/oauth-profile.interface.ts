@@ -6,8 +6,12 @@ import { OAuthProvider } from '../entities/oauth-account.entity';
 export interface OAuthProfile {
   provider: OAuthProvider;
   providerUserId: string;
+  /**
+   * Always an address the provider has verified: AuthService links by it
+   * (ADR-0007). A strategy that cannot get one refuses the login with
+   * `UnverifiedEmailException` instead of returning a profile.
+   */
   email: string;
-  emailVerified: boolean;
   suggestedUsername: string;
   firstName: string;
   lastName: string;

@@ -64,10 +64,9 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
     return {
       provider: OAuthProvider.FORTYTWO,
       providerUserId: String(profile.id),
-      email: profile.email,
       // 42 verifies the account's email at signup on the intra; there is
       // no "verified" flag in the /v2/me response because it's always true.
-      emailVerified: true,
+      email: profile.email,
       suggestedUsername: profile.login,
       firstName: profile.first_name,
       lastName: profile.last_name,
