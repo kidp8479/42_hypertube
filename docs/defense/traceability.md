@@ -44,7 +44,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | Log in with the username and password (III.1; the email works too), password hashed | HYP-10 / HYP-91 | `POST /users` (register), `POST /auth/login` takes an `identifier`: an email when it contains `@`, otherwise a username, matched whatever the case (`UsersService.findForLogin`); a username cannot contain `@` | `auth.service.spec.ts`, `users.service.spec.ts`, `users.controller.update.spec.ts`; Bruno 05-06 (email, then username in another case), 27 / 32; `frontend/e2e/auth.spec.ts` logs in with the username | done |
 | OAuth "42 strategy" + >= 1 other provider | HYP-11 / HYP-53 / HYP-57 | `FortyTwoStrategy` + `GithubStrategy` (`auth/strategies/`), identity linking in `AuthService.resolveOAuthUser` (ADR-0007); callback -> single-use exchange code -> `POST /auth/oauth/exchange` | `fortytwo.strategy.spec.ts`, `github.strategy.spec.ts`, `auth.service.spec.ts`, `oauth-exchange.service.spec.ts`; Bruno 17-20; `frontend/e2e/oauth.spec.ts`; SPA side (`auth-oauth-buttons.tsx`, `/oauth/callback` page, HYP-57) in `auth-oauth-callback-page.test.tsx` | done |
 | Reset password by email | HYP-34 (needs HYP-32 mail infra) | n/a | n/a | todo |
-| One-click logout, from any page | HYP-35 / HYP-45 (frontend) / HYP-19 (header on every page) | `POST /auth/logout` (204, public, revokes the refresh-token session and clears the cookie, ADR-0011), then frontend `logout()` clears token + query cache -> guard redirects | `auth.session.spec.ts`, Bruno 33-34, `auth-provider.test.tsx` logout cases | done - the 15 minute access token still expires on its own, see `known-limitations.md` |
+| One-click logout, from any page | HYP-35 / HYP-45 (frontend) / HYP-19 (header on every page) | the header's Log out button; `POST /auth/logout` (204, public, revokes the refresh-token session and clears the cookie, ADR-0011), then frontend `logout()` clears token + query cache -> guard redirects | `auth.session.spec.ts`, Bruno 33-34, `auth-provider.test.tsx` logout cases | done - the 15 minute access token still expires on its own, see `known-limitations.md` |
 | Language choice, default English | HYP-36 / HYP-56 | `User.preferredLanguage` (`en` / `fr`, default `en`); frontend `react-i18next` with English as default and fallback, language resolved before the first render (account, then manual choice, then browser, then English), switcher saving to `localStorage` and to the account via `PATCH /users/:id` (`docs/diagrams/i18n.md`) | `lib/i18n.test.ts`, `lib/language.test.ts`, `language-switcher.test.tsx`, `language-sync.test.tsx`; the account side in `users.controller.update.spec.ts` (saved, 400 on an unsupported language) and Bruno 13 | done |
 | `GET /users/me` current-user shortcut | HYP-44 | `UsersController.findMe` | unit + HTTP routing test | done |
 | Frontend: router, API client, auth context, protected routes | HYP-45 | `src/features/auth/`, `src/lib/`, `RequireAuth` | Vitest specs under `frontend/src/`; ADR-0006 | done |
@@ -66,9 +66,9 @@ control, its code path, its proof, and the accepted gaps) lives in
 
 | Requirement | Issue | State |
 |---|---|---|
-| Header, main section and footer on every page; a newcomer finds register and search quickly | HYP-19 | todo |
-| Works on Firefox and Chrome (subject: latest versions; marking sheet: Firefox >= 41, Chrome >= 46) | HYP-19 | todo |
-| Usable on a phone and on small resolutions | HYP-19 | partial - auth pages checked at 320 px (HYP-66) |
+| Header, main section and footer on every page; a newcomer finds register and search quickly | HYP-19 | partial - `AppLayout` frames every route (`app-layout.test.tsx`, `e2e/layout.spec.ts`); the login page links to register; search waits for the library (HYP-13) |
+| Works on Firefox and Chrome (subject: latest versions; marking sheet: Firefox >= 41, Chrome >= 46) | HYP-19 | done for the latest versions - every Playwright spec runs in Playwright's Chromium and Firefox builds, locally and in CI; the marking-sheet minimums are below what Tailwind v4 supports (`known-limitations.md`); a manual pass in stock Firefox and Chrome before the defense |
+| Usable on a phone and on small resolutions | HYP-19 | partial - `e2e/layout.spec.ts` checks the login and a signed-in page at 320 px, no sideways scroll; re-check with each new page |
 
 ## Video library and player
 

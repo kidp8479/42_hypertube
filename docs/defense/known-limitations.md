@@ -117,3 +117,18 @@ was already copied still works until it expires, 15 minutes by default
 - **Real-world:** an email change is normally confirmed from the new address.
 - **Cost to fix later:** medium, with HYP-39 (a confirmation link to the new
   address).
+
+## Only recent browsers are supported
+
+The SPA runs on the latest Firefox and Chrome, as the subject asks, but not
+on the much older minimums of the marking sheet (Firefox 41, Chrome 46).
+
+- **Why:** Tailwind CSS v4 (ADR-0012) relies on modern CSS (cascade layers,
+  `@property`, `color-mix()`) and documents Chrome 111, Safari 16.4 and
+  Firefox 128 as its floor. Browsers from 2015 also lack what React 19 and
+  the Vite build output assume.
+- **Real-world:** a public product would check its audience's browser share
+  before choosing, and add fallbacks or a "browser not supported" page.
+- **Cost to fix later:** high. Supporting 2015 browsers would mean dropping
+  Tailwind v4 for v3 and transpiling down the whole bundle. Not worth it for
+  a project graded on current browsers.
