@@ -7,6 +7,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 
 // Stands in for the real JwtAuthGuard: every request in this suite is
 // treated as authenticated as user 7, so a handler that reads req.user
@@ -35,6 +36,7 @@ describe('UsersController path routing', () => {
       controllers: [UsersController],
       providers: [
         { provide: UsersService, useValue: usersService },
+        { provide: RefreshTokenService, useValue: {} },
         { provide: APP_GUARD, useValue: stubAuthGuard },
       ],
     }).compile();

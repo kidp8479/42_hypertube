@@ -13,6 +13,7 @@ import { App } from 'supertest/types';
 import { PreferredLanguage, User } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { RefreshTokenService } from '../auth/refresh-token.service';
 
 // Every request in this suite comes from user 7.
 const stubAuthGuard = {
@@ -53,6 +54,7 @@ describe('UsersController response fields', () => {
       controllers: [UsersController],
       providers: [
         { provide: UsersService, useValue: usersService },
+        { provide: RefreshTokenService, useValue: {} },
         { provide: APP_GUARD, useValue: stubAuthGuard },
         // The serializer main.ts installs globally: what it emits is what a
         // client receives.

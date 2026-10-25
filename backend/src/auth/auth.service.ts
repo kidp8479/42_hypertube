@@ -18,6 +18,7 @@ import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { isUniqueViolation } from '../common/utils/unique-violation.util';
+import { RefreshTokenService } from './refresh-token.service';
 
 /**
  * Credential verification and token issuance for the login flow, plus the
@@ -39,6 +40,7 @@ export class AuthService implements OnModuleInit {
     private readonly jwtService: JwtService,
     @InjectRepository(OAuthAccount)
     private readonly oauthAccountRepository: Repository<OAuthAccount>,
+    private readonly refreshTokens: RefreshTokenService,
   ) {}
 
   async onModuleInit() {
@@ -109,16 +111,19 @@ export class AuthService implements OnModuleInit {
    * redeemed (ADR-0007). Two cases, checked in order:
    * 1. This (provider, providerUserId) pair is already linked - that user,
    *    nothing else to do.
-   * 2. Not linked yet - link to an existing local account with that email
-   *    if one exists (revoking that account's password, see below),
+   * 2. Not linked yet - link to an existing account with that email if one
+   *    exists (claiming it first when its email is unverified, see below),
    *    otherwise create a fresh one. The email is provider-verified
    *    (`OAuthProfile.email`).
    *
-   * Revoking the password on link: local registration does not verify the
-   * email, so an attacker could pre-register a victim's address with a
-   * password of their own. When the real owner later signs in through a
-   * provider and is linked to that account, the attacker's password must
-   * stop working - the owner sets a new one through the reset flow.
+   * Claiming an unverified account: neither a local registration nor an
+   * email change checks the address, so an attacker could put a victim's
+   * email on an account they hold, by a password, a session or a provider
+   * of their own. When the real owner signs in through a provider, the
+   * account becomes theirs alone: its password, its sessions and its other
+   * provider links are revoked, and its email is marked verified. The
+   * owner sets a new password through the reset flow. A verified account
+   * is linked as is: a provider already vouched for that email.
    *
    * `profile.email` is normalized here rather than trusted as-is: unlike
    * `LoginDto`/`CreateUserDto`, it never passes through the validation
@@ -155,20 +160,13 @@ export class AuthService implements OnModuleInit {
     }
 
     let user = await this.usersService.findByEmail(email);
-    // Set only when linking to an account registered locally with a
-    // password: registration never verifies the email, so that password
-    // may belong to someone who does not own the address.
-    const passwordToRevoke = user?.password ? user.id : null;
     if (!user) {
       user = await this.usersService.createFromOAuth({ ...profile, email });
-    }
-
-    // Revoked before the link exists, not after: if a step fails between
-    // the two, the account may end up password-less and unlinked (the
-    // owner resets it, the next login links normally) but never linked
-    // with the old password still working.
-    if (passwordToRevoke !== null) {
-      await this.usersService.clearPassword(passwordToRevoke);
+    } else if (!user.emailVerified) {
+      // Claimed before the link exists, not after: if a step fails between
+      // the two, the account may end up claimed and unlinked (the next
+      // login links normally) but never linked with the old access intact.
+      await this.claimUnverifiedAccount(user.id);
     }
 
     await this.oauthAccountRepository.save(
@@ -179,5 +177,12 @@ export class AuthService implements OnModuleInit {
       }),
     );
     return user;
+  }
+
+  /** Revokes every way into the account but the owner's verified email (see `resolveOAuthUser`). */
+  private async claimUnverifiedAccount(userId: number): Promise<void> {
+    await this.usersService.claimEmail(userId);
+    await this.refreshTokens.revokeAllForUser(userId);
+    await this.oauthAccountRepository.delete({ userId });
   }
 }

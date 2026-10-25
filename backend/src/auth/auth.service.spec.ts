@@ -1,5 +1,6 @@
 // Unit spec for AuthService: credential checks, token minting, and the OAuth
-// identity -> local user resolution (linking, password revocation, races).
+// identity -> local user resolution (linking, claiming an unverified
+// account, races).
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
@@ -12,6 +13,7 @@ import { OAuthAccount, OAuthProvider } from './entities/oauth-account.entity';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { UNIQUE_VIOLATION } from '../common/utils/unique-violation.util';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshTokenService } from './refresh-token.service';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake stays loose.
@@ -20,7 +22,11 @@ type UsersServiceMock = {
   findForLogin: jest.Mock;
   findOne: jest.Mock;
   createFromOAuth: jest.Mock;
-  clearPassword: jest.Mock;
+  claimEmail: jest.Mock;
+};
+
+type RefreshTokenServiceMock = {
+  revokeAllForUser: jest.Mock;
 };
 
 type JwtServiceMock = {
@@ -31,6 +37,7 @@ type OAuthAccountRepositoryMock = {
   findOneBy: jest.Mock;
   create: jest.Mock;
   save: jest.Mock;
+  delete: jest.Mock;
 };
 
 // A Postgres unique-violation error, shaped like what the `pg` driver
@@ -51,6 +58,7 @@ const buildUser = (overrides: Partial<User> = {}): User =>
     lastName: 'Lovelace',
     password: 'set-me-in-the-test',
     profilePicture: 'https://example.com/avatar.png',
+    emailVerified: false,
     preferredLanguage: 'en',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -63,6 +71,7 @@ describe('AuthService', () => {
   let users: UsersServiceMock;
   let jwt: JwtServiceMock;
   let oauthAccounts: OAuthAccountRepositoryMock;
+  let refreshTokens: RefreshTokenServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -75,7 +84,7 @@ describe('AuthService', () => {
             findForLogin: jest.fn(),
             findOne: jest.fn(),
             createFromOAuth: jest.fn(),
-            clearPassword: jest.fn(),
+            claimEmail: jest.fn(),
           },
         },
         {
@@ -88,7 +97,12 @@ describe('AuthService', () => {
             findOneBy: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
+            delete: jest.fn(),
           },
+        },
+        {
+          provide: RefreshTokenService,
+          useValue: { revokeAllForUser: jest.fn() },
         },
       ],
     }).compile();
@@ -101,6 +115,7 @@ describe('AuthService', () => {
     users = module.get(UsersService);
     jwt = module.get(JwtService);
     oauthAccounts = module.get(getRepositoryToken(OAuthAccount));
+    refreshTokens = module.get(RefreshTokenService);
   });
 
   // --- tests ---
@@ -274,7 +289,7 @@ describe('AuthService', () => {
         expect(result).toBe(winner);
       });
 
-      it('links to a local account registered meanwhile, revoking its password first', async () => {
+      it('links to a local account registered meanwhile, claiming it first', async () => {
         // The winner is a local registration of the same address: the rerun
         // must take the normal linking path, not just return that user.
         oauthAccounts.findOneBy.mockResolvedValue(null);
@@ -286,11 +301,11 @@ describe('AuthService', () => {
         const result = await service.resolveOAuthUser(profile);
 
         expect(result).toBe(registered);
-        expect(users.clearPassword).toHaveBeenCalledWith(22);
+        expect(users.claimEmail).toHaveBeenCalledWith(22);
         expect(oauthAccounts.save).toHaveBeenCalledWith(
           expect.objectContaining({ userId: 22 }),
         );
-        expect(users.clearPassword.mock.invocationCallOrder[0]).toBeLessThan(
+        expect(users.claimEmail.mock.invocationCallOrder[0]).toBeLessThan(
           oauthAccounts.save.mock.invocationCallOrder[0],
         );
       });
@@ -328,49 +343,74 @@ describe('AuthService', () => {
       );
     });
 
-    describe('linking to an existing local account', () => {
-      // Local registration does not verify the email, so whoever registered
-      // it may not own the address. Once the real owner signs in through a
-      // provider and gets linked, the password that account was created
-      // with must stop working (account pre-hijacking).
+    describe('linking to an existing account', () => {
+      // Neither a local registration nor an email change checks the address,
+      // so whoever holds an unverified account may not own its email. When
+      // the real owner signs in through a provider, every other way in
+      // (password, sessions, other providers) must stop working.
       beforeEach(() => {
         oauthAccounts.findOneBy.mockResolvedValue(null);
       });
 
-      it('revokes the local password of the account it links to', async () => {
+      it('claims an unverified account: password, sessions and other links revoked, before the link', async () => {
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.clearPassword).toHaveBeenCalledWith(9);
+        expect(users.claimEmail).toHaveBeenCalledWith(9);
+        expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(9);
+        expect(oauthAccounts.delete).toHaveBeenCalledWith({ userId: 9 });
+        expect(oauthAccounts.delete.mock.invocationCallOrder[0]).toBeLessThan(
+          oauthAccounts.save.mock.invocationCallOrder[0],
+        );
       });
 
-      it('leaves a password-less account alone', async () => {
+      it('claims a password-less account whose email was changed (no password, still unverified)', async () => {
+        // An attacker's GitHub-only account, its email changed to the
+        // victim's: no password to revoke, but its sessions and its GitHub
+        // link would otherwise survive.
         users.findByEmail.mockResolvedValue(
-          buildUser({ id: 9, password: null }),
+          buildUser({ id: 9, password: null, emailVerified: false }),
         );
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.clearPassword).not.toHaveBeenCalled();
+        expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(9);
+        expect(oauthAccounts.delete).toHaveBeenCalledWith({ userId: 9 });
       });
 
-      it('does not revoke anything for a freshly created account', async () => {
+      it('links a verified account as is, keeping its password and sessions', async () => {
+        users.findByEmail.mockResolvedValue(
+          buildUser({ id: 9, password: 'argon2-hash', emailVerified: true }),
+        );
+
+        await service.resolveOAuthUser(profile);
+
+        expect(users.claimEmail).not.toHaveBeenCalled();
+        expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+        expect(oauthAccounts.save).toHaveBeenCalledWith(
+          expect.objectContaining({ userId: 9 }),
+        );
+      });
+
+      it('does not claim anything for a freshly created account', async () => {
         users.findByEmail.mockResolvedValue(null);
         users.createFromOAuth.mockResolvedValue(buildUser({ id: 11 }));
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.clearPassword).not.toHaveBeenCalled();
+        expect(users.claimEmail).not.toHaveBeenCalled();
       });
 
-      it('does not link the identity when revoking the password fails', async () => {
+      it('does not link the identity when the claim fails', async () => {
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
-        users.clearPassword.mockRejectedValue(new Error('connection lost'));
+        refreshTokens.revokeAllForUser.mockRejectedValue(
+          new Error('connection lost'),
+        );
 
         await expect(service.resolveOAuthUser(profile)).rejects.toThrow(
           'connection lost',

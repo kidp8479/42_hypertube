@@ -29,6 +29,16 @@ export class User {
   email!: string;
 
   /**
+   * Whether an OAuth provider vouched for `email`: `true` for an account
+   * created or linked through a provider, `false` after a local
+   * registration or an email change, neither of which checks the address.
+   * Linking a provider to an unverified account hands it to the holder of
+   * the verified email (`AuthService.resolveOAuthUser`, ADR-0007).
+   */
+  @Column({ default: false })
+  emailVerified!: boolean;
+
+  /**
    * Unique whatever the case (`Ada` and `ada` clash) through the index
    * `UQ_user_username_lower` on `LOWER(username)`, which lives in its
    * migration only: TypeORM cannot model it and its schema check ignores

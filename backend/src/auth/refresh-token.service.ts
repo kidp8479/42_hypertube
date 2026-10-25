@@ -93,6 +93,17 @@ export class RefreshTokenService {
     }
   }
 
+  /**
+   * Ends every session of a user: after a credential change, or when an
+   * unverified account is handed to the owner of its email (ADR-0007).
+   */
+  async revokeAllForUser(userId: number): Promise<void> {
+    await this.tokens.update(
+      { userId, revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
+  }
+
   private isDead(row: RefreshToken, now: Date): boolean {
     return (
       row.revokedAt !== null ||

@@ -1,6 +1,11 @@
 // Unit spec for UsersService with a mocked repository: password hashing,
-// OAuth account creation (username fallback, column limits), update and 404s.
-import { NotFoundException } from '@nestjs/common';
+// OAuth account creation (username fallback, column limits), update (with
+// re-authentication for a credential change) and 404s.
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
@@ -16,7 +21,6 @@ type RepositoryMock = {
   create: jest.Mock;
   save: jest.Mock;
   findOneBy: jest.Mock;
-  preload: jest.Mock;
   delete: jest.Mock;
   update: jest.Mock;
   createQueryBuilder: jest.Mock;
@@ -63,7 +67,6 @@ describe('UsersService', () => {
             findOneBy: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
-            preload: jest.fn(),
             delete: jest.fn(),
             update: jest.fn(),
             createQueryBuilder: jest.fn(),
@@ -278,29 +281,111 @@ describe('UsersService', () => {
     });
   });
 
-  describe('clearPassword', () => {
-    it('sets the stored password hash to null for that user only', async () => {
-      await service.clearPassword(7);
+  describe('claimEmail', () => {
+    it('drops the password and marks the email verified, for that user only', async () => {
+      await service.claimEmail(7);
 
-      expect(repository.update).toHaveBeenCalledWith(7, { password: null });
+      expect(repository.update).toHaveBeenCalledWith(7, {
+        password: null,
+        emailVerified: true,
+      });
     });
   });
 
   describe('update', () => {
-    it('preloads the merged row and saves it', async () => {
-      const merged = { id: 1, firstName: 'Grace' } as User;
-      repository.preload.mockResolvedValue(merged);
-      repository.save.mockResolvedValue(merged);
+    let stored: User;
 
+    /** The row `update` loads, password hash included, and saves back as is. */
+    function storeUser(password: string | null) {
+      stored = {
+        id: 1,
+        email: 'ada@example.com',
+        firstName: 'Ada',
+        password,
+        emailVerified: true,
+      } as User;
+      repository.createQueryBuilder.mockReturnValue({
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(stored),
+      });
+      repository.save.mockImplementation((user: User) => Promise.resolve(user));
+    }
+
+    beforeEach(async () => {
+      storeUser(await argon2.hash('current pass'));
+    });
+
+    it('saves a profile field without asking for the password', async () => {
       const result = await service.update(1, { firstName: 'Grace' });
 
-      expect(repository.preload).toHaveBeenCalledWith({
-        id: 1,
-        firstName: 'Grace',
+      expect(result).toEqual({
+        user: expect.objectContaining({ firstName: 'Grace' }) as User,
+        credentialsChanged: false,
       });
-      expect(repository.save).toHaveBeenCalledWith(merged);
-      expect(result).toBe(merged);
     });
+
+    it('hashes a new password and reports a credential change', async () => {
+      const result = await service.update(1, {
+        password: 'brand new pass',
+        currentPassword: 'current pass',
+      });
+
+      expect(result.credentialsChanged).toBe(true);
+      expect(stored.password).toMatch(/^\$argon2id\$/);
+      await expect(
+        argon2.verify(stored.password as string, 'brand new pass'),
+      ).resolves.toBe(true);
+      expect(stored).not.toHaveProperty('currentPassword');
+    });
+
+    it('marks a new email unverified', async () => {
+      const result = await service.update(1, {
+        email: 'grace@example.com',
+        currentPassword: 'current pass',
+      });
+
+      expect(result.credentialsChanged).toBe(true);
+      expect(stored.emailVerified).toBe(false);
+    });
+
+    it('treats the current email sent back as no change', async () => {
+      const result = await service.update(1, { email: 'ada@example.com' });
+
+      expect(result.credentialsChanged).toBe(false);
+      expect(stored.emailVerified).toBe(true);
+    });
+
+    it('answers 400 when currentPassword is missing for a credential change', async () => {
+      await expect(
+        service.update(1, { password: 'brand new pass' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it('answers 403 on a wrong currentPassword, saving nothing', async () => {
+      await expect(
+        service.update(1, { email: 'grace@example.com', currentPassword: 'x' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a password', { password: 'brand new pass' }],
+      ['an email', { email: 'grace@example.com' }],
+    ])(
+      'refuses %s change on an account without a password, saving nothing',
+      async (_, dto) => {
+        // OAuth-only, or just claimed: an access token still alive must not
+        // be able to set credentials on it.
+        storeUser(null);
+
+        await expect(
+          service.update(1, { ...dto, currentPassword: 'anything' }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(repository.save).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('lookups on a missing id', () => {
@@ -313,7 +398,11 @@ describe('UsersService', () => {
     });
 
     it('update throws 404 and never saves', async () => {
-      repository.preload.mockResolvedValue(undefined);
+      repository.createQueryBuilder.mockReturnValue({
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(null),
+      });
 
       await expect(service.update(999, {})).rejects.toBeInstanceOf(
         NotFoundException,
