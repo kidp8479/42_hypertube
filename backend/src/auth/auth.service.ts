@@ -166,7 +166,9 @@ export class AuthService implements OnModuleInit {
       // Claimed before the link exists, not after: if a step fails between
       // the two, the account may end up claimed and unlinked (the next
       // login links normally) but never linked with the old access intact.
-      await this.claimUnverifiedAccount(user.id);
+      await this.usersService.claimEmail(user.id);
+      await this.refreshTokens.revokeAllForUser(user.id);
+      await this.oauthAccountRepository.delete({ userId: user.id });
     }
 
     await this.oauthAccountRepository.save(
@@ -177,12 +179,5 @@ export class AuthService implements OnModuleInit {
       }),
     );
     return user;
-  }
-
-  /** Revokes every way into the account but the owner's verified email (see `resolveOAuthUser`). */
-  private async claimUnverifiedAccount(userId: number): Promise<void> {
-    await this.usersService.claimEmail(userId);
-    await this.refreshTokens.revokeAllForUser(userId);
-    await this.oauthAccountRepository.delete({ userId });
   }
 }

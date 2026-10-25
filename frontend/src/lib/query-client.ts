@@ -1,9 +1,7 @@
 // TanStack Query config: the singleton client every query/mutation in the
 // app shares, plus the global 401 -> session-expired safety net.
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
-import { ApiError } from './api';
-
-const UNAUTHORIZED = 401;
+import { ApiError, UNAUTHORIZED } from './api';
 
 // Registrable indirection so this module never has to import AuthProvider
 // (which itself imports `queryClient`) - avoids a circular dependency.

@@ -29,11 +29,8 @@ export class User {
   email!: string;
 
   /**
-   * Whether an OAuth provider vouched for `email`: `true` for an account
-   * created or linked through a provider, `false` after a local
-   * registration or an email change, neither of which checks the address.
-   * Linking a provider to an unverified account hands it to the holder of
-   * the verified email (`AuthService.resolveOAuthUser`, ADR-0007).
+   * Whether an OAuth provider vouched for `email`: `false` after a local
+   * registration or an email change. See `AuthService.resolveOAuthUser`.
    */
   @Column({ default: false })
   emailVerified!: boolean;

@@ -344,10 +344,7 @@ describe('AuthService', () => {
     });
 
     describe('linking to an existing account', () => {
-      // Neither a local registration nor an email change checks the address,
-      // so whoever holds an unverified account may not own its email. When
-      // the real owner signs in through a provider, every other way in
-      // (password, sessions, other providers) must stop working.
+      // Why an unverified account is claimed: `resolveOAuthUser`'s doc.
       beforeEach(() => {
         oauthAccounts.findOneBy.mockResolvedValue(null);
       });

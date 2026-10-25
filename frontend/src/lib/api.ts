@@ -5,7 +5,7 @@ import { getAuthToken, removeAuthToken, setAuthToken } from './token';
 /** Where the backend is reached from the browser: the dev proxy (vite.config.ts) strips it. */
 export const API_BASE = '/api';
 
-const UNAUTHORIZED = 401;
+export const UNAUTHORIZED = 401;
 const NO_CONTENT = 204;
 
 /** A non-ok `fetch` response, surfaced with its status so callers can branch on it (401 -> logout, 403 -> ownership, ...). */
@@ -71,17 +71,6 @@ export async function refreshSettled(): Promise<void> {
   await pendingRefresh?.catch(() => undefined);
 }
 
-/**
- * The token to retry a request with after it got a 401 with `rejected`, or
- * `null` to give up. When the token changed since the request left (a
- * refresh or a login landed meanwhile), the 401 is about a token already
- * replaced: retry with the current one rather than refreshing again.
- */
-function tokenAfterRejection(rejected: string): Promise<string | null> {
-  const current = getAuthToken();
-  return current === rejected ? refreshAccessToken() : Promise.resolve(current);
-}
-
 function send(
   path: string,
   init: RequestInit | undefined,
@@ -107,8 +96,11 @@ function send(
  * sites only ever pass a backend-relative path.
  *
  * A 401 on a request that carried a token is retried once with a renewed
- * token (see {@link tokenAfterRejection}). The auth routes are never retried:
- * their 401 is the answer itself (bad credentials, a dead cookie).
+ * token. When the token changed since the request left (a refresh or a
+ * login landed meanwhile), the 401 is about a token already replaced: it
+ * retries with the current one rather than refreshing again. The auth
+ * routes are never retried: their 401 is the answer itself (bad
+ * credentials, a dead cookie).
  */
 export async function apiFetch<T>(
   path: string,
@@ -121,7 +113,8 @@ export async function apiFetch<T>(
     sentWith &&
     !path.startsWith('/auth/')
   ) {
-    const renewed = await tokenAfterRejection(sentWith);
+    const current = getAuthToken();
+    const renewed = current === sentWith ? await refreshAccessToken() : current;
     if (renewed) {
       response = await send(path, init, renewed);
     }

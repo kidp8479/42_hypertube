@@ -108,15 +108,10 @@ export class UsersController {
   }
 
   /**
-   * After an email or password change, a session opened with the old
-   * credentials must not survive: every refresh-token family of the user is
-   * revoked, and the caller gets a fresh one in a new cookie so they stay
-   * signed in. This route never sees the caller's own refresh cookie (it is
-   * scoped to the auth routes), so "every session but this one" is done as
-   * "every session, then a new one" (ADR-0011).
+   * Ends every session after a credential change, then opens one for the
+   * caller: this route never sees their refresh cookie (ADR-0011). The
+   * cookie goes on `req.res`, which keeps Nest's normal reply (no `@Res`).
    */
-  // Express hangs the response on `req.res`: setting the cookie there keeps
-  // Nest's normal reply (no `@Res`) and the handler within its parameter budget.
   private async restartSessions(userId: number, req: Request) {
     await this.refreshTokens.revokeAllForUser(userId);
     const issued = await this.refreshTokens.issue(userId);

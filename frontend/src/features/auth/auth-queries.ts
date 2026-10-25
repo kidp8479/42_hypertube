@@ -22,8 +22,7 @@ function retryBootstrap(failureCount: number, error: unknown) {
  * rejects once the retries on a transient failure run out.
  *
  * A retry after the refresh succeeded reuses its token instead of rotating
- * the cookie again. Run through `queryClient.query` for the retries and so the
- * profile lands in the `['me']` cache entry the login also seeds.
+ * the cookie again. Run through `queryClient.query` for its retries.
  */
 export function restoreSession(): Promise<User | null> {
   return queryClient.query({
