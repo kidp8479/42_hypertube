@@ -306,6 +306,28 @@ flowchart TD
 - The caller's own cookie never reaches `/users` (it is scoped to the auth
   routes), hence "revoke all, then issue one" rather than "all but this one".
 
+### The profile page, frontend side (HYP-87)
+
+`/profile` splits the edit in two forms, so only the email and the password
+ask for the current password. Each sends only what changed.
+
+```mermaid
+flowchart LR
+    I["Information form<br/>username, names, picture"] --> PATCH["PATCH /users/:id<br/>(a mutation: a 401 reaches<br/>the session-expired net)"]
+    C["Email and password form<br/>+ currentPassword"] --> PATCH
+    PATCH -- "200" --> U["updateUser: the header follows"]
+    PATCH -- "409" --> T["username or email taken"]
+    PATCH -- "403" --> W["current password is wrong"]
+    PATCH -- "400 (credentials form)" --> N["account has no password yet"]
+```
+
+- An emptied picture is sent as `null`, which removes it.
+- `user-updated` only applies while signed in: a save that answers after a
+  logout does not sign the user back in.
+- `/users/:id` shows another user's username and picture. One's own id goes
+  to `/profile`, since the API answers the owner with the email; a 400 or a
+  404 is the 404 page.
+
 ## 10. Login rate limits (HYP-94)
 
 Usernames are listed to every signed-in user (`GET /users`) and are login

@@ -18,6 +18,7 @@ flowchart TB
     Main --> Public["/login, /register, /oauth/callback"]
     Main --> Guard["RequireAuth<br/>loading message while the session resolves"]
     Guard --> Home["/ (library, HYP-13)"]
+    Guard --> Profile["/profile, /users/:id (HYP-87)"]
     Main --> NotFound["any other address: 404 page (HYP-66)"]
 ```
 
@@ -25,8 +26,9 @@ flowchart TB
 
 The header reads the session from `AuthContext`. Signed out (or while the
 session is still loading) it holds the brand and the language picker; signed
-in it adds the account, the one-click logout and a row of section links, so
-each is one click away from any page.
+in it adds the account (a link to `/profile`), the one-click logout and a row
+of section links (Library, My profile), so each is one click away from any
+page.
 
 ```mermaid
 flowchart LR
