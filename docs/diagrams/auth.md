@@ -89,10 +89,10 @@ stateDiagram-v2
     authenticated --> anonymous: session-expired<br/>(a 401 the refresh could not save)
 ```
 
-`RequireAuth` renders nothing while `loading`, its children when
-`authenticated`, and redirects to `/login` when `anonymous`. The bootstrap
-events only apply from `loading`: a startup check that settles after a login
-is dropped.
+`RequireAuth` shows a loading message while `loading` (only after 0.4 s,
+so a fast answer never flashes it), its children when `authenticated`, and
+redirects to `/login` when `anonymous`. The bootstrap events only apply from
+`loading`: a startup check that settles after a login is dropped.
 
 ## 3. OAuth handshake (HYP-11, HYP-53, HYP-57)
 
