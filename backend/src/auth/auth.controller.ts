@@ -85,28 +85,32 @@ export class AuthController {
    * Answers 200. Public, because the cookie is the credential: the access
    * token it replaces is usually expired by now.
    *
-   * @throws {UnauthorizedException} 401 with no cookie, or for a token that is
-   * unknown, expired, revoked or already rotated (which also ends the whole
-   * session). The dead cookie is cleared either way.
+   * With no cookie at all it answers 204 and no body: there is no session to
+   * renew, which is the normal state of a signed-out visitor. The SPA asks on
+   * every load, and a 401 there would put a red network line in every
+   * anonymous visitor's console. The response is written by hand because a
+   * passthrough response always gets the route's single `@HttpCode`.
+   *
+   * @throws {UnauthorizedException} 401 for a token that is unknown, expired,
+   * revoked or already rotated (which also ends the whole session). The dead
+   * cookie is cleared.
    */
-  // Higher than login: the SPA refreshes on load, on a 401 and once per
-  // access-token lifetime, but it is no guessing target (256 random bits).
+  // Higher than login: the SPA refreshes on every load and on a 401, but it is
+  // no guessing target (256 random bits).
   @Public()
   @Throttle({ default: { limit: scaledThrottleLimit(20), ttl: 60_000 } })
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async refresh(@Req() req: Request, @Res() res: Response): Promise<void> {
     const secret = readRefreshCookie(req);
     if (!secret) {
-      throw new UnauthorizedException();
+      res.status(HttpStatus.NO_CONTENT).end();
+      return;
     }
     try {
       const next = await this.refreshTokens.rotate(secret);
       setRefreshCookie(req, res, next);
-      return await this.authService.loginById(next.userId);
+      const tokens = await this.authService.loginById(next.userId);
+      res.status(HttpStatus.OK).json(tokens);
     } catch (error) {
       clearRefreshCookie(req, res);
       throw error;

@@ -45,7 +45,8 @@ session on the server.
   nothing to revoke.
 - `POST /auth/login` and `POST /auth/oauth/exchange` open the session and still
   return the access token in the body, so the current SPA keeps working.
-- Every failure is the same 401. `/auth/refresh` is throttled (20 per minute).
+- Every rejected cookie is the same 401; no cookie at all is a 204 (amendment
+  below). `/auth/refresh` is throttled (20 per minute).
   Rows expired for over a day are deleted as tokens are issued: no scheduler.
 
 ## Rejected
@@ -62,8 +63,18 @@ access-token ids (a lookup per request for a 15 minute window).
   `docs/defense/known-limitations.md`.
 - A stateful table now sits behind login, touched at login, refresh and logout,
   never on an ordinary request.
-- Until HYP-78 the SPA ignores the cookie: the access token stays in
-  `localStorage` with no refresh. Its logout call already revokes the session,
-  because the browser sends the cookie with it.
+- The SPA keeps the access token in memory and refreshes on load and on a 401
+  (HYP-78, `docs/diagrams/auth.md` section 8).
 - A film must outlive the access token: the player will use its own short-lived
   signed stream token (HYP-14), not the JWT.
+
+## Amendment 2026-10-25: no cookie is a 204, not a 401 (HYP-78)
+
+The SPA keeps its access token in memory, so it calls `POST /auth/refresh` on
+every load to find out whether there is a session. For a signed-out visitor
+there is no cookie, and a 401 there would print a red network line in the
+browser console on every anonymous visit (the defense requires a clean
+console). With no cookie at all the route now answers **204 with no body**: no
+session to renew is the normal state, not a failure. A cookie that is sent but
+not accepted (unknown, expired, revoked, reused) still answers 401 and is
+cleared.

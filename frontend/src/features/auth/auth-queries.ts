@@ -1,12 +1,13 @@
-// TanStack Query hook wrapping the /users/me identity check.
-import { useQuery } from '@tanstack/react-query';
-import { ApiError, apiFetch } from '../../lib/api';
+// The startup identity check: restores the session from the refresh cookie
+// and loads the `/users/me` profile into the query cache.
+import { ApiError, apiFetch, refreshAccessToken } from '../../lib/api';
+import { queryClient } from '../../lib/query-client';
 import { getAuthToken } from '../../lib/token';
 import type { User } from './auth-types';
 
 const MAX_BOOTSTRAP_RETRIES = 2;
 
-// A 4xx (a 401 on an expired token above all) is a real answer - retrying it
+// A 4xx (a 401 on a dead session above all) is a real answer - retrying it
 // only delays the redirect to /login. A network drop or a 5xx is transient
 // and worth a couple of retries so a cold backend doesn't look like a logout.
 function retryBootstrap(failureCount: number, error: unknown) {
@@ -15,23 +16,22 @@ function retryBootstrap(failureCount: number, error: unknown) {
 }
 
 /**
- * Bootstrap identity check: skipped entirely (`enabled: false`) when there's
- * no stored token, and retried only on a transient failure (network drop or
- * 5xx, see `retryBootstrap`).
+ * Bootstrap: on load the access token is gone (it lives in memory), so the
+ * refresh cookie trades for a new one, then `GET /users/me` loads the
+ * profile. Resolves to `null` when there is no session to restore, and
+ * rejects once the retries on a transient failure run out.
  *
- * Fetched once, on load. After that AuthProvider owns the identity - it seeds
- * this cache entry on login, clears it on logout, and the global 401 net
- * covers expiry - so every background refetch is disabled; otherwise the hook
- * would re-hit `/users/me` on every window focus and remount.
+ * A retry after the refresh succeeded reuses its token instead of rotating
+ * the cookie again. Run through `queryClient.query` for the retries and so the
+ * profile lands in the `['me']` cache entry the login also seeds.
  */
-export function useMeQuery() {
-  return useQuery({
+export function restoreSession(): Promise<User | null> {
+  return queryClient.query({
     queryKey: ['me'],
-    queryFn: () => apiFetch<User>('/users/me'),
-    enabled: Boolean(getAuthToken()),
+    queryFn: async () => {
+      const token = getAuthToken() ?? (await refreshAccessToken());
+      return token ? ((await apiFetch<User>('/users/me')) ?? null) : null;
+    },
     retry: retryBootstrap,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
   });
 }

@@ -1,26 +1,37 @@
-// Spec for AuthProvider: bootstrap from a stored token, login (password and
-// OAuth code) with token rollback on failure, logout, and the 401 safety net.
+// Spec for AuthProvider: bootstrap from the refresh cookie, login (password
+// and OAuth code) with token rollback on failure, logout, and the 401 safety
+// net, including a late bootstrap or 401 that must not end a newer session.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 // The singleton client, on purpose: the 401 -> logout net lives on its cache
 // handler, so a fresh per-test client could not exercise it.
 import { queryClient } from '../../lib/query-client';
 import { ApiError } from '../../lib/api';
-import { getAuthToken, setAuthToken } from '../../lib/token';
+import { getAuthToken, removeAuthToken, setAuthToken } from '../../lib/token';
 import { fakeUser } from '../../test/fixtures';
 import { AuthProvider } from './auth-provider';
 import { useAuth } from './auth-context';
 
-// Replace only `apiFetch`; keep the real `ApiError` class so `instanceof`
-// checks in the query cache handler still match.
+// Replace only `apiFetch` and the refresh; keep the real `ApiError` class so
+// `instanceof` checks in the query cache handler still match.
 vi.mock('../../lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/api')>()),
   apiFetch: vi.fn(),
+  refreshAccessToken: vi.fn(),
 }));
-const { apiFetch } = await import('../../lib/api');
+const { apiFetch, refreshAccessToken } = await import('../../lib/api');
 const apiFetchMock = vi.mocked(apiFetch);
+const refreshMock = vi.mocked(refreshAccessToken);
+
+/** The bootstrap refresh restores a session: the token is set, as the real one does. */
+function refreshRestores(token: string) {
+  refreshMock.mockImplementationOnce(() => {
+    setAuthToken(token);
+    return Promise.resolve(token);
+  });
+}
 
 function Probe() {
   const { state, login, loginWithOAuthCode, logout } = useAuth();
@@ -49,6 +60,18 @@ function Probe() {
   );
 }
 
+/** A query that fails with a 401, as one does once `apiFetch` gave up renewing. */
+async function surfaceUnauthorized() {
+  await act(() =>
+    queryClient
+      .query({
+        queryKey: ['protected'],
+        queryFn: () => Promise.reject(new ApiError(401)),
+      })
+      .catch(() => undefined),
+  );
+}
+
 function renderProvider() {
   return {
     user: userEvent.setup(),
@@ -64,6 +87,9 @@ function renderProvider() {
 
 beforeEach(() => {
   apiFetchMock.mockReset();
+  refreshMock.mockReset();
+  // No refresh cookie unless a test says otherwise.
+  refreshMock.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -71,17 +97,18 @@ afterEach(() => {
 });
 
 describe('AuthProvider', () => {
-  it('settles to anonymous when no token is stored', async () => {
+  it('settles to anonymous when the refresh finds no session', async () => {
     renderProvider();
 
     await waitFor(() =>
       expect(screen.getByTestId('status')).toHaveTextContent('anonymous'),
     );
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
-  it('bootstraps to authenticated when a stored token resolves /users/me', async () => {
-    setAuthToken('stored-token');
-    apiFetchMock.mockResolvedValueOnce(fakeUser);
+  it('bootstraps to authenticated when the refresh restores a session', async () => {
+    refreshRestores('restored-token');
+    apiFetchMock.mockResolvedValueOnce(fakeUser); // GET /users/me
 
     renderProvider();
 
@@ -89,6 +116,31 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
     );
     expect(screen.getByTestId('user')).toHaveTextContent('ada');
+    expect(apiFetchMock).toHaveBeenCalledWith('/users/me');
+  });
+
+  it('stays signed in when a login beats a late bootstrap', async () => {
+    let finishRefresh: (token: string | null) => void = () => {};
+    refreshMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishRefresh = resolve;
+      }),
+    );
+    apiFetchMock
+      .mockResolvedValueOnce({ access_token: 'fresh-token' }) // POST /auth/login
+      .mockResolvedValueOnce(fakeUser); // GET /users/me
+
+    const { user } = renderProvider();
+    await user.click(screen.getByRole('button', { name: 'login' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+
+    finishRefresh(null);
+
+    await waitFor(() => expect(refreshMock).toHaveBeenCalled());
+    expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
+    expect(getAuthToken()).toBe('fresh-token');
   });
 
   it('login stores the token and moves to authenticated', async () => {
@@ -161,16 +213,32 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
   });
 
-  it('clears an expired token and goes anonymous when /users/me 401s on load', async () => {
-    setAuthToken('stale-token');
-    apiFetchMock.mockRejectedValueOnce(new ApiError(401));
-
+  it('a 401 that renewing could not save ends the session', async () => {
+    refreshRestores('live-token');
+    apiFetchMock.mockResolvedValueOnce(fakeUser);
     renderProvider();
-
     await waitFor(() =>
-      expect(screen.getByTestId('status')).toHaveTextContent('anonymous'),
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
     );
-    await waitFor(() => expect(getAuthToken()).toBeNull());
+
+    // What a failed refresh leaves behind: no token, then the 401 surfaces.
+    removeAuthToken();
+    await surfaceUnauthorized();
+
+    expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
+  });
+
+  it('a 401 answered to a replaced token leaves the session alone', async () => {
+    refreshRestores('live-token');
+    apiFetchMock.mockResolvedValueOnce(fakeUser);
+    renderProvider();
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('authenticated'),
+    );
+
+    await surfaceUnauthorized();
+
+    expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
   });
 
   it('logout drops the token, clears the query cache and goes anonymous', async () => {
@@ -190,15 +258,11 @@ describe('AuthProvider', () => {
     expect(queryClient.getQueryData(['stale'])).toBeUndefined();
   });
 
-  it('logout tells the backend before it forgets the token', async () => {
+  it('logout tells the backend', async () => {
     setAuthToken('live-token');
-    // apiFetch reads the stored token when it is called, so the token must
-    // still be there at that instant or the request would go out anonymous.
-    let tokenWhenCalled: string | null = null;
-    apiFetchMock.mockResolvedValueOnce(fakeUser).mockImplementationOnce(() => {
-      tokenWhenCalled = getAuthToken();
-      return Promise.resolve(undefined);
-    });
+    apiFetchMock
+      .mockResolvedValueOnce(fakeUser) // GET /users/me
+      .mockResolvedValueOnce(undefined); // POST /auth/logout
 
     const { user } = renderProvider();
     await waitFor(() =>
@@ -207,10 +271,11 @@ describe('AuthProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'logout' }));
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/auth/logout', {
-      method: 'POST',
-    });
-    expect(tokenWhenCalled).toBe('live-token');
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith('/auth/logout', {
+        method: 'POST',
+      }),
+    );
   });
 
   it('logout still signs out locally when the backend call fails', async () => {

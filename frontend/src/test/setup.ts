@@ -1,7 +1,9 @@
-// Vitest setup: jest-dom matchers, strict i18n keys and a clean localStorage.
+// Vitest setup: jest-dom matchers, strict i18n keys, and a clean token and
+// localStorage between tests.
 import '@testing-library/jest-dom/vitest';
 import { afterEach } from 'vitest';
 import i18n from '../lib/i18n';
+import { removeAuthToken } from '../lib/token';
 
 // A key that resolves to nothing would render the raw key in the UI and, in
 // the browser, log a warning (the defense requires a clean console). Make it
@@ -13,8 +15,9 @@ i18n.options.missingKeyHandler = (languages, namespace, key) => {
   );
 };
 
-// jsdom keeps localStorage across tests in a file; the auth layer stores a
-// token there, so wipe it between tests to stop one test leaking into the next.
+// The token module and jsdom's localStorage (the UI language) both outlive a
+// test within a file: reset them so one test cannot leak into the next.
 afterEach(() => {
+  removeAuthToken();
   localStorage.clear();
 });

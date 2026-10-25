@@ -1,6 +1,6 @@
-// Auth actions with real side effects (network + localStorage/cache),
+// Auth actions with real side effects (network, token, query cache),
 // kept out of authReducer so it stays a pure state transition.
-import { ApiError, apiFetch } from '../../lib/api';
+import { ApiError, apiFetch, refreshSettled } from '../../lib/api';
 import { setAuthToken, removeAuthToken } from '../../lib/token';
 import { queryClient } from '../../lib/query-client';
 import type { SupportedLanguage } from '../../lib/languages';
@@ -10,8 +10,13 @@ interface LoginResponse {
   access_token: string;
 }
 
-/** POSTs to an endpoint that answers `{ access_token }` and stores the token. */
+/**
+ * POSTs to an endpoint that answers `{ access_token }` and stores the token.
+ * Waits for an in-flight refresh first (see `refreshSettled`), so a startup
+ * refresh that fails cannot clear the cookie this sign-in sets.
+ */
 async function requestToken(path: string, body: object): Promise<void> {
+  await refreshSettled();
   const response = await apiFetch<LoginResponse>(path, {
     method: 'POST',
     body: JSON.stringify(body),
@@ -64,10 +69,11 @@ export async function exchangeOAuthCode(code: string): Promise<void> {
 /**
  * Tells the backend the user is signing out (`POST /auth/logout`, ADR-0011):
  * it revokes the session the refresh cookie belongs to and clears the cookie.
- * The local sign-out is {@link logoutLocal}, called after this one: `apiFetch`
- * reads the token synchronously, and `logoutLocal` removes it.
+ * The cookie is the only credential it needs. Sent once any refresh in
+ * flight has settled, so it revokes the cookie that refresh may rotate in.
  */
 export async function logoutRequest(): Promise<void> {
+  await refreshSettled();
   await apiFetch('/auth/logout', { method: 'POST' });
 }
 

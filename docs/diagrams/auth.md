@@ -28,11 +28,11 @@ flowchart TD
     oCb -- "302 ?code= (or ?error=)" --> cbpage["SPA - /oauth/callback page"]
     cbpage --> exch["API - POST /auth/oauth/exchange"]
 
-    postLogin -- "access_token" --> token[("SPA - token in localStorage")]
+    postLogin -- "access_token" --> token[("SPA - token in memory")]
     exch -- "access_token" --> token
     token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>+ ownership check on writes"]
     jwt --> routes["every other route"]
-    token -. "expired" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
+    token -. "page load, or a 401" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
     refresh -- "access_token" --> token
 
     out["SPA - logout button"] --> postLogout["API - POST /auth/logout<br/>revokes the session, 204"]
@@ -51,7 +51,8 @@ Blue: the SPA (`frontend/src/features/auth`). Violet: the backend
 
 What the overview hides, each covered below or in the ADRs: rate limits
 (`security-checklist.md` section 7), the uniform 401 on login, the 403 on
-another user's row, the SPA's session states and `RequireAuth` (section 2).
+another user's row, the SPA's session states and `RequireAuth` (section 2),
+how the SPA keeps the session across a reload and a 401 (section 8).
 
 ## 1. Register, frontend side (HYP-46)
 
@@ -80,15 +81,17 @@ cause (e.g. a "session expired" notice).
 ```mermaid
 stateDiagram-v2
     [*] --> loading
-    loading --> authenticated: bootstrap-success<br/>(token + GET /users/me ok)
-    loading --> anonymous: bootstrap-anonymous<br/>(no token, or /users/me 4xx)
+    loading --> authenticated: bootstrap-success<br/>(POST /auth/refresh + GET /users/me ok)
+    loading --> anonymous: bootstrap-anonymous<br/>(no session cookie, or a 4xx)
     anonymous --> authenticated: login-success<br/>(password login or OAuth code exchange)
     authenticated --> anonymous: logout<br/>(POST /auth/logout best effort,<br/>token + query cache cleared)
-    authenticated --> anonymous: session-expired<br/>(any 401 mid-session)
+    authenticated --> anonymous: session-expired<br/>(a 401 the refresh could not save)
 ```
 
 `RequireAuth` renders nothing while `loading`, its children when
-`authenticated`, and redirects to `/login` when `anonymous`.
+`authenticated`, and redirects to `/login` when `anonymous`. The bootstrap
+events only apply from `loading`: a startup check that settles after a login
+is dropped.
 
 ## 3. OAuth handshake (HYP-11, HYP-53, HYP-57)
 
@@ -180,7 +183,9 @@ a new access token **and the next cookie**: each refresh token works once.
 
 ```mermaid
 flowchart TD
-    A["POST /auth/refresh<br/>(cookie only, no Bearer)"] --> B{"token known, alive,<br/>not revoked?"}
+    A["POST /auth/refresh<br/>(cookie only, no Bearer)"] --> N{"cookie sent?"}
+    N -- no --> Z["204, no body<br/>(no session: a signed-out visitor)"]
+    N -- yes --> B{"token known, alive,<br/>not revoked?"}
     B -- no --> X["401 + clear the cookie"]
     B -- yes --> C{"already used?"}
     C -- "no" --> OK["mark it used, issue the next one<br/>200 + new access token + new cookie"]
@@ -189,8 +194,7 @@ flowchart TD
 ```
 
 Only the token's SHA-256 is stored, grouped by session (`familyId`). The SPA
-keeps the access token in `localStorage` and does not refresh yet (HYP-78): the
-cookie is set and read by the logout only.
+side is section 8.
 
 ## 7. Logout (HYP-35, HYP-77)
 
@@ -217,3 +221,43 @@ sequenceDiagram
 An access token copied before logout still works until it expires (15 minutes),
 but nothing can renew it. Listed in
 [`known-limitations.md`](../defense/known-limitations.md).
+
+## 8. The SPA keeps the session (HYP-78)
+
+The access token lives in a module variable (`lib/token.ts`), never in
+`localStorage`, so a script cannot read it and a reload loses it. The refresh
+cookie brings it back: on load, `restoreSession` (`auth-queries.ts`) calls
+`POST /auth/refresh` then `GET /users/me`. Mid-session, `apiFetch` answers a
+401 by refreshing once and retrying the request.
+
+```mermaid
+sequenceDiagram
+    participant C as Caller (query, page)
+    participant F as apiFetch
+    participant A as Backend
+    C->>F: GET /users/me
+    F->>A: Bearer (expired)
+    A-->>F: 401
+    alt token changed since the request left (a login, a refresh)
+        F->>A: retry with the current token
+    else same token
+        F->>A: POST /auth/refresh (shared by every 401 in flight)
+        A-->>F: 200 new access token + next cookie
+        F->>A: retry with the new token
+    end
+    A-->>F: 200
+    F-->>C: data
+    Note over F,C: refresh 401: the token is dropped, the 401 reaches the<br/>query cache net, AuthProvider dispatches session-expired
+```
+
+- **One refresh at a time.** Parallel 401s, and the two bootstrap runs of
+  StrictMode in dev, share the refresh in flight: each rotation consumes the
+  cookie, so a second one would present a used token.
+- **A newer token wins.** A refresh that lands after a login or a logout does
+  not overwrite what they set. The 401 net ends the session only when no token
+  is left, so a 401 answered to a replaced token leaves the new session alone.
+- **Login and logout wait for the refresh in flight.** A failed refresh clears
+  the cookie; landing after a login it would wipe the new session's cookie,
+  and a logout must revoke the cookie the refresh rotates in.
+- **The auth routes are never retried**: their 401 is the answer (bad
+  credentials, a dead cookie).
