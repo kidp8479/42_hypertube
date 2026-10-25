@@ -104,13 +104,17 @@ export class UsersService {
       .getOne();
   }
 
-  // Caps the number of sequential "is it taken?" queries a single OAuth
-  // signup can trigger - past this, a pre-seeded run of base/base1/base2/...
-  // would otherwise make this loop run indefinitely.
+  /**
+   * Caps the number of sequential "is it taken?" queries a single OAuth
+   * signup can trigger - past this, a pre-seeded run of base/base1/base2/...
+   * would otherwise make this loop run indefinitely.
+   */
   private static readonly MAX_USERNAME_ATTEMPTS = 50;
 
-  // Mirror the `User` column lengths: an OAuth profile bypasses the DTO
-  // limits, and a value past the column makes Postgres reject the insert.
+  /**
+   * Mirror the `User` column lengths: an OAuth profile bypasses the DTO
+   * limits, and a value past the column makes Postgres reject the insert.
+   */
   private static readonly USERNAME_MAX_LENGTH = 30;
   private static readonly NAME_MAX_LENGTH = 100;
 

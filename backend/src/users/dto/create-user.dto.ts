@@ -16,8 +16,8 @@ import { PreferredLanguage } from '../entities/user.entity';
  * Payload accepted at registration (`POST /users`).
  *
  * Server-managed columns (`id`, `createdAt`, `updatedAt`) are never part
- * of the input. `profilePicture` is not part of it either: it will come in
- * as a file upload, a separate flow that does not exist yet.
+ * of the input. `profilePicture` is not part of it either: it is set
+ * afterwards through `PATCH /users/:id` (`UpdateUserDto`).
  */
 export class CreateUserDto {
   @NormalizeEmail()

@@ -32,7 +32,7 @@ import type { Request, Response } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
- * Authentication routes: email/password login, the 42 and GitHub OAuth
+ * Authentication routes: username-or-email + password login, the 42 and GitHub OAuth
  * handshakes, the session routes (refresh, logout) - all public, since each
  * proves itself with credentials or the refresh cookie rather than a bearer
  * token. All credential logic lives in {@link AuthService}, the refresh-token

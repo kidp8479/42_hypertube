@@ -38,6 +38,7 @@ export class UsersController {
     private readonly refreshTokens: RefreshTokenService,
   ) {}
 
+  /** Registers an account (public). The response never carries the password hash. */
   // Registration is rare per real user; cap it hard to blunt sign-up
   // spam and (later) reset-email flooding from a single source.
   @Public()
@@ -47,26 +48,30 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  // Every user, as id and username only (subject III.4).
+  /** Every user, as id and username only (subject III.4). */
   @Get()
   async findAll() {
     const users = await this.usersService.findAll();
     return users.map((user) => new UserSummaryDto(user));
   }
 
-  // The caller's own profile. Declared before the ':id' route on purpose:
-  // Nest matches routes in declaration order, so with ':id' first a request
-  // to /users/me would bind ":id" = "me" and ParseIdPipe would 400 before
-  // this handler ran.
+  /**
+   * The caller's own profile. Declared before the ':id' route on purpose:
+   * Nest matches routes in declaration order, so with ':id' first a request
+   * to /users/me would bind ":id" = "me" and ParseIdPipe would 400 before
+   * this handler ran.
+   */
   @Get('me')
   findMe(@CurrentUser() user: AuthUser) {
     return this.usersService.findOne(user.id);
   }
 
-  // Any profile can be read, but only the owner sees all of it: someone
-  // else gets the public fields, never the email (subject III.1, III.4).
-  // ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
-  // service runs, so no query is ever built from it.
+  /**
+   * Any profile can be read, but only the owner sees all of it: someone
+   * else gets the public fields, never the email (subject III.1, III.4).
+   * ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
+   * service runs, so no query is ever built from it.
+   */
   @Get(':id')
   async findOne(
     @Param('id', ParseIdPipe) id: number,
@@ -76,8 +81,16 @@ export class UsersController {
     return user.id === id ? found : new PublicUserDto(found);
   }
 
-  // A user may only edit or delete their own profile: 403 otherwise, per
-  // the subject.
+  /**
+   * Edits one's own profile: the registration fields plus `profilePicture`.
+   * An email or password change needs `currentPassword`, then ends every
+   * session and opens a new one for the caller (`restartSessions`).
+   *
+   * @throws {ForbiddenException} 403 on another user's id (the subject's
+   * rule), or a wrong `currentPassword`.
+   * @throws {BadRequestException} 400 when `currentPassword` is missing, or
+   * the account has no password to confirm with.
+   */
   // Checks a password when the email or the password changes, so it is
   // throttled like a login attempt, with room for ordinary profile edits.
   @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
@@ -99,6 +112,12 @@ export class UsersController {
     return updated;
   }
 
+  /**
+   * Deletes one's own account.
+   *
+   * @throws {ForbiddenException} 403 on another user's id.
+   * @throws {NotFoundException} 404 when the id matches no row.
+   */
   @Delete(':id')
   remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     if (user.id !== id) {

@@ -12,9 +12,11 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler;
 }
 
-// The 401 net has to sit on both caches: `QueryCache.onError` never sees a
-// mutation's failure, so a 401 from `useMutation` (register, comments, ...)
-// would otherwise slip past.
+/**
+ * The 401 net has to sit on both caches: `QueryCache.onError` never sees a
+ * mutation's failure, so a 401 from `useMutation` (register, comments, ...)
+ * would otherwise slip past.
+ */
 function routeUnauthorized(error: unknown) {
   if (error instanceof ApiError && error.status === UNAUTHORIZED) {
     onUnauthorized?.();

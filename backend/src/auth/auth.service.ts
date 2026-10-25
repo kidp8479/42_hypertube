@@ -29,7 +29,7 @@ import { RefreshTokenService } from './refresh-token.service';
 export class AuthService implements OnModuleInit {
   /**
    * A valid argon2id hash of a throwaway value, used only to spend the
-   * same CPU time on a login attempt for an email that has no account as
+   * same CPU time on a login attempt for an identifier that matches no account as
    * for one that does (see `validateUser`). Generated at startup so it
    * always matches the current hashing parameters.
    */
@@ -126,7 +126,7 @@ export class AuthService implements OnModuleInit {
    * is linked as is: a provider already vouched for that email.
    *
    * `profile.email` is normalized here rather than trusted as-is: unlike
-   * `LoginDto`/`CreateUserDto`, it never passes through the validation
+   * `CreateUserDto`, it never passes through the validation
    * pipe's `@NormalizeEmail`, so a provider returning a different casing
    * than the one a local account was registered with would otherwise
    * dodge the case-insensitive match in case 2 and create a duplicate

@@ -1,5 +1,6 @@
 // Every app-wide provider in one place, in the order the app needs them:
-// the Query client outermost (AuthProvider and its bootstrap query depend on it),
+// the Query client outermost (every page's queries need it, and AuthProvider's
+// bootstrap runs on the same client),
 // then auth state, then the router.
 import type { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';

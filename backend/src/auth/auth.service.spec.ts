@@ -108,7 +108,7 @@ describe('AuthService', () => {
     }).compile();
 
     // `.compile()` does not run lifecycle hooks; `onModuleInit` seeds the
-    // dummy hash that the "unknown email" path relies on.
+    // dummy hash that the unknown-account path relies on.
     await module.init();
 
     service = module.get<AuthService>(AuthService);

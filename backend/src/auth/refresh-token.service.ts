@@ -1,3 +1,5 @@
+// Refresh-token store and rotation (ADR-0011), shared by AuthController and
+// UsersController through RefreshTokenModule.
 import { randomUUID } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
