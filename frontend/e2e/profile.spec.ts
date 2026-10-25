@@ -2,7 +2,7 @@
 // reload, and another user's profile shows no email.
 import { test, expect } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
-import { signUpAndSignIn } from './sign-up';
+import { createAccount, signUpAndSignIn } from './sign-up';
 
 test('an edited first name is kept after a reload', async ({ page }) => {
   const issues = trackConsoleIssues(page);
@@ -22,27 +22,14 @@ test("another user's profile shows the username, never the email", async ({
   page,
 }) => {
   const issues = trackConsoleIssues(page);
-  const suffix = `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
-  const created = await page.request.post('/api/users', {
-    data: {
-      email: `e2e-other-${suffix}@example.com`,
-      username: `e2eo${suffix}`,
-      firstName: 'Other',
-      lastName: 'User',
-      password: 'correct horse battery',
-    },
-  });
-  expect(created.ok()).toBe(true);
-  const { id } = (await created.json()) as { id: number };
+  const other = await createAccount(page, 'o');
   await signUpAndSignIn(page);
 
-  await page.goto(`/users/${id}`);
+  await page.goto(`/users/${other.id}`);
 
   await expect(
-    page.getByRole('heading', { level: 1, name: `e2eo${suffix}` }),
+    page.getByRole('heading', { level: 1, name: other.username }),
   ).toBeVisible();
-  await expect(page.getByText(`e2e-other-${suffix}@example.com`)).toHaveCount(
-    0,
-  );
+  await expect(page.getByText(other.email)).toHaveCount(0);
   expect(issues).toEqual([]);
 });
