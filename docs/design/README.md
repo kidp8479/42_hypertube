@@ -14,8 +14,9 @@ one `h1`, a `header` and a `main` per page) and the meaning of each colour:
 - mint: the brand, "have" pieces, success and secondary accent
 - alert red: errors only
 
-The React app is the source of truth once the tokens land in
-`frontend/src`; this file is not kept in sync with it.
+The React app is the source of truth: the tokens live in
+`frontend/src/styles/tokens.css` as the Tailwind theme (ADR-0012), and this
+file is not kept in sync with it.
 
 ## Screens
 

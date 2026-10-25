@@ -299,8 +299,10 @@ Backend (`backend/src`): `<kebab-case-name>.<role>.ts`.
 
 Frontend (`frontend/src`): kebab-case, `<feature>-<descriptor>` inside a
 feature folder, see
-[ADR-0006](docs/adr/0006-frontend-architecture.md). Tests are `.test.ts(x)`
-and styles `.module.css`. `App.tsx` and `main.tsx` keep the Vite scaffold
+[ADR-0006](docs/adr/0006-frontend-architecture.md). Tests are `.test.ts(x)`;
+styles are Tailwind classes in the component
+([ADR-0012](docs/adr/0012-tailwind-css-v4-on-top-of-the-design-tokens.md)),
+and a class list shared by several components is a `<name>-classes.ts`. `App.tsx` and `main.tsx` keep the Vite scaffold
 names.
 
 ## API conventions (NestJS)

@@ -29,6 +29,7 @@ might ask us to justify.
 | [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted |
 | [0010](0010-typeorm-migrations-build-the-schema.md) | TypeORM migrations build the schema, `synchronize` is off | accepted |
 | [0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md) | Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session | accepted (backend; SPA side HYP-78) |
+| [0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md) | Tailwind CSS v4 on top of the design tokens | accepted |
 
 ## Planned
 
