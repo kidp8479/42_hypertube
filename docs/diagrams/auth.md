@@ -325,8 +325,8 @@ flowchart LR
 - `user-updated` only applies while signed in: a save that answers after a
   logout does not sign the user back in.
 - `/users/:id` shows another user's username and picture. One's own id goes
-  to `/profile`, since the API answers the owner with the email; a 400 or a
-  404 is the 404 page.
+  to `/profile` (and so does `me`), since the API answers the owner with the
+  email; a 400 or a 404 is the 404 page.
 
 ## 10. Login rate limits (HYP-94)
 

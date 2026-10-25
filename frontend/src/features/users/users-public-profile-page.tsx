@@ -11,15 +11,16 @@ import { UserAvatar } from './users-avatar';
 
 /**
  * Shows another user's username and picture, never their email (subject
- * III.1, III.4). One's own id goes to `/profile`, since the API would answer
- * it with the full profile. A malformed id (400) or an unknown one (404) is
+ * III.1, III.4). One's own id (or `me`) goes to `/profile`, since the API
+ * would answer it with the full profile. A malformed id (400) or an unknown one (404) is
  * the 404 page.
  */
 export function PublicProfilePage() {
   const { t } = useTranslation('users');
   const { id = '' } = useParams();
   const { state } = useAuth();
-  const isOwn = state.user !== null && String(state.user.id) === id;
+  const isOwn =
+    id === 'me' || (state.user !== null && String(state.user.id) === id);
   const profile = useQuery({
     queryKey: ['users', id],
     queryFn: () => fetchPublicUser(id),

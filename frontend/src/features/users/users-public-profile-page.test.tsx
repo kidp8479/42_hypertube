@@ -58,12 +58,15 @@ describe('PublicProfilePage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/users/2', expect.anything());
   });
 
-  it('sends one’s own id to /profile, without asking the API', () => {
-    const fetchMock = renderAt(`/users/${fakeUser.id}`);
+  it.each([String(fakeUser.id), 'me'])(
+    'sends one’s own id (%s) to /profile, without asking the API',
+    (id) => {
+      const fetchMock = renderAt(`/users/${id}`);
 
-    expect(screen.getByText('own profile page')).toBeInTheDocument();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+      expect(screen.getByText('own profile page')).toBeInTheDocument();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([400, 404])('shows the 404 page on a %i', async (status) => {
     renderAt('/users/abc', new Response(null, { status }));
