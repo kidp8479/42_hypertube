@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { apiFetch } from '../../lib/api';
-import { queryClient, setUnauthorizedHandler } from '../../lib/query-client';
+import { setUnauthorizedHandler } from '../../lib/query-client';
 import { getAuthToken, removeAuthToken } from '../../lib/token';
 import { AuthContext } from './auth-context';
 import { authReducer, initialState } from './auth-reducer';
@@ -37,13 +37,9 @@ async function fetchSignedInUser(): Promise<User> {
     if (!user) {
       throw new Error('Signed in but /users/me returned no profile');
     }
-    // The same cache entry the bootstrap fills, so a reader of ['me'] finds
-    // the profile whichever way the session started.
-    queryClient.setQueryData(['me'], user);
     return user;
   } catch (error) {
     removeAuthToken();
-    queryClient.removeQueries({ queryKey: ['me'] });
     throw error;
   }
 }

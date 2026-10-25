@@ -104,7 +104,6 @@ test.describe('session lifetime', () => {
     await expect(page).toHaveURL(/\/login$/);
     expect((await loggedOut).status()).toBe(204);
 
-    await page.reload();
     await page.goto('/');
 
     await expect(page).toHaveURL(/\/login$/);

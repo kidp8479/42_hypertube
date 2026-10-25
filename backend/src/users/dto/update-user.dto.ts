@@ -4,10 +4,7 @@ import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
 
 /**
- * Payload accepted when editing a profile (`PATCH /users/:id`): the
- * subject's username, email, password and profile picture URL, plus the
- * name and language fields. Every CreateUserDto field is optional, with the
- * same rules.
+ * Payload accepted when editing a profile (`PATCH /users/:id`).
  *
  * Changing the email or the password takes `currentPassword`, and an
  * account without a password cannot change either here

@@ -328,10 +328,10 @@ names.
 - Login/auth DTOs carry **no** password length or complexity rule beyond a
   size cap - the form must accept legacy credentials, and a policy hint only
   helps an attacker.
-- An "edit" DTO (`PartialType(OmitType(CreateDto, [...]))`) omits every
-  field that needs its own confirmed flow, not just makes them optional.
-  For `UpdateUserDto` that is `password` and `email` (login identifier +
-  reset channel) - each has a dedicated re-auth/verify endpoint.
+- An "edit" DTO is `PartialType(CreateDto)` plus its own fields. A field
+  that changes a credential (for `UpdateUserDto`, `email` and `password`)
+  is re-authenticated in the service (`currentPassword`), and the change
+  ends every other session.
 
 ### Database schema
 

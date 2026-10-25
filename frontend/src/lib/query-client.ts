@@ -1,9 +1,7 @@
 // TanStack Query config: the singleton client every query/mutation in the
 // app shares, plus the global 401 -> session-expired safety net.
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
-import { ApiError } from './api';
-
-const UNAUTHORIZED = 401;
+import { ApiError, UNAUTHORIZED } from './api';
 
 // Registrable indirection so this module never has to import AuthProvider
 // (which itself imports `queryClient`) - avoids a circular dependency.
@@ -14,9 +12,11 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler;
 }
 
-// The 401 net has to sit on both caches: `QueryCache.onError` never sees a
-// mutation's failure, so a 401 from `useMutation` (register, comments, ...)
-// would otherwise slip past.
+/**
+ * The 401 net has to sit on both caches: `QueryCache.onError` never sees a
+ * mutation's failure, so a 401 from `useMutation` (register, comments, ...)
+ * would otherwise slip past.
+ */
 function routeUnauthorized(error: unknown) {
   if (error instanceof ApiError && error.status === UNAUTHORIZED) {
     onUnauthorized?.();

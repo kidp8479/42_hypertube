@@ -29,11 +29,8 @@ export class User {
   email!: string;
 
   /**
-   * Whether an OAuth provider vouched for `email`: `true` for an account
-   * created or linked through a provider, `false` after a local
-   * registration or an email change, neither of which checks the address.
-   * Linking a provider to an unverified account hands it to the holder of
-   * the verified email (`AuthService.resolveOAuthUser`, ADR-0007).
+   * Whether an OAuth provider vouched for `email`: `false` after a local
+   * registration or an email change. See `AuthService.resolveOAuthUser`.
    */
   @Column({ default: false })
   emailVerified!: boolean;
@@ -64,7 +61,8 @@ export class User {
    *
    * `null` for an OAuth-only account (42, GitHub, ...) - nothing was
    * ever hashed because the user never set a password. `AuthService.
-   * validateUser` treats that case the same as an unknown email, so
+   * validateUser` treats that case the same as an unknown username or
+   * email, so
    * `POST /auth/login` can't be used to tell an OAuth-only account
    * apart from one that doesn't exist.
    *
@@ -76,8 +74,8 @@ export class User {
   password!: string | null;
 
   /**
-   * Avatar URL. Nullable until the file-upload flow lands: nothing sets
-   * it yet, so it stays `null` for every account.
+   * Avatar URL, https only, set through `PATCH /users/:id`; `null` until
+   * the user sets one.
    */
   // Explicit `type` because the `string | null` union erases the
   // reflected column type (TypeORM would otherwise see "Object").

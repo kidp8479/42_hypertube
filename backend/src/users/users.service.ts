@@ -16,7 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { ARGON2_OPTIONS } from '../auth/argon2.config';
 
 /** What a profile update did: the saved row, and whether the email or the password changed. */
-export interface ProfileUpdate {
+interface ProfileUpdate {
   user: User;
   credentialsChanged: boolean;
 }
@@ -104,13 +104,17 @@ export class UsersService {
       .getOne();
   }
 
-  // Caps the number of sequential "is it taken?" queries a single OAuth
-  // signup can trigger - past this, a pre-seeded run of base/base1/base2/...
-  // would otherwise make this loop run indefinitely.
+  /**
+   * Caps the number of sequential "is it taken?" queries a single OAuth
+   * signup can trigger - past this, a pre-seeded run of base/base1/base2/...
+   * would otherwise make this loop run indefinitely.
+   */
   private static readonly MAX_USERNAME_ATTEMPTS = 50;
 
-  // Mirror the `User` column lengths: an OAuth profile bypasses the DTO
-  // limits, and a value past the column makes Postgres reject the insert.
+  /**
+   * Mirror the `User` column lengths: an OAuth profile bypasses the DTO
+   * limits, and a value past the column makes Postgres reject the insert.
+   */
   private static readonly USERNAME_MAX_LENGTH = 30;
   private static readonly NAME_MAX_LENGTH = 100;
 
@@ -183,8 +187,7 @@ export class UsersService {
   }
 
   /**
-   * Hands an unverified account to the holder of its email: removes the
-   * password hash and marks the email verified (`AuthService.
+   * The user half of claiming an unverified account (`AuthService.
    * resolveOAuthUser`). A targeted `update` rather than `save`: `password`
    * is excluded from default selects, so a loaded entity would not carry it.
    */
@@ -229,13 +232,9 @@ export class UsersService {
   }
 
   /**
-   * Re-authentication for an email or password change: the account's
-   * current password must come with it, so a stolen access token cannot
-   * take the account over. An account without a password (OAuth-only, or
-   * just claimed by its email's owner) has nothing to confirm with, so it
-   * cannot change either here: it sets a password through the reset flow,
-   * which proves it owns the email. Otherwise an access token still alive
-   * after a claim could set a password on the claimed account.
+   * Re-authentication for an email or password change. An account without
+   * a password (OAuth-only, or just claimed) sets one through the reset
+   * flow instead: an access token still alive after a claim must not.
    *
    * @throws {BadRequestException} 400 when the account has no password, or
    * when `currentPassword` is missing.

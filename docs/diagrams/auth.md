@@ -155,8 +155,8 @@ for its verified owner (ADR-0007, amendment 2026-10-25).
 `auth-oauth-callback-page.tsx`: where section 3 hands the browser back to
 the SPA. The code is removed from the URL before it is exchanged, and only
 one exchange runs even under StrictMode's double effect. The exchange waits
-for the startup `/users/me` check: with a stale token in storage, its late
-401 would otherwise wipe the fresh token. A success goes
+for the startup bootstrap (section 8) to settle: a refresh that fails clears
+the cookie, and landing after the exchange it would wipe the new session's. A success goes
 through the same `login-success` event as a password login (section 2).
 
 ```mermaid
@@ -166,7 +166,7 @@ flowchart TD
     B -- "?error=email_unverified" --> EU["'Your GitHub account has no<br/>verified email address...'"]
     B -- "?error=failed, unknown reason,<br/>or neither code nor error" --> EF["'Sign-in failed. Please try again.'"]
     B -- "?code=C" --> S["navigate(replace) to /oauth/callback<br/>code stripped from the URL"]
-    S --> W["wait for the startup /users/me check<br/>(auth state leaves loading)"]
+    S --> W["wait for the startup bootstrap<br/>(auth state leaves loading)"]
     W --> X["loginWithOAuthCode(C)<br/>POST /auth/oauth/exchange, store the token,<br/>then GET /users/me"]
     X --> R{Outcome}
     R -- "401 (unknown / used / expired code)" --> EX["'This sign-in link has expired.'"]

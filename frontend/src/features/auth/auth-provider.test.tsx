@@ -33,6 +33,7 @@ function refreshRestores(token: string) {
   });
 }
 
+/** Shows the auth state and exposes login, OAuth login and logout as buttons, so a test drives AuthProvider like a page would. */
 function Probe() {
   const { state, login, loginWithOAuthCode, logout } = useAuth();
   // The real pages surface these rejections in their own state; the probe
@@ -138,7 +139,12 @@ describe('AuthProvider', () => {
 
     finishRefresh(null);
 
-    await waitFor(() => expect(refreshMock).toHaveBeenCalled());
+    // Wait until the bootstrap has really settled (no session), then let its
+    // dispatch run: only then can the reducer guard be seen at work.
+    await waitFor(() =>
+      expect(queryClient.getQueryState(['me'])?.status).toBe('success'),
+    );
+    await act(async () => {});
     expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
     expect(getAuthToken()).toBe('fresh-token');
   });
@@ -177,7 +183,7 @@ describe('AuthProvider', () => {
     await user.click(screen.getByRole('button', { name: 'login' }));
 
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(2));
-    // login() must not leave a token behind that a reload would pick up.
+    // login() must not leave a live token behind when it reports failure.
     expect(getAuthToken()).toBeNull();
     expect(screen.getByTestId('status')).toHaveTextContent('anonymous');
   });

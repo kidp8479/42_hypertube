@@ -32,7 +32,7 @@ import type { Request, Response } from 'express';
 import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
- * Authentication routes: email/password login, the 42 and GitHub OAuth
+ * Authentication routes: username-or-email + password login, the 42 and GitHub OAuth
  * handshakes, the session routes (refresh, logout) - all public, since each
  * proves itself with credentials or the refresh cookie rather than a bearer
  * token. All credential logic lives in {@link AuthService}, the refresh-token
@@ -85,11 +85,9 @@ export class AuthController {
    * Answers 200. Public, because the cookie is the credential: the access
    * token it replaces is usually expired by now.
    *
-   * With no cookie at all it answers 204 and no body: there is no session to
-   * renew, which is the normal state of a signed-out visitor. The SPA asks on
-   * every load, and a 401 there would put a red network line in every
-   * anonymous visitor's console. The response is written by hand because a
-   * passthrough response always gets the route's single `@HttpCode`.
+   * With no cookie it answers 204: a signed-out visitor, whom a 401 would
+   * give a red console line on every load (ADR-0011). Written by hand, since
+   * a passthrough response always gets the route's single `@HttpCode`.
    *
    * @throws {UnauthorizedException} 401 for a token that is unknown, expired,
    * revoked or already rotated (which also ends the whole session). The dead

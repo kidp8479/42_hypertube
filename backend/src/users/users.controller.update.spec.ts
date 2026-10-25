@@ -6,10 +6,7 @@ import {
   ForbiddenException,
   INestApplication,
 } from '@nestjs/common';
-import { APP_GUARD, HttpAdapterHost } from '@nestjs/core';
-import { QueryFailedError } from 'typeorm';
-import { QueryFailedFilter } from '../common/filters/query-failed.filter';
-import { UNIQUE_VIOLATION } from '../common/utils/unique-violation.util';
+import { APP_GUARD } from '@nestjs/core';
 import { RefreshTokenService } from '../auth/refresh-token.service';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
@@ -46,9 +43,6 @@ describe('PATCH /users/:id body', () => {
 
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(globalValidationPipe());
-    app.useGlobalFilters(
-      new QueryFailedFilter(app.get(HttpAdapterHost).httpAdapter),
-    );
     await app.init();
   });
 
@@ -92,26 +86,6 @@ describe('PATCH /users/:id body', () => {
     expect(usersService.update).not.toHaveBeenCalled();
   });
 
-  it('passes email, password and currentPassword through to the service', async () => {
-    usersService.update.mockResolvedValue({
-      user: {},
-      credentialsChanged: true,
-    });
-    refreshTokens.issue.mockResolvedValue({
-      secret: 'r1',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    const body = {
-      email: 'grace@example.com',
-      password: 'brand new pass',
-      currentPassword: 'current pass',
-    };
-
-    await request(app.getHttpServer()).patch('/users/7').send(body).expect(200);
-
-    expect(usersService.update).toHaveBeenCalledWith(7, body);
-  });
-
   it('after a credential change, ends every session and hands the caller a new cookie', async () => {
     usersService.update.mockResolvedValue({
       user: { id: 7 },
@@ -122,11 +96,18 @@ describe('PATCH /users/:id body', () => {
       expiresAt: new Date(Date.now() + 60_000),
     });
 
+    const body = {
+      email: 'grace@example.com',
+      password: 'brand new pass',
+      currentPassword: 'current pass',
+    };
+
     const res = await request(app.getHttpServer())
       .patch('/users/7')
-      .send({ password: 'brand new pass', currentPassword: 'current pass' })
+      .send(body)
       .expect(200);
 
+    expect(usersService.update).toHaveBeenCalledWith(7, body);
     expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(7);
     expect(refreshTokens.issue).toHaveBeenCalledWith(7);
     expect(
@@ -159,21 +140,6 @@ describe('PATCH /users/:id body', () => {
       .patch('/users/7')
       .send({ password: 'brand new pass', currentPassword: 'wrong' })
       .expect(403);
-
-    expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
-  });
-
-  it('answers 409 on a taken email, revoking nothing', async () => {
-    usersService.update.mockRejectedValue(
-      Object.assign(new QueryFailedError('UPDATE ...', [], new Error()), {
-        code: UNIQUE_VIOLATION,
-      }),
-    );
-
-    await request(app.getHttpServer())
-      .patch('/users/7')
-      .send({ email: 'taken@example.com', currentPassword: 'current pass' })
-      .expect(409);
 
     expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
   });

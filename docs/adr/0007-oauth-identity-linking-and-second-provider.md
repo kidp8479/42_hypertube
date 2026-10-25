@@ -149,7 +149,7 @@ Replaces the JWT-in-the-body response, as decided above:
   failure into 401). Since HYP-57 every callback failure redirects to the
   SPA instead, see the amendment below.
 - A cookie now exists in the auth flow even though sessions are JWT in
-  `localStorage`. It carries no identity, only a one-shot nonce, and
+  `localStorage` (in memory since the ADR-0006 amendment of 2026-10-25). It carries no identity, only a one-shot nonce, and
   should not be mistaken for session state.
 
 ## Amendment 2026-10-09: failed callbacks redirect to the SPA (HYP-57)

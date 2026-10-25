@@ -7,9 +7,12 @@ import type { User } from './auth-types';
 
 const MAX_BOOTSTRAP_RETRIES = 2;
 
-// A 4xx (a 401 on a dead session above all) is a real answer - retrying it
-// only delays the redirect to /login. A network drop or a 5xx is transient
-// and worth a couple of retries so a cold backend doesn't look like a logout.
+/**
+ * A 4xx is a real answer: retrying it only delays the redirect to /login (a
+ * missing or dead session already resolves to `null`, with no error). A
+ * network drop or a 5xx is transient and worth a couple of retries, so a
+ * cold backend doesn't look like a logout.
+ */
 function retryBootstrap(failureCount: number, error: unknown) {
   const transient = !(error instanceof ApiError) || error.status >= 500;
   return transient && failureCount < MAX_BOOTSTRAP_RETRIES;
@@ -22,8 +25,7 @@ function retryBootstrap(failureCount: number, error: unknown) {
  * rejects once the retries on a transient failure run out.
  *
  * A retry after the refresh succeeded reuses its token instead of rotating
- * the cookie again. Run through `queryClient.query` for the retries and so the
- * profile lands in the `['me']` cache entry the login also seeds.
+ * the cookie again. Run through `queryClient.query` for its retries.
  */
 export function restoreSession(): Promise<User | null> {
   return queryClient.query({

@@ -4,6 +4,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { IsNull } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RefreshTokenService } from './refresh-token.service';
 import { hashRefreshSecret } from './refresh-secret.util';
@@ -215,7 +216,7 @@ describe('RefreshTokenService', () => {
       await service.revokeAllForUser(7);
 
       expect(repo.update).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 7 }),
+        { userId: 7, revokedAt: IsNull() },
         { revokedAt: NOW },
       );
     });

@@ -96,6 +96,10 @@ function validateConfirmPassword(
   return undefined;
 }
 
+/**
+ * Runs every register-form rule; an empty object means the form may be sent.
+ * Values are checked trimmed, as `registerRequest` sends them.
+ */
 export function validateRegister(values: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {};
 

@@ -22,7 +22,7 @@ committed under `backend/src/`.
 | Hash cost pinned, not left to library defaults | `auth/argon2.config.ts` (m = 19 MiB, t = 2, p = 1, OWASP) | ADR-0004 |
 | Hash column kept out of normal reads | `user.entity.ts` `@Column({ select: false })` on `password` | `user.entity.spec.ts` |
 | Hash stripped from every response body even when loaded on purpose | `@Exclude()` on the column + global `ClassSerializerInterceptor` in `main.ts` | `users.controller.spec.ts` (serialized output has no `password`) |
-| Login reads the hash deliberately, never by default | `users.service.ts` `findByEmail()` uses a query-builder `addSelect('user.password')` | `users.service.spec.ts` |
+| Login reads the hash deliberately, never by default | `users.service.ts` `findForLogin()` (username or email) reads it through `findWithPassword()`, a query-builder `addSelect('user.password')` | `users.service.spec.ts` |
 
 `select: false` and `@Exclude()` are two independent nets: the first
 keeps the hash out of the row, the second drops it at serialization if a
@@ -88,7 +88,6 @@ the id checked for ownership comes from the verified token
 | No JWT in a URL: the callback redirects to the SPA with a single-use exchange code (32 random bytes, 60 s TTL, deleted on first use), traded for the token by `POST /auth/oauth/exchange` | `auth/oauth-exchange.service.ts`, `auth.controller.ts` | `oauth-exchange.service.spec.ts`; Bruno 19-20 |
 | Unknown, used and expired codes answer the same `401` | `AuthController.exchange` | `auth.controller.spec.ts` |
 | A provider identity auto-links to an existing account only through a verified email: a strategy returns only a provider-verified address or refuses the login (GitHub: primary + verified row of `/user/emails`, never the public profile email) | `auth.service.ts` `resolveOAuthUser`, `oauth-profile.interface.ts`, `github.strategy.ts` | `auth.service.spec.ts`, `github.strategy.spec.ts`; ADR-0007 |
-| Account pre-hijacking: linking a provider to an account that has a password revokes that password | `auth.service.ts` `resolveOAuthUser` | `auth.service.spec.ts`; ADR-0007 |
 | One provider account maps to one local user: unique `(provider, providerUserId)`, the loser of a link race signs in through the winner's row | `auth/entities/oauth-account.entity.ts`, `AuthService.recoverFromLinkRace` | `auth.service.spec.ts` |
 | A failed callback leaks nothing: it redirects to the SPA with one of three reasons (`cancelled`, `email_unverified`, `failed`), details stay in the server log; success and failure redirects send `Referrer-Policy: no-referrer` (the callback URL holds the provider's `code` and `state`) | `auth/filters/oauth-callback.filter.ts`, `auth/decorators/oauth-callback.decorator.ts` | `oauth-callback.filter.spec.ts`; Bruno 17-18; ADR-0007 amendment |
 
