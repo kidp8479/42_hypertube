@@ -113,14 +113,20 @@ describe('UsersService', () => {
   describe('findForLogin', () => {
     it('looks an identifier with @ up as a normalized email', async () => {
       const user = { id: 1 } as User;
-      const byEmail = jest
-        .spyOn(service, 'findByEmail')
-        .mockResolvedValue(user);
+      const query = {
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(user),
+      };
+      repository.createQueryBuilder.mockReturnValue(query);
 
       await expect(service.findForLogin(' Ada@Example.com ')).resolves.toBe(
         user,
       );
-      expect(byEmail).toHaveBeenCalledWith('ada@example.com');
+      // LoginDto only trims: this is where a login email gets lower-cased.
+      expect(query.where).toHaveBeenCalledWith('user.email = :email', {
+        email: 'ada@example.com',
+      });
     });
 
     it('looks any other identifier up as a username, whatever the case, password included', async () => {

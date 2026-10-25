@@ -138,7 +138,12 @@ describe('AuthProvider', () => {
 
     finishRefresh(null);
 
-    await waitFor(() => expect(refreshMock).toHaveBeenCalled());
+    // Wait until the bootstrap has really settled (no session), then let its
+    // dispatch run: only then can the reducer guard be seen at work.
+    await waitFor(() =>
+      expect(queryClient.getQueryState(['me'])?.status).toBe('success'),
+    );
+    await act(async () => {});
     expect(screen.getByTestId('status')).toHaveTextContent('authenticated');
     expect(getAuthToken()).toBe('fresh-token');
   });

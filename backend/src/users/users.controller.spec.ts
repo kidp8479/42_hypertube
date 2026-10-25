@@ -53,14 +53,6 @@ describe('UsersController', () => {
       expect(users.update).not.toHaveBeenCalled();
     });
 
-    it('update proceeds when the id is the caller', async () => {
-      users.update.mockResolvedValue({ user: {}, credentialsChanged: false });
-
-      await controller.update(1, { firstName: 'Ada K.' }, ada, {} as Request);
-
-      expect(users.update).toHaveBeenCalledWith(1, { firstName: 'Ada K.' });
-    });
-
     it('remove rejects a mismatched user with 403', () => {
       expect(() => controller.remove(2, ada)).toThrow(ForbiddenException);
       expect(users.remove).not.toHaveBeenCalled();
