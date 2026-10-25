@@ -1,6 +1,8 @@
 // Real-browser coverage for the base layout (HYP-19): header, main and footer
-// on every page, usable on a 320px-wide phone without sideways scrolling.
+// on every page, usable on a 320px-wide phone without sideways scrolling, and
+// a 404 page for an unknown address (HYP-66).
 import { test, expect, type Page } from '@playwright/test';
+import { trackConsoleIssues } from './console-issues';
 import { signUpAndSignIn } from './sign-up';
 
 // The narrowest phone width WCAG reflow asks to support.
@@ -37,4 +39,21 @@ test.describe('base layout on a phone', () => {
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Library' })).toBeVisible();
   });
+});
+
+test('an unknown address shows the 404 page inside the layout', async ({
+  page,
+}) => {
+  const issues = trackConsoleIssues(page);
+
+  await page.goto('/no-such-page');
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Page not found' }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/no-such-page$/);
+  await expectFramedWithoutSidewaysScroll(page);
+  await page.getByRole('link', { name: 'Back to home' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(issues).toEqual([]);
 });

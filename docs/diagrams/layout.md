@@ -16,8 +16,9 @@ flowchart TB
     Layout --> Main["main: the matched route"]
     Layout --> Footer["footer: project credit, source code link"]
     Main --> Public["/login, /register, /oauth/callback"]
-    Main --> Guard["RequireAuth"]
+    Main --> Guard["RequireAuth<br/>loading message while the session resolves"]
     Guard --> Home["/ (library, HYP-13)"]
+    Main --> NotFound["any other address: 404 page (HYP-66)"]
 ```
 
 ## 1. Header by session state (HYP-19)

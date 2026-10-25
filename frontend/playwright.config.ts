@@ -12,6 +12,10 @@ const trustLocalCertificate = baseURL.startsWith('https://localhost');
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // One worker locally: two browsers in parallel next to the compose stack
+  // make a dev machine swap, and the run gets slower and flaky. CI runners
+  // have the room, so they keep Playwright's default.
+  workers: process.env.CI ? undefined : 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

@@ -8,6 +8,12 @@ export const commonEn = {
     sections: 'Sections',
     library: 'Library',
   },
+  loading: 'Loading…',
+  notFound: {
+    title: 'Page not found',
+    body: 'There is nothing at this address.',
+    home: 'Back to home',
+  },
   footer: {
     project: 'Hypertube · a 42 Paris school project',
     source: 'Source code',
