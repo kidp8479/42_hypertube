@@ -6,9 +6,9 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
 import i18n from '../../lib/i18n';
-import { AuthContext, type AuthContextValue } from './auth-context';
+import { AuthContext } from './auth-context';
 import type { AuthState } from './auth-reducer';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { RegisterPage } from './auth-register-page';
 import { registerRequest } from './auth-actions';
 
@@ -29,12 +29,7 @@ function LoginStub() {
 function renderRegisterPage(
   state: AuthState = { status: 'anonymous', user: null },
 ) {
-  const value: AuthContextValue = {
-    state,
-    login: vi.fn(),
-    loginWithOAuthCode: vi.fn(),
-    logout: vi.fn(),
-  };
+  const value = fakeAuth(state);
   render(
     <AuthContext.Provider value={value}>
       <MemoryRouter initialEntries={['/register']}>

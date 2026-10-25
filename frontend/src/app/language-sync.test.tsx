@@ -6,20 +6,13 @@ import type { ReactNode } from 'react';
 import i18n from '../lib/i18n';
 import { AuthContext } from '../features/auth/auth-context';
 import type { AuthState } from '../features/auth/auth-reducer';
-import { fakeUser } from '../test/fixtures';
+import { fakeUser, fakeAuth } from '../test/fixtures';
 import { useLanguageSync } from './language-sync';
 
 function wrapperFor(state: AuthState) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <AuthContext.Provider
-        value={{
-          state,
-          login: vi.fn(),
-          loginWithOAuthCode: vi.fn(),
-          logout: vi.fn(),
-        }}
-      >
+      <AuthContext.Provider value={fakeAuth(state)}>
         {children}
       </AuthContext.Provider>
     );

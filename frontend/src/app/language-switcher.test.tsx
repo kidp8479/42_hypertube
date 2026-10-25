@@ -7,20 +7,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import i18n from '../lib/i18n';
 import { AuthContext } from '../features/auth/auth-context';
 import type { AuthState } from '../features/auth/auth-reducer';
-import { fakeUser } from '../test/fixtures';
+import { fakeUser, fakeAuth } from '../test/fixtures';
 import { LanguageSwitcher } from './language-switcher';
 
 function renderSwitcher(state: AuthState) {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider
-        value={{
-          state,
-          login: vi.fn(),
-          loginWithOAuthCode: vi.fn(),
-          logout: vi.fn(),
-        }}
-      >
+      <AuthContext.Provider value={fakeAuth(state)}>
         <LanguageSwitcher />
       </AuthContext.Provider>
     </QueryClientProvider>,

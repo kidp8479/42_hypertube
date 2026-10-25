@@ -132,3 +132,18 @@ on the much older minimums of the marking sheet (Firefox 41, Chrome 46).
 - **Cost to fix later:** high. Supporting 2015 browsers would mean dropping
   Tailwind v4 for v3 and transpiling down the whole bundle. Not worth it for
   a project graded on current browsers.
+
+## Profile pictures are linked, not hosted
+
+A profile picture is an https address the user types (`PATCH /users/:id`),
+shown as is in the header and on the profile pages.
+
+- **Why:** the subject asks for a profile picture, not for an image store;
+  an upload with validation, resizing and storage is HYP-38's work.
+- **Real-world:** the image host sees the IP address of everyone who views
+  that profile (a tracking pixel), and the picture can change or disappear
+  behind the same address. `referrerPolicy="no-referrer"` keeps the page
+  address from leaking, not the IP. A public product would upload and serve
+  the images itself.
+- **Cost to fix later:** medium. Upload, check the type and size, store the
+  file, serve it from the app; the column then holds a path instead of a URL.

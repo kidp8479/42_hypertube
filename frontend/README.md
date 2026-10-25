@@ -13,6 +13,7 @@ src/
 ├── App.tsx           # the single route table, inside the layout (public routes + <RequireAuth> subtree)
 ├── app/              # provider stack, layout (header, footer), language switcher and sync
 ├── features/auth/    # auth state machine, guard, auth pages (login, register, OAuth), auth strings (en/fr)
+├── features/users/   # profile pages (/profile, /users/:id), avatar, users strings (en/fr)
 ├── lib/              # fetch wrapper (apiFetch), token accessor, QueryClient, i18n setup and language rules
 └── test/             # Vitest setup and shared fixtures
 e2e/                  # Playwright specs (Chromium and Firefox, against a running stack)

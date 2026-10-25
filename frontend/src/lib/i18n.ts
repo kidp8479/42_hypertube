@@ -12,13 +12,15 @@ import { commonEn } from '../app/common-locale-en';
 import { commonFr } from '../app/common-locale-fr';
 import { authEn } from '../features/auth/auth-locale-en';
 import { authFr } from '../features/auth/auth-locale-fr';
+import { usersEn } from '../features/users/users-locale-en';
+import { usersFr } from '../features/users/users-locale-fr';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './languages';
 import { readStoredLanguage, resolveLanguage } from './language';
 
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { auth: authEn, common: commonEn },
-    fr: { auth: authFr, common: commonFr },
+    en: { auth: authEn, common: commonEn, users: usersEn },
+    fr: { auth: authFr, common: commonFr, users: usersFr },
   },
   lng: resolveLanguage({
     userLanguage: undefined,

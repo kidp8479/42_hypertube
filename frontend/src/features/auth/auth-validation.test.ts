@@ -28,6 +28,7 @@ describe('validateRegister', () => {
     ['empty', '', { code: 'required' }],
     ['missing @', 'ada.example.com', { code: 'invalidEmail' }],
     ['missing domain dot', 'ada@example', { code: 'invalidEmail' }],
+    ['one-character TLD', 'ada@example.c', { code: 'invalidEmail' }],
     [
       'too long',
       `${'a'.repeat(250)}@example.com`,

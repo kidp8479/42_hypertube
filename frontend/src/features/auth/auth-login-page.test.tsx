@@ -7,7 +7,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import type { AuthState } from './auth-reducer';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { LoginPage } from './auth-login-page';
 
 // `/` renders a marker so "navigated home" is observable as a DOM change.
@@ -18,12 +18,7 @@ function renderLoginPage(
   initialState?: { justRegistered?: boolean },
 ) {
   const login = vi.fn<AuthContextValue['login']>();
-  const value: AuthContextValue = {
-    state,
-    login,
-    loginWithOAuthCode: vi.fn(),
-    logout: vi.fn(),
-  };
+  const value = fakeAuth(state, { login });
   render(
     <AuthContext.Provider value={value}>
       <MemoryRouter

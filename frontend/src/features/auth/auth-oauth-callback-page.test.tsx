@@ -8,7 +8,7 @@ import { ApiError } from '../../lib/api';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import { OAuthCodeRejectedError } from './auth-actions';
 import type { AuthState } from './auth-reducer';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { OAuthCallbackPage } from './auth-oauth-callback-page';
 
 // Renders the URL the page is on, so "the code left the URL" is observable.
@@ -34,12 +34,7 @@ function renderCallbackPage(
   const loginWithOAuthCode =
     vi.fn<AuthContextValue['loginWithOAuthCode']>(exchange);
   const tree = (current: AuthState) => {
-    const value: AuthContextValue = {
-      state: current,
-      login: vi.fn(),
-      loginWithOAuthCode,
-      logout: vi.fn(),
-    };
+    const value = fakeAuth(current, { loginWithOAuthCode });
     const app = (
       <AuthContext.Provider value={value}>
         <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>

@@ -102,9 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'logout' });
   }, []);
 
+  const updateUser = useCallback((user: User) => {
+    dispatch({ type: 'user-updated', user });
+  }, []);
+
   const value = useMemo(
-    () => ({ state, login, loginWithOAuthCode, logout }),
-    [state, login, loginWithOAuthCode, logout],
+    () => ({ state, login, loginWithOAuthCode, logout, updateUser }),
+    [state, login, loginWithOAuthCode, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

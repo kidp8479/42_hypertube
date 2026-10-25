@@ -9,6 +9,7 @@ export const commonFr: typeof commonEn = {
     logout: 'Se déconnecter',
     sections: 'Sections',
     library: 'Bibliothèque',
+    profile: 'Mon profil',
   },
   loading: 'Chargement…',
   notFound: {
