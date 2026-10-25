@@ -75,6 +75,7 @@ the id checked for ownership comes from the verified token
 | One-click logout: `POST /auth/logout` (public, driven by the refresh cookie) revokes the whole session and clears the cookie, then the SPA discards its token and query cache | `auth.controller.ts`, `refresh-token.service.ts`, `frontend/src/features/auth/` | `auth/auth.session.spec.ts`, `auth.controller.spec.ts`, Bruno 33-34, `frontend/src/features/auth/auth-provider.test.tsx` |
 | Refresh tokens: 256 random bits in an `HttpOnly`, `SameSite=Strict`, `Secure` cookie scoped to the auth routes, only their SHA-256 stored, rotated on every use; a consumed token used again (after a 10 s tolerance) revokes its whole session; 7 days sliding, 30 days at most from the login | `auth/refresh-token.service.ts`, `auth/refresh-cookie.util.ts`, `auth/entities/refresh-token.entity.ts` | `refresh-token.service.spec.ts`, `refresh-cookie.util.spec.ts`, `auth.session.spec.ts`, Bruno 26-34; ADR-0011 |
 | Access token revocation before its expiry | stateless on purpose, nothing can renew it after a logout | **accepted limit** - 15 minutes, ADR-0011, `docs/defense/known-limitations.md` |
+| Access token in memory only, never in `localStorage`: a reload restores it from the refresh cookie, a 401 refreshes once (single flight) and retries | `frontend/src/lib/token.ts`, `frontend/src/lib/api.ts` | `lib/api.test.ts`, `auth-provider.test.tsx`, `frontend/e2e/session.spec.ts` |
 | Token TTL | `JWT_EXPIRES_IN` default `15m`, `REFRESH_EXPIRES_IN` default `7d` | `env.validation.ts` |
 
 ## 5b. OAuth sign-in (42, GitHub)

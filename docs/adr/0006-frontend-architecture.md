@@ -22,8 +22,10 @@ design and grilling session before any auth screen existed:
   is mirrored into React state by hand.
 - **Client/auth state:** React Context + `useReducer`. The auth state machine
   (`loading` / `authenticated` / `anonymous`) is a pure reducer; `AuthProvider`
-  wires it to the network. The JWT lives in `localStorage`, is read by the
-  fetch wrapper at call time, and is never held in React state.
+  wires it to the network. The access token lives in a module variable
+  (`lib/token.ts`), is read by the fetch wrapper at call time, and is never
+  held in React state; a reload restores it from the refresh cookie
+  (ADR-0011).
 
 Access control is expressed in the route tree, not the filesystem: protected
 routes are nested under a pathless `<Route element={<RequireAuth />}>`, and
@@ -58,13 +60,10 @@ it is public.
   state machine (three states, five events). Redux/Zustand would be a dependency
   and a pattern to learn for no gain here. `useReducer` is a React fundamental
   and keeps the transition logic pure and unit-testable without React.
-- **Token in `localStorage`, read only by the wrapper** (amended by ADR-0011:
-  the access token moves to memory with HYP-78, only an `HttpOnly` refresh
-  cookie survives a reload). Keeping it out of
-  React state means there is exactly one source of truth and no re-render
-  storm on login/logout; the trade-off (XSS can read `localStorage`) is
-  accepted for a project with a strict input-sanitisation requirement and no
-  third-party script surface. Revisit if that changes.
+- **Token in memory, read only by the wrapper** (ADR-0011, HYP-78). Keeping it
+  out of React state means there is exactly one source of truth and no
+  re-render storm on login/logout. Out of `localStorage`, an injected script
+  has no token to read; only the `HttpOnly` refresh cookie survives a reload.
 
 ## Consequences
 
@@ -89,9 +88,18 @@ it is public.
   (`<name>.<role>.ts`) is documented in `CONTRIBUTING.md` > File naming;
   `App.tsx` and `main.tsx` keep the Vite scaffold names.
 - The 401-anywhere path is centralised: the singleton `QueryClient`'s cache
-  `onError` routes a 401 to a handler `AuthProvider` registers, which clears
-  the token and flags the session expired; `RequireAuth` then redirects.
+  `onError` routes a 401 to a handler `AuthProvider` registers. `apiFetch`
+  has already tried one refresh by then, so the handler flags the session
+  expired when no token is left; `RequireAuth` then redirects.
 - Not covered here: the logout and refresh strategy (decided in
   [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)), and the
   styling system (Tailwind CSS v4, decided in
   [ADR-0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md)).
+
+## Amendment 2026-10-25: the access token moves to memory (HYP-78)
+
+The token left `localStorage` for a module variable, as ADR-0011 planned: an
+XSS could read `localStorage`, and with the `HttpOnly` refresh cookie a reload
+no longer needs the token to survive. The bootstrap is now `POST /auth/refresh`
+then `GET /users/me`, and `apiFetch` refreshes once on a 401 before the 401 net
+sees it. The details are in `docs/diagrams/auth.md` section 8.

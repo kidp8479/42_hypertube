@@ -62,8 +62,7 @@ access-token ids (a lookup per request for a 15 minute window).
   `docs/defense/known-limitations.md`.
 - A stateful table now sits behind login, touched at login, refresh and logout,
   never on an ordinary request.
-- Until HYP-78 the SPA ignores the cookie: the access token stays in
-  `localStorage` with no refresh. Its logout call already revokes the session,
-  because the browser sends the cookie with it.
+- The SPA keeps the access token in memory and refreshes on load and on a 401
+  (HYP-78, `docs/diagrams/auth.md` section 8).
 - A film must outlive the access token: the player will use its own short-lived
   signed stream token (HYP-14), not the JWT.
