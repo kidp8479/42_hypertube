@@ -1,5 +1,5 @@
 // Spec for RequireAuth: protected route when authenticated, redirect to
-// /login when anonymous, nothing while auth is resolving.
+// /login when anonymous, a loading message while auth is resolving.
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -46,9 +46,10 @@ describe('RequireAuth', () => {
     expect(screen.queryByText('protected content')).not.toBeInTheDocument();
   });
 
-  it('renders neither route while auth is still resolving', () => {
+  it('shows a loading status, neither route, while auth is still resolving', () => {
     renderGuard({ status: 'loading', user: null });
 
+    expect(screen.getByRole('status')).toHaveTextContent('Loading…');
     expect(screen.queryByText('protected content')).not.toBeInTheDocument();
     expect(screen.queryByText('login page')).not.toBeInTheDocument();
   });

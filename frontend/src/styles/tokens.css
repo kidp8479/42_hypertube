@@ -66,6 +66,15 @@
 
   /* Targets: 24px, the WCAG 2.2 minimum (`min-h-target`). */
   --spacing-target: 1.5rem;
+
+  /* A loading message that only shows when the wait is noticeable, so a fast
+     answer never flashes it (`animate-appear-late`, with `opacity-0`). */
+  --animate-appear-late: appear 0.15s 0.4s forwards;
+  @keyframes appear {
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Not utility values: the focus ring every focusable element shares. */

@@ -10,6 +10,12 @@ export const commonFr: typeof commonEn = {
     sections: 'Sections',
     library: 'Bibliothèque',
   },
+  loading: 'Chargement…',
+  notFound: {
+    title: 'Page introuvable',
+    body: "Il n'y a rien à cette adresse.",
+    home: "Retour à l'accueil",
+  },
   footer: {
     project: "Hypertube · un projet de l'école 42 Paris",
     source: 'Code source',
