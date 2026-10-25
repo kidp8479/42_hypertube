@@ -23,7 +23,9 @@ export const usersFr: typeof usersEn = {
     newPasswordHint: "Laissez vide pour garder l'actuel.",
     submit: 'Mettre à jour',
     submitting: 'Mise à jour...',
-    saved: 'E-mail et mot de passe mis à jour.',
+    savedEmail: 'E-mail mis à jour.',
+    savedPassword: 'Mot de passe mis à jour.',
+    savedBoth: 'E-mail et mot de passe mis à jour.',
     nothingToChange:
       "Modifiez d'abord l'e-mail ou saisissez un nouveau mot de passe.",
     wrongPassword: 'Le mot de passe actuel est incorrect.',

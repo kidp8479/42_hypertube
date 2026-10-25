@@ -20,7 +20,9 @@ import {
 } from './users-validation';
 
 type Outcome =
-  | 'credentials.saved'
+  | 'credentials.savedEmail'
+  | 'credentials.savedPassword'
+  | 'credentials.savedBoth'
   | 'credentials.nothingToChange'
   | 'credentials.wrongPassword'
   | 'credentials.emailTaken'
@@ -70,6 +72,15 @@ function changesFrom(user: User, values: CredentialsValues): ProfileChanges {
   return changes;
 }
 
+function savedOutcome(changes: ProfileChanges): Outcome {
+  if (changes.email !== undefined && changes.password !== undefined) {
+    return 'credentials.savedBoth';
+  }
+  return changes.email !== undefined
+    ? 'credentials.savedEmail'
+    : 'credentials.savedPassword';
+}
+
 /**
  * Changes the email and/or the password. The backend asks for the current
  * password, then ends every other session (ADR-0011): this one keeps going.
@@ -107,7 +118,7 @@ export function CredentialsForm({ user }: { user: User }) {
       });
       updateUser(saved);
       setValues(emptyValues(saved));
-      setOutcome('credentials.saved');
+      setOutcome(savedOutcome(changes));
     } catch (caught) {
       const status = caught instanceof ApiError ? caught.status : 0;
       setOutcome(REFUSALS[status] ?? 'errors.generic');
@@ -146,7 +157,9 @@ export function CredentialsForm({ user }: { user: User }) {
       </div>
       {input('currentPassword', tAuth('fields.currentPassword'))}
       {outcome && (
-        <Alert tone={outcome === 'credentials.saved' ? 'success' : 'error'}>
+        <Alert
+          tone={outcome.startsWith('credentials.saved') ? 'success' : 'error'}
+        >
           {t(outcome)}
         </Alert>
       )}

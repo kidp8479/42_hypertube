@@ -80,11 +80,27 @@ describe('ProfilePage email and password form', () => {
       json({ ...fakeUser, email: 'ada@example.org' }),
     );
 
-    expect(
-      await screen.findByText('Email and password updated.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Email updated.')).toBeInTheDocument();
     expect(sentBody()).toEqual({
       email: 'ada@example.org',
+      currentPassword: 'secret-123',
+    });
+  });
+
+  it('says only the password changed when the email was left as is', async () => {
+    const { sentBody, user } = renderProfile(json(fakeUser));
+
+    await user.type(screen.getByLabelText('New password'), 'new-secret-123');
+    await user.type(
+      screen.getByLabelText('Confirm password'),
+      'new-secret-123',
+    );
+    await user.type(screen.getByLabelText('Current password'), 'secret-123');
+    await user.click(screen.getByRole('button', { name: 'Update' }));
+
+    expect(await screen.findByText('Password updated.')).toBeInTheDocument();
+    expect(sentBody()).toEqual({
+      password: 'new-secret-123',
       currentPassword: 'secret-123',
     });
   });
