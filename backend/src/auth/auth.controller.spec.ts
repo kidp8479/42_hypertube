@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { RefreshTokenService } from './refresh-token.service';
+import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { REFRESH_COOKIE } from './refresh-cookie.util';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { OAuthProvider } from './entities/oauth-account.entity';
@@ -85,7 +86,11 @@ describe('AuthController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      // Throttling is covered over HTTP in auth.throttle.spec.ts.
+      .overrideGuard(LoginIdentifierThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
     auth = module.get(AuthService);

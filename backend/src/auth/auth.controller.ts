@@ -23,6 +23,7 @@ import {
 } from './refresh-cookie.util';
 import { Public } from './decorators/public.decorator';
 import { OAuthCallback } from './decorators/oauth-callback.decorator';
+import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { spaCallbackUrl } from './spa-callback-url.util';
 import { scaledThrottleLimit } from '../config/throttle.config';
 import { ExchangeCodeDto } from './dto/exchange-code.dto';
@@ -56,10 +57,12 @@ export class AuthController {
    * hint about which part failed (wrong password and unknown account are
    * indistinguishable, see {@link AuthService.validateUser}).
    */
-  // Brute-force ceiling: 5 attempts per minute per IP, well below what a
+  // Brute-force ceiling: 5 attempts per minute per IP, and 5 per minute per
+  // identifier whatever the IP (LoginIdentifierThrottlerGuard). Well below what a
   // human login needs and far under an automated guessing rate.
   @Public()
   @Throttle({ default: { limit: scaledThrottleLimit(5), ttl: 60_000 } })
+  @UseGuards(LoginIdentifierThrottlerGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(

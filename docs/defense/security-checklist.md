@@ -104,7 +104,8 @@ the id checked for ownership comes from the verified token
 | Scope | Limit | Where |
 |---|---|---|
 | Every route, per client IP (the address the edge proxy appended: `trust proxy`, ADR-0009) | 100 / 60 s | `ThrottlerModule.forRoot` in `app.module.ts`, `config/trust-proxy.config.ts` |
-| `POST /auth/login` | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
+| `POST /auth/login`, per IP | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
+| `POST /auth/login`, per identifier whatever the IP (trimmed and lower-cased; an unknown identifier counts the same, so a 429 reveals nothing; the trade-off is in `docs/diagrams/auth.md` section 10) | 5 / 60 s | `LoginIdentifierThrottlerGuard` (`auth/guards/`) |
 | `POST /users` (register) | 10 / 3600 s | `@Throttle` on `users.controller.ts` |
 | `POST /auth/oauth/exchange` | 10 / 60 s | `@Throttle` on `auth.controller.ts` |
 | Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts`, `config/env.validation.ts` |

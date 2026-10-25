@@ -50,7 +50,7 @@ Blue: the SPA (`frontend/src/features/auth`). Violet: the backend
 (`backend/src/auth`, `backend/src/users`). Grey: outside both.
 
 What the overview hides, each covered below or in the ADRs: rate limits
-(`security-checklist.md` section 7), the uniform 401 on login, the 403 on
+(section 10 and `security-checklist.md` section 7), the uniform 401 on login, the 403 on
 another user's row, the SPA's session states and `RequireAuth` (section 2),
 how the SPA keeps the session across a reload and a 401 (section 8), changing
 the email or the password (section 9).
@@ -305,3 +305,28 @@ flowchart TD
 - The route is throttled (10 per minute), since it checks a password.
 - The caller's own cookie never reaches `/users` (it is scoped to the auth
   routes), hence "revoke all, then issue one" rather than "all but this one".
+
+## 10. Login rate limits (HYP-94)
+
+Usernames are listed to every signed-in user (`GET /users`) and are login
+keys, so a per-IP limit alone would let an attacker spread guesses on one
+account over many IPs. `POST /auth/login` has two counters, both 5 per
+minute; either one tripping answers 429 before any password check.
+
+```mermaid
+flowchart LR
+    R["POST /auth/login"] --> IP{"ThrottlerGuard (global)<br/>5 / min for this IP?"}
+    IP -- "over" --> T["429"]
+    IP -- "under" --> ID{"LoginIdentifierThrottlerGuard<br/>5 / min for this identifier<br/>(trimmed, lower-cased)?"}
+    ID -- "over" --> T
+    ID -- "under" --> V["validateUser<br/>200 or uniform 401"]
+```
+
+The counter is per identifier: a username and an email are separate keys,
+even for the same account. An unknown identifier gets a counter like any
+other, so a 429 does not tell whether the account exists, and the
+`X-RateLimit-*` headers show the caller's per-IP counter only.
+
+Trade-off: someone who keeps sending 5 bad attempts a minute on a known
+username keeps its password login at 429 for as long as they keep going
+(OAuth login still works). There is no lockout that outlasts the attempts.
