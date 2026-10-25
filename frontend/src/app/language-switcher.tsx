@@ -48,9 +48,9 @@ export function LanguageSwitcher() {
     <header className="flex justify-end gap-2 px-4 py-2">
       <label>
         {t('language.label')}{' '}
-        {/* A native select does not take the page palette on its own. */}
+        {/* The open option list takes the select's own background. */}
         <select
-          className="min-h-target border border-edge bg-bg px-2 py-1 text-ink"
+          className="min-h-target border border-edge bg-bg px-2 py-1"
           value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
           onChange={(event) => handleChange(event.target.value)}
         >

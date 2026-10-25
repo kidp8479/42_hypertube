@@ -11,7 +11,7 @@ const BASE =
 // Colours live only here, never in BASE: two utilities setting the same
 // property on one element resolve by stylesheet order, not class order.
 const VARIANTS: Record<ButtonVariant, string> = {
-  outline: 'bg-transparent text-ink hover:not-disabled:bg-ink/8',
+  outline: 'text-ink hover:not-disabled:bg-ink/8',
   solid: 'bg-ink text-bg hover:not-disabled:bg-ink-hover',
 };
 

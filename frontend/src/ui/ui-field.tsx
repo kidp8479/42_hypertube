@@ -47,7 +47,7 @@ export function Field({
       <input
         {...input}
         id={inputId}
-        className="w-full border border-edge bg-transparent p-3 focus:border-ink aria-invalid:border-alert"
+        className="w-full border border-edge p-3 focus:border-ink aria-invalid:border-alert"
         aria-invalid={error || invalid ? true : undefined}
         aria-describedby={describedBy}
       />
