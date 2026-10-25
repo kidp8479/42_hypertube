@@ -19,6 +19,7 @@ type RepositoryMock = {
   preload: jest.Mock;
   delete: jest.Mock;
   update: jest.Mock;
+  createQueryBuilder: jest.Mock;
 };
 
 // The username each `findOneBy` call looked for, in order. The lookup is a
@@ -65,6 +66,7 @@ describe('UsersService', () => {
             preload: jest.fn(),
             delete: jest.fn(),
             update: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
       ],
@@ -116,6 +118,25 @@ describe('UsersService', () => {
         user,
       );
       expect(byEmail).toHaveBeenCalledWith('ada@example.com');
+    });
+
+    it('looks any other identifier up as a username, whatever the case, password included', async () => {
+      const user = { id: 1 } as User;
+      const query = {
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(user),
+      };
+      repository.createQueryBuilder.mockReturnValue(query);
+
+      await expect(service.findForLogin('ADA')).resolves.toBe(user);
+      // Compared like the LOWER(username) unique index, and with the hash
+      // that `select: false` would otherwise leave out.
+      expect(query.where).toHaveBeenCalledWith(
+        'LOWER(user.username) = LOWER(:identifier)',
+        { identifier: 'ADA' },
+      );
+      expect(query.addSelect).toHaveBeenCalledWith('user.password');
     });
   });
 

@@ -66,24 +66,27 @@ export class UsersService {
     if (identifier.includes('@')) {
       return this.findByEmail(normalizeEmail(identifier));
     }
-    return this.usersRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('LOWER(user.username) = LOWER(:identifier)', { identifier })
-      .getOne();
+    return this.findWithPassword('LOWER(user.username) = LOWER(:identifier)', {
+      identifier,
+    });
+  }
+
+  /** Looks a user up by email (login, OAuth linking), password hash included. */
+  findByEmail(email: string) {
+    return this.findWithPassword('user.email = :email', { email });
   }
 
   /**
-   * Looks a user up by email for the login flow. Uses a query builder
-   * with `addSelect` so the `password` hash - hidden by `select: false`
-   * on the entity - comes back alongside the normal columns; a plain
-   * `findOneBy` would omit it. Resolves to `null` when there's no match.
+   * One user matching a parameterised `where`, or `null`. A query builder
+   * with `addSelect` so the `password` hash - hidden by `select: false` on
+   * the entity - comes back alongside the normal columns; a plain
+   * `findOneBy` would omit it.
    */
-  findByEmail(email: string) {
+  private findWithPassword(where: string, params: Record<string, string>) {
     return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
-      .where('user.email = :email', { email })
+      .where(where, params)
       .getOne();
   }
 

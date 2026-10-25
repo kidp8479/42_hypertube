@@ -6,7 +6,6 @@ import type { AuthState } from './auth-reducer';
 /** What `useAuth()` hands out - AuthProvider is the only place that constructs one. */
 export interface AuthContextValue {
   state: AuthState;
-  /** `identifier` is a username or an email. */
   login: (identifier: string, password: string) => Promise<void>;
   loginWithOAuthCode: (code: string) => Promise<void>;
   logout: () => void;

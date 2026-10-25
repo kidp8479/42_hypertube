@@ -6,8 +6,7 @@ import { Trim } from '../../common/decorators/trim.decorator';
  * Credentials accepted at `POST /auth/login`.
  *
  * `identifier` is a username or an email (subject III.1 asks for the
- * username; the email keeps working). It is told apart by `@`, which a
- * username cannot contain, in `UsersService.findForLogin`.
+ * username), see `UsersService.findForLogin`.
  *
  * No length/complexity rules on `password` beyond a size cap: the login
  * form must accept whatever a legacy account was created with, and any

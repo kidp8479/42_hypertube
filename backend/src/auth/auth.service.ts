@@ -50,8 +50,6 @@ export class AuthService implements OnModuleInit {
    * A wrong password and an unknown username or email are deliberately
    * indistinguishable - same return value, same response time - so the
    * endpoint can't be used to discover which accounts exist.
-   *
-   * @param identifier a username or an email, see `UsersService.findForLogin`
    */
   async validateUser(identifier: string, password: string) {
     const user = await this.usersService.findForLogin(identifier);
