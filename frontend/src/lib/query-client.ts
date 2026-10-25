@@ -1,5 +1,5 @@
 // TanStack Query config: the singleton client every query/mutation in the
-// app shares, plus the global 401 -> logout safety net.
+// app shares, plus the global 401 -> session-expired safety net.
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { ApiError } from './api';
 
@@ -26,7 +26,7 @@ function routeUnauthorized(error: unknown) {
 /** App-wide singleton client; a 401 from any query or mutation triggers the registered unauthorized handler. */
 export const queryClient = new QueryClient({
   defaultOptions: {
-    // Off by default; a query that wants retries opts in (see useMeQuery).
+    // Off by default; a query that wants retries opts in (see restoreSession).
     queries: { retry: false },
   },
   queryCache: new QueryCache({ onError: routeUnauthorized }),

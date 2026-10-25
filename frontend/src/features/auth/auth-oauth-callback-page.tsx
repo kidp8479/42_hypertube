@@ -63,9 +63,8 @@ export function OAuthCallbackPage() {
     }
   }, [code, navigate]);
 
-  // Held back until AuthProvider's startup /users/me check settles: with a
-  // stale token in storage, its late 401 would otherwise wipe the token the
-  // exchange just stored and sign the user straight back out.
+  // Held back until AuthProvider's startup bootstrap settles, so the sign-in
+  // lands after it rather than racing the startup refresh.
   useEffect(() => {
     if (!code || bootstrapping || exchangeStarted.current) {
       return;

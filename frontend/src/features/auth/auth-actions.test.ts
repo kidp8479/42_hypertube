@@ -1,5 +1,5 @@
-// Spec for the auth actions with network side effects: register payload and
-// the OAuth code exchange error mapping.
+// Spec for the auth actions with network side effects: register payload, the
+// OAuth code exchange error mapping, and a login waiting for a refresh.
 import { describe, it, expect, vi } from 'vitest';
 
 // Replace only `apiFetch`; keep the real `ApiError` class so `instanceof`
@@ -8,11 +8,16 @@ vi.mock('../../lib/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/api')>()),
   apiFetch: vi.fn(),
 }));
-const { apiFetch, ApiError } = await import('../../lib/api');
+const { apiFetch, ApiError, refreshAccessToken } =
+  await import('../../lib/api');
 const apiFetchMock = vi.mocked(apiFetch);
 
-const { registerRequest, exchangeOAuthCode, OAuthCodeRejectedError } =
-  await import('./auth-actions');
+const {
+  registerRequest,
+  exchangeOAuthCode,
+  loginRequest,
+  OAuthCodeRejectedError,
+} = await import('./auth-actions');
 const { setAuthToken, getAuthToken, removeAuthToken } =
   await import('../../lib/token');
 
@@ -104,5 +109,32 @@ describe('exchangeOAuthCode', () => {
     apiFetchMock.mockRejectedValueOnce(outage);
 
     await expect(exchangeOAuthCode('any-code')).rejects.toBe(outage);
+  });
+});
+
+describe('loginRequest', () => {
+  it('waits for the refresh in flight, whose failure clears the cookie', async () => {
+    let answerRefresh: (response: object) => void = () => {};
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise((resolve) => {
+            answerRefresh = resolve;
+          }),
+      ),
+    );
+    apiFetchMock.mockResolvedValueOnce({ access_token: 'fresh-token' });
+
+    const refresh = refreshAccessToken();
+    const login = loginRequest('ada', 'correct horse');
+    await Promise.resolve();
+    expect(apiFetchMock).not.toHaveBeenCalled();
+
+    answerRefresh({ ok: false, status: 401 });
+    await Promise.all([refresh, login]);
+
+    expect(apiFetchMock).toHaveBeenCalledWith('/auth/login', expect.anything());
+    expect(getAuthToken()).toBe('fresh-token');
   });
 });
