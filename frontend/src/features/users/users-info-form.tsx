@@ -63,7 +63,7 @@ export function InfoForm({ user }: { user: User }) {
   async function handleSubmit(event: SyntheticEvent) {
     event.preventDefault();
     setOutcome(null);
-    const validationErrors = validateInfo(values);
+    const validationErrors = validateInfo(values, valuesOf(user));
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
       return;

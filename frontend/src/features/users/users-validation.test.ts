@@ -12,10 +12,22 @@ const info = {
 };
 
 describe('validateInfo', () => {
+  it('checks only the fields that changed', () => {
+    const saved = { ...info, username: 'ab' };
+    const picture = 'https://example.com/a.png';
+
+    expect(validateInfo({ ...saved, profilePicture: picture }, saved)).toEqual(
+      {},
+    );
+  });
+
   it('accepts an empty picture (no picture) and an https address', () => {
-    expect(validateInfo(info)).toEqual({});
+    expect(validateInfo(info, info)).toEqual({});
     expect(
-      validateInfo({ ...info, profilePicture: 'https://example.com/a.png' }),
+      validateInfo(
+        { ...info, profilePicture: 'https://example.com/a.png' },
+        info,
+      ),
     ).toEqual({});
   });
 
@@ -27,7 +39,7 @@ describe('validateInfo', () => {
       'https://localhost/a.png',
       'https://example.c/a.png',
     ]) {
-      expect(validateInfo({ ...info, profilePicture })).toEqual({
+      expect(validateInfo({ ...info, profilePicture }, info)).toEqual({
         profilePicture: { code: 'invalidUrl' },
       });
     }
@@ -36,7 +48,7 @@ describe('validateInfo', () => {
   it('refuses a picture address longer than the column', () => {
     const profilePicture = `https://example.com/${'a'.repeat(500)}`;
 
-    expect(validateInfo({ ...info, profilePicture })).toEqual({
+    expect(validateInfo({ ...info, profilePicture }, info)).toEqual({
       profilePicture: { code: 'tooLong', max: 500 },
     });
   });

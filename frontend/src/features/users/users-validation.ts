@@ -62,14 +62,25 @@ function collect<F extends AccountField>(
   return errors;
 }
 
-/** The information form's rules; an empty object means it may be sent. */
-export function validateInfo(values: InfoValues): FieldErrors<InfoField> {
-  return collect<InfoField>([
+/**
+ * The information form's rules; an empty object means it may be sent. Only
+ * the fields that differ from `saved` are checked, like the backend's partial
+ * update: a value an OAuth login set outside the register rules (a 2-letter
+ * GitHub login as username) must not block saving another field.
+ */
+export function validateInfo(
+  values: InfoValues,
+  saved: InfoValues,
+): FieldErrors<InfoField> {
+  const checks: Array<[InfoField, ValidationError | undefined]> = [
     ['username', validateUsername(values.username)],
     ['firstName', validateName(values.firstName)],
     ['lastName', validateName(values.lastName)],
     ['profilePicture', validateProfilePicture(values.profilePicture)],
-  ]);
+  ];
+  return collect(
+    checks.filter(([field]) => values[field].trim() !== saved[field]),
+  );
 }
 
 /**
