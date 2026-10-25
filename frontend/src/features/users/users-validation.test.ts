@@ -55,6 +55,25 @@ describe('validateInfo', () => {
     }
   });
 
+  it('checks the picture on a browser without URL.parse (before Chrome 126)', () => {
+    // Shadowed, not deleted: jsdom's URL inherits `parse` from Node's.
+    Object.defineProperty(URL, 'parse', {
+      value: undefined,
+      configurable: true,
+    });
+    try {
+      const valid = { ...info, profilePicture: 'https://example.com/a.png' };
+      const invalid = { ...info, profilePicture: 'not a url' };
+
+      expect(validateInfo(valid, info)).toEqual({});
+      expect(validateInfo(invalid, info)).toEqual({
+        profilePicture: { code: 'invalidUrl' },
+      });
+    } finally {
+      Reflect.deleteProperty(URL, 'parse');
+    }
+  });
+
   it('refuses a picture address longer than the column', () => {
     const profilePicture = `https://example.com/${'a'.repeat(500)}`;
 
