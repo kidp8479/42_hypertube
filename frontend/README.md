@@ -19,7 +19,8 @@ e2e/                  # Playwright specs (real browser, against a running stack)
 ```
 
 Files are kebab-case `<feature>-<descriptor>`, tests `.test.ts(x)`, styles
-`.module.css` (`CONTRIBUTING.md` > File naming).
+Tailwind classes in the component, on the tokens of `src/styles/tokens.css`
+(ADR-0012, `CONTRIBUTING.md` > File naming).
 
 ## API access
 

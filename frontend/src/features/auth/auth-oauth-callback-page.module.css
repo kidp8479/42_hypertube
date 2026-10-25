@@ -1,7 +1,0 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  max-width: 20rem;
-  margin: var(--space-7) auto;
-}

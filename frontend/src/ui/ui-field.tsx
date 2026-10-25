@@ -1,7 +1,6 @@
 // Shared form field: label, input, hint and error wired together for
 // assistive technology, so no page rebuilds that by hand.
 import { useId, type InputHTMLAttributes } from 'react';
-import styles from './ui-field.module.css';
 
 /** Props of `Field`: every native input attribute plus its texts. */
 export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -38,20 +37,30 @@ export function Field({
       .filter(Boolean)
       .join(' ') || undefined;
   return (
-    <div className={styles.field}>
-      <label htmlFor={inputId} className={styles.label}>
+    <div className="grid content-start gap-2">
+      <label
+        htmlFor={inputId}
+        className="font-mono text-xs leading-label font-medium tracking-caps text-muted uppercase"
+      >
         {label}
       </label>
       <input
         {...input}
         id={inputId}
-        className={styles.input}
+        className="w-full border border-edge p-3 focus:border-ink aria-invalid:border-alert"
         aria-invalid={error || invalid ? true : undefined}
         aria-describedby={describedBy}
       />
       {error && (
-        <span id={messageId} className={styles.error}>
-          <svg viewBox="0 0 12 12" aria-hidden="true" className={styles.icon}>
+        <span
+          id={messageId}
+          className="flex items-start gap-2 text-sm text-alert"
+        >
+          <svg
+            viewBox="0 0 12 12"
+            aria-hidden="true"
+            className="mt-1 size-3 flex-none fill-none stroke-current stroke-[1.2px]"
+          >
             <circle cx="6" cy="6" r="5" />
             <path d="M6 3.2v3.4M6 8.4v.2" />
           </svg>
@@ -59,7 +68,10 @@ export function Field({
         </span>
       )}
       {!error && hint && (
-        <span id={messageId} className={styles.hint}>
+        <span
+          id={messageId}
+          className="font-mono text-xs leading-label text-muted"
+        >
           {hint}
         </span>
       )}

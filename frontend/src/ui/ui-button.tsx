@@ -1,11 +1,10 @@
 // Shared button: the one place the button look (solid / outline) is defined.
 import type { ButtonHTMLAttributes } from 'react';
-import styles from './ui-button.module.css';
+import { buttonClasses, type ButtonVariant } from './ui-button-classes';
 
 /** Props of `Button`: every native button attribute plus the look. */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** `solid` is the one main action of a screen, `outline` is any other. */
-  variant?: 'solid' | 'outline';
+  variant?: ButtonVariant;
 }
 
 /**
@@ -18,8 +17,6 @@ export function Button({
   className,
   ...rest
 }: ButtonProps) {
-  const classes = [styles.button, styles[variant], className]
-    .filter(Boolean)
-    .join(' ');
+  const classes = [buttonClasses(variant), className].filter(Boolean).join(' ');
   return <button type={type} className={classes} {...rest} />;
 }

@@ -35,10 +35,11 @@ it is public.
 
 - **The student starts a React/NestJS/TypeORM internship in ~10 days and is
   using this project to widen skills.** The guiding rule for the whole
-  frontend: build the fundamentals by hand (a `fetch` wrapper, CSS, Context,
+  frontend: build the fundamentals by hand (a `fetch` wrapper, Context,
   routing) and adopt only the modern tools that are themselves internship
-  skills (TanStack Query, Vitest). A file-based router or a data-router would
-  hide exactly the routing mechanics worth learning.
+  skills (TanStack Query, Vitest, and Tailwind since ADR-0012). A file-based
+  router or a data-router would hide exactly the routing mechanics worth
+  learning.
 - **Declarative routing keeps the route table in one readable place.** For an
   app this size (auth, movie library, video page, comments) the entire route
   tree fits on one screen in `App.tsx`. File-based routing pays off at dozens
@@ -92,5 +93,5 @@ it is public.
   the token and flags the session expired; `RequireAuth` then redirects.
 - Not covered here: the logout and refresh strategy (decided in
   [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)), and the
-  eventual styling-system decision (CSS Modules is the current default, not
-  yet ADR-worthy).
+  styling system (Tailwind CSS v4, decided in
+  [ADR-0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md)).

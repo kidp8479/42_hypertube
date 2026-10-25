@@ -10,7 +10,6 @@ import {
 import { isSupportedLanguage, storeLanguage } from '../lib/language';
 import { useAuth } from '../features/auth/auth-context';
 import { savePreferredLanguage } from './language-actions';
-import styles from './language-switcher.module.css';
 
 // Each language is named in itself, so it stays readable to someone who
 // landed on a language they cannot read.
@@ -44,10 +43,14 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <header className={styles.switcher}>
+    // Until the base layout (HYP-19) owns the page header, the switcher is the
+    // banner landmark of every page.
+    <header className="flex justify-end gap-2 px-4 py-2">
       <label>
         {t('language.label')}{' '}
+        {/* The open option list takes the select's own background. */}
         <select
+          className="min-h-target border border-edge bg-bg px-2 py-1"
           value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
           onChange={(event) => handleChange(event.target.value)}
         >

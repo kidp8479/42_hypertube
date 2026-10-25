@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
@@ -8,7 +9,7 @@ const apiProxyTarget =
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     // Dev-only: forward every /api/* call to the NestJS backend and strip
     // the prefix, so the browser talks to a single origin (no CORS) and
@@ -25,8 +26,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    // Resolve *.module.css imports in tests instead of throwing on them.
-    css: true,
     // Reset mock state between tests, matching the backend jest config.
     clearMocks: true,
     // e2e/ holds Playwright specs, run separately via `npm run test:e2e` -

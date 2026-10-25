@@ -1,20 +1,25 @@
 /*
- * Design tokens (HYP-66): the one place the visual identity is defined.
- * Components read these variables, they never hold a colour, a size or a
- * border width of their own.
+ * Design tokens (HYP-66): the one place the visual identity is defined, as
+ * the Tailwind theme (ADR-0012). Each variable here becomes utility classes
+ * (`--color-ink` gives `text-ink`, `bg-ink`, `border-ink`...), and the
+ * `initial` resets drop Tailwind's default palette and type scale, so a
+ * component can only use these values.
  *
  * Direction: dark, near-black with a blue-green cast, no gradients or shadows,
- * 1px monoline strokes, off-white for structure, orange and mint kept rare.
- * One dark look on purpose, so there is no light theme to maintain (the
- * library is full of colourful posters; a quiet frame suits them).
+ * 1px monoline strokes (Tailwind's `border`), off-white for structure, orange
+ * and mint kept rare. One dark look on purpose, so there is no light theme to
+ * maintain (the library is full of colourful posters; a quiet frame suits
+ * them).
  *
  * Contrast is computed (WCAG relative luminance), not estimated. Text needs
  * 4.5:1, a functional border 3:1; a decorative line may be lower.
+ *
+ * Space is Tailwind's default 4px step (`p-1` is 4px, `p-4` 16px), so it is
+ * not redefined here.
  */
-:root {
-  color-scheme: dark;
-
+@theme {
   /* Surfaces */
+  --color-*: initial;
   --color-bg: #171a1b;
   --color-surface: #1f2324;
 
@@ -34,39 +39,38 @@
 
   /* Type. IBM Plex is self-hosted (@fontsource, imported in main.tsx), so no
      request leaves for a font CDN; the system stacks are the fallback. */
+  --font-*: initial;
   --font-sans:
     'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  /* No paired line height: a `text-*` class keeps the line height around it. */
+  --text-*: initial;
   --text-xs: 0.75rem; /* 12px: labels, hints, captions */
   --text-sm: 0.8125rem; /* 13px: buttons, alerts */
   --text-base: 0.9375rem; /* 15px: body */
   --text-lg: 1.5rem; /* 24px: page titles */
+  --leading-*: initial;
   --leading-body: 1.5;
   --leading-title: 1.2;
+  --leading-label: normal; /* monospace labels and buttons: the font's own */
+  --tracking-*: initial;
   --tracking-label: 0.04em; /* monospace labels: buttons */
   --tracking-caps: 0.1em; /* uppercase field labels */
 
-  /* Space: a 4px base, every gap and padding is one of these. */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-
-  /* Strokes and corners. Controls are square; only the round badge and the
-     pill chip are round. */
-  --border-width: 1px;
-  --radius-none: 0;
+  /* Corners. Controls are square (no class needed); only the round badge
+     and the pill chip are round. */
+  --radius-*: initial;
   --radius-sm: 2px;
   --radius-round: 50%;
   --radius-pill: 999px;
 
-  /* Focus and targets */
+  /* Targets: 24px, the WCAG 2.2 minimum (`min-h-target`). */
+  --spacing-target: 1.5rem;
+}
+
+/* Not utility values: the focus ring every focusable element shares. */
+:root {
+  color-scheme: dark;
   --focus-ring: 2px solid var(--color-ink);
   --focus-offset: 2px;
-  --target-min: 1.5rem; /* 24px, WCAG 2.2 minimum target size */
-  --badge-size-sm: 1.25rem; /* the icon badge inside an alert */
-  --icon-xs: 0.75rem; /* 12px: the mark before a field error */
 }
