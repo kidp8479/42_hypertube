@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthContext } from '../auth/auth-context';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { PublicProfilePage } from './users-public-profile-page';
 
 function renderAt(path: string, answer?: Response) {
@@ -19,13 +19,7 @@ function renderAt(path: string, answer?: Response) {
       }
     >
       <AuthContext.Provider
-        value={{
-          state: { status: 'authenticated', user: fakeUser },
-          login: vi.fn(),
-          loginWithOAuthCode: vi.fn(),
-          logout: vi.fn(),
-          updateUser: vi.fn(),
-        }}
+        value={fakeAuth({ status: 'authenticated', user: fakeUser })}
       >
         <MemoryRouter initialEntries={[path]}>
           <Routes>

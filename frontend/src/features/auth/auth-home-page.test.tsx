@@ -1,21 +1,15 @@
 // Spec for HomePage: shows the signed-in user and follows a language switch.
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import i18n from '../../lib/i18n';
 import { AuthContext } from './auth-context';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { HomePage } from './auth-home-page';
 
 function renderHomePage() {
   render(
     <AuthContext.Provider
-      value={{
-        state: { status: 'authenticated', user: fakeUser },
-        login: vi.fn(),
-        loginWithOAuthCode: vi.fn(),
-        logout: vi.fn(),
-        updateUser: vi.fn(),
-      }}
+      value={fakeAuth({ status: 'authenticated', user: fakeUser })}
     >
       <HomePage />
     </AuthContext.Provider>,

@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthContext } from '../auth/auth-context';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { ProfilePage } from './users-profile-page';
 
 function renderProfile(answer: Response) {
@@ -15,13 +15,10 @@ function renderProfile(answer: Response) {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider
-        value={{
-          state: { status: 'authenticated', user: fakeUser },
-          login: vi.fn(),
-          loginWithOAuthCode: vi.fn(),
-          logout: vi.fn(),
-          updateUser,
-        }}
+        value={fakeAuth(
+          { status: 'authenticated', user: fakeUser },
+          { updateUser },
+        )}
       >
         <ProfilePage />
       </AuthContext.Provider>

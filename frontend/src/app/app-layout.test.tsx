@@ -8,22 +8,14 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import i18n from '../lib/i18n';
 import { AuthContext } from '../features/auth/auth-context';
 import type { AuthState } from '../features/auth/auth-reducer';
-import { fakeUser } from '../test/fixtures';
+import { fakeUser, fakeAuth } from '../test/fixtures';
 import { AppLayout } from './app-layout';
 
 function renderLayout(state: AuthState) {
   const logout = vi.fn();
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider
-        value={{
-          state,
-          login: vi.fn(),
-          loginWithOAuthCode: vi.fn(),
-          logout,
-          updateUser: vi.fn(),
-        }}
-      >
+      <AuthContext.Provider value={fakeAuth(state, { logout })}>
         <MemoryRouter initialEntries={['/']}>
           <Routes>
             <Route element={<AppLayout />}>

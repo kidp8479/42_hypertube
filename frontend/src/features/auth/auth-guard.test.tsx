@@ -1,24 +1,18 @@
 // Spec for RequireAuth: protected route when authenticated, redirect to
 // /login when anonymous, a loading message while auth is resolving.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { AuthContext, type AuthContextValue } from './auth-context';
+import { AuthContext } from './auth-context';
 import type { AuthState } from './auth-reducer';
-import { fakeUser } from '../../test/fixtures';
+import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { RequireAuth } from './auth-guard';
 
 // Render the guard inside a real router so a redirect actually changes the
 // rendered route, exactly as it would in the app. `/` is protected, `/login`
 // is the public landing the guard sends anonymous users to.
 function renderGuard(state: AuthState) {
-  const value: AuthContextValue = {
-    state,
-    login: vi.fn(),
-    loginWithOAuthCode: vi.fn(),
-    logout: vi.fn(),
-    updateUser: vi.fn(),
-  };
+  const value = fakeAuth(state);
   return render(
     <AuthContext.Provider value={value}>
       <MemoryRouter initialEntries={['/']}>
