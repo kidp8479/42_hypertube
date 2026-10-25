@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { OAuthCodeRejectedError } from './auth-actions';
 import { Alert } from '../../ui/ui-alert';
 import { useAuth } from './auth-context';
-import styles from './auth-oauth-callback-page.module.css';
 
 /** The backend's `?error=` reasons, plus `expired` for a rejected code. */
 type OAuthErrorCode = 'cancelled' | 'email_unverified' | 'failed' | 'expired';
@@ -82,7 +81,7 @@ export function OAuthCallbackPage() {
   }, [code, bootstrapping, loginWithOAuthCode, navigate]);
 
   return (
-    <main className={styles.page}>
+    <main className="mx-auto my-12 flex max-w-80 flex-col gap-4">
       {/* React hoists this to <head>: no page loaded from here may learn the callback URL. */}
       <meta name="referrer" content="no-referrer" />
       <h1>{t('oauthCallback.title')}</h1>

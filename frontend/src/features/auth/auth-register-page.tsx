@@ -23,11 +23,15 @@ import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
-import styles from './auth-register-page.module.css';
+import { AUTH_LINKS } from './auth-form-classes';
 
 // The form-level error is stored as a translation key, not a sentence, so it
 // is translated at render time and follows a language switch.
 type FormError = 'register.conflict' | 'errors.generic';
+
+const FORM = 'mx-auto my-12 flex max-w-md flex-col gap-4';
+// Pairs share a row when there is room, stack on a phone.
+const ROW = 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4';
 
 /** A labelled input plus its validation message, for one register field. */
 function RegisterInput({
@@ -120,10 +124,10 @@ export function RegisterPage() {
 
   return (
     <main>
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      <form className={FORM} onSubmit={handleSubmit} noValidate>
         <h1>{t('register.title')}</h1>
 
-        <div className={styles.row}>
+        <div className={ROW}>
           <RegisterInput
             field="firstName"
             type="text"
@@ -159,7 +163,7 @@ export function RegisterPage() {
           placeholder={t('placeholders.email')}
           onChange={handleChange}
         />
-        <div className={styles.row}>
+        <div className={ROW}>
           <RegisterInput
             field="password"
             type="password"
@@ -186,7 +190,7 @@ export function RegisterPage() {
 
         <OAuthButtons />
 
-        <p className={styles.links}>
+        <p className={`m-0 ${AUTH_LINKS}`}>
           {t('register.hasAccount')}{' '}
           <Link to="/login">{t('register.logIn')}</Link>
         </p>

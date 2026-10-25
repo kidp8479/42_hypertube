@@ -11,7 +11,7 @@ import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
-import styles from './auth-login-page.module.css';
+import { AUTH_LINKS } from './auth-form-classes';
 
 // Stored as a translation key, not a sentence, so it follows a language switch.
 type LoginError = 'login.badCredentials' | 'errors.generic';
@@ -56,7 +56,10 @@ export function LoginPage() {
 
   return (
     <main>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form
+        className="mx-auto my-12 flex max-w-80 flex-col gap-4"
+        onSubmit={handleSubmit}
+      >
         <h1>{t('login.title')}</h1>
 
         {justRegistered && (
@@ -92,7 +95,7 @@ export function LoginPage() {
 
         <OAuthButtons />
 
-        <div className={styles.links}>
+        <div className={AUTH_LINKS}>
           {/* Not wired yet: password reset is HYP-34. Kept for the layout. */}
           <a
             href="#forgot-password"

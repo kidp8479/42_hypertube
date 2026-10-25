@@ -4,7 +4,6 @@
 import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '../../ui/ui-button';
 import { useAuth } from './auth-context';
-import styles from './auth-home-page.module.css';
 
 /**
  * Landing page behind {@link RequireAuth}. Renders the current user's identity
@@ -21,7 +20,7 @@ export function HomePage() {
   const user = state.user;
 
   return (
-    <main className={styles.page}>
+    <main className="mx-auto my-12 flex max-w-lg flex-col items-start gap-4">
       <h1>Hypertube</h1>
       <p>
         <Trans
