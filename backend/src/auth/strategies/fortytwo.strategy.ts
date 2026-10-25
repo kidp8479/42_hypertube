@@ -7,6 +7,7 @@ import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
 import { CookieStateStore } from './cookie-state.store';
 import { fetchJson } from './fetch-json.util';
+import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 // snake_case fields because this mirrors 42's /v2/me JSON response as-is -
 // mapped to the camelCase OAuthProfile in validate() below.
@@ -61,13 +62,17 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
     refreshToken: string,
     profile: FortyTwoProfile,
   ): OAuthProfile {
+    // Not expected from 42, but the contract of OAuthProfile.email holds
+    // for every provider: no address, no login.
+    if (!profile.email) {
+      throw new UnverifiedEmailException();
+    }
     return {
       provider: OAuthProvider.FORTYTWO,
       providerUserId: String(profile.id),
-      email: profile.email,
       // 42 verifies the account's email at signup on the intra; there is
       // no "verified" flag in the /v2/me response because it's always true.
-      emailVerified: true,
+      email: profile.email,
       suggestedUsername: profile.login,
       firstName: profile.first_name,
       lastName: profile.last_name,

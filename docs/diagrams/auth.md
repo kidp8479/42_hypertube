@@ -119,24 +119,23 @@ sequenceDiagram
 ## 4. OAuth identity linking (HYP-11)
 
 `AuthService.resolveOAuthUser`: which local account a provider identity
-signs into.
+signs into. The strategy has already refused a profile without a
+provider-verified email (`UnverifiedEmailException`), so matching by email is
+safe.
 
 ```mermaid
 flowchart TD
     A["GET /auth/{42,github}/callback"] --> B["Strategy.validate() -> OAuthProfile"]
     B --> C{"(provider, providerUserId)<br/>already linked?"}
     C -- yes --> L["sign in as that user<br/>(exchange code, see 3)"]
-    C -- no --> D{"email verified<br/>by the provider?"}
-    D -- yes --> E{"local user with<br/>this email?"}
-    D -- no --> F["create a new user"]
+    C -- no --> E{"local user with<br/>this email?"}
     E -- yes --> G["link identity to that user;<br/>revoke its local password, if it has one"]
-    E -- no --> F
+    E -- no --> F["create a new user"]
     F --> H["link identity to the new user"]
     G --> L
     H --> L
-    H -. "unique violation<br/>(concurrent callback)" .-> R["re-read the winner's link"]
-    R --> L
-    F -. "unique violation on email / username<br/>(concurrent first login) - not handled yet, HYP-55" .-> X["409 or orphan user"]
+    F & G & H -. "unique violation" .-> C2["another request inserted first:<br/>run the resolution once more<br/>(a second violation is a 409)"]
+    C2 --> C
 ```
 
 ## 5. OAuth callback page, frontend side (HYP-57)

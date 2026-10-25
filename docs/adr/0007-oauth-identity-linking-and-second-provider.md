@@ -29,8 +29,7 @@ provider vouches that email is verified.
   account: doing so would let an attacker who controls an unverified
   address on one provider claim someone else's account on another.
 - **A shared `OAuthProfile` shape** (`provider`, `providerUserId`,
-  `email`, `emailVerified`, `suggestedUsername`, `firstName`,
-  `lastName`) that every strategy's `validate()` maps into, so
+  `email`, `suggestedUsername`, `firstName`, `lastName`) that every strategy's `validate()` maps into, so
   `AuthService.resolveOAuthUser` stays provider-agnostic. A third provider
   costs one new strategy file, not a change to the linking logic.
 
@@ -57,12 +56,12 @@ provider vouches that email is verified.
   both pass the "not linked yet" check and race to create the same
   `(provider, providerUserId)` row. The database's unique constraint is
   the source of truth; the loser recovers by re-reading the link the
-  winner created and signs in through it, rather than surfacing the
+  winner created (since 2026-10-25, through a rerun of the whole
+  resolution) and signs in through it, rather than surfacing the
   unique-violation 409 to what is, from the user's side, a successful
   login.
-  The user-creation step just before it is not covered yet: the same
-  double first login can fail on the `email` / `username` unique
-  constraint (409, or an orphan `User` row), tracked in HYP-55.
+  The user-creation step just before it is covered too, see the
+  2026-10-25 amendment.
 - **Token handoff after an OAuth callback:** a single-use exchange code,
   not a JWT placed directly in a redirect URL (which would leak it into
   browser history and server logs). Built in HYP-53, see the amendment
@@ -194,3 +193,24 @@ state check would fail on every login.
   `X-Forwarded-Proto`), so a dev stack behind the TLS proxy gets it too.
 - The callback URLs registered at the providers are the proxy's HTTPS ones,
   and `FRONTEND_ORIGIN` is the proxy's origin, where the SPA callback page is.
+
+## Amendment 2026-10-25: the verified-email rule lives in the strategies, and a lost user-creation race runs again (HYP-55)
+
+- **`OAuthProfile.emailVerified` is gone.** Both strategies set it to `true`
+  (42 always verifies, GitHub keeps only the primary+verified row), so the
+  "unverified: create without matching" branch of `resolveOAuthUser` could
+  not run, and would have answered 409 on an existing email if it ever had.
+  The rule above is unchanged, but it is now the strategies' contract:
+  `OAuthProfile.email` is always provider-verified, and a strategy that has
+  none refuses the login with `UnverifiedEmailException`. A new provider
+  (HYP-20) must do the same.
+- **A unique violation runs the whole resolution once more.** Two first
+  logins for the same provider account (a double-click), or one racing a
+  local registration of the same address or a sign-up taking the same
+  username, can both read "no link, no user" before either inserts; the
+  loser's user insert then hits the `email` or `username` constraint. The
+  rerun sees what the winner committed: its link (that user), its user by
+  email (linked, with any local password revoked first, as above), or a
+  free username. A lost race on the link insert takes the same rerun,
+  which finds the winner's link. A second violation is rethrown and
+  becomes the 409.

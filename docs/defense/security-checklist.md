@@ -84,7 +84,7 @@ the id checked for ownership comes from the verified token
 | Login CSRF: `state` must equal a one-shot nonce cookie set by `/auth/<provider>/login` (`HttpOnly`, `SameSite=Lax`, `Path=/auth`, ~10 min, `Secure` in production), compared in constant time and cleared on the callback | `auth/strategies/cookie-state.store.ts`, passed as `store` to both strategies | `cookie-state.store.spec.ts`; Bruno 17-18; `frontend/e2e/oauth.spec.ts` |
 | No JWT in a URL: the callback redirects to the SPA with a single-use exchange code (32 random bytes, 60 s TTL, deleted on first use), traded for the token by `POST /auth/oauth/exchange` | `auth/oauth-exchange.service.ts`, `auth.controller.ts` | `oauth-exchange.service.spec.ts`; Bruno 19-20 |
 | Unknown, used and expired codes answer the same `401` | `AuthController.exchange` | `auth.controller.spec.ts` |
-| A provider identity auto-links to an existing account only through a verified email (GitHub: primary + verified row of `/user/emails`, never the public profile email) | `auth.service.ts` `resolveOAuthUser`, `github.strategy.ts` | `auth.service.spec.ts`, `github.strategy.spec.ts`; ADR-0007 |
+| A provider identity auto-links to an existing account only through a verified email: a strategy returns only a provider-verified address or refuses the login (GitHub: primary + verified row of `/user/emails`, never the public profile email) | `auth.service.ts` `resolveOAuthUser`, `oauth-profile.interface.ts`, `github.strategy.ts` | `auth.service.spec.ts`, `github.strategy.spec.ts`; ADR-0007 |
 | Account pre-hijacking: linking a provider to an account that has a password revokes that password | `auth.service.ts` `resolveOAuthUser` | `auth.service.spec.ts`; ADR-0007 |
 | One provider account maps to one local user: unique `(provider, providerUserId)`, the loser of a link race signs in through the winner's row | `auth/entities/oauth-account.entity.ts`, `AuthService.recoverFromLinkRace` | `auth.service.spec.ts` |
 | A failed callback leaks nothing: it redirects to the SPA with one of three reasons (`cancelled`, `email_unverified`, `failed`), details stay in the server log; success and failure redirects send `Referrer-Policy: no-referrer` (the callback URL holds the provider's `code` and `state`) | `auth/filters/oauth-callback.filter.ts`, `auth/decorators/oauth-callback.decorator.ts` | `oauth-callback.filter.spec.ts`; Bruno 17-18; ADR-0007 amendment |
@@ -158,7 +158,6 @@ store is only needed once more than one backend instance runs (noted in
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | Upload validation not built | HYP-38 | n/a until uploads exist |
 | Password strength check not built | HYP-37 | low |
-| Two concurrent first-time OAuth callbacks can race on user creation (409 or orphan user) | HYP-55 | low - needs a double-click on a first login |
 
 ## Notes
 

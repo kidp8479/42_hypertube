@@ -14,10 +14,10 @@ import { User } from '../users/entities/user.entity';
 import { ARGON2_OPTIONS } from './argon2.config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
-import { UNIQUE_VIOLATION } from '../common/filters/query-failed.filter';
+import { isUniqueViolation } from '../common/utils/unique-violation.util';
 
 /**
  * Credential verification and token issuance for the login flow, plus the
@@ -106,16 +106,13 @@ export class AuthService implements OnModuleInit {
    * Finds or creates the local `User` behind a verified OAuth identity.
    * It does not sign anyone in: the caller hands the user over through a
    * single-use exchange code, and the JWT is minted when that code is
-   * redeemed (ADR-0007). Three cases, checked in order:
+   * redeemed (ADR-0007). Two cases, checked in order:
    * 1. This (provider, providerUserId) pair is already linked - that user,
    *    nothing else to do.
-   * 2. Not linked yet, but the provider vouches the email is verified -
-   *    link to an existing local account with that email if one exists
-   *    (revoking that account's password, see below), otherwise create a
-   *    fresh one.
-   * 3. Not linked and the email isn't verified - create a fresh account
-   *    without matching by email (matching an unverified email to an
-   *    existing account would let an attacker claim it as their own).
+   * 2. Not linked yet - link to an existing local account with that email
+   *    if one exists (revoking that account's password, see below),
+   *    otherwise create a fresh one. The email is provider-verified
+   *    (`OAuthProfile.email`).
    *
    * Revoking the password on link: local registration does not verify the
    * email, so an attacker could pre-register a victim's address with a
@@ -129,8 +126,24 @@ export class AuthService implements OnModuleInit {
    * than the one a local account was registered with would otherwise
    * dodge the case-insensitive match in case 2 and create a duplicate
    * account instead of linking to the existing one.
+   *
+   * A unique violation (a concurrent first login, registration or
+   * sign-up won the race to insert) runs the whole resolution once more,
+   * so the winner's rows go through the normal path instead of a 409. A
+   * second violation is rethrown (ADR-0007, 2026-10-25 amendment).
    */
   async resolveOAuthUser(profile: OAuthProfile): Promise<User> {
+    try {
+      return await this.resolveOAuthUserOnce(profile);
+    } catch (err) {
+      if (!isUniqueViolation(err)) {
+        throw err;
+      }
+      return this.resolveOAuthUserOnce(profile);
+    }
+  }
+
+  private async resolveOAuthUserOnce(profile: OAuthProfile): Promise<User> {
     const email = normalizeEmail(profile.email);
 
     const existingAccount = await this.oauthAccountRepository.findOneBy({
@@ -141,10 +154,7 @@ export class AuthService implements OnModuleInit {
       return this.usersService.findOne(existingAccount.userId);
     }
 
-    let user: User | null = null;
-    if (profile.emailVerified) {
-      user = await this.usersService.findByEmail(email);
-    }
+    let user = await this.usersService.findByEmail(email);
     // Set only when linking to an account registered locally with a
     // password: registration never verifies the email, so that password
     // may belong to someone who does not own the address.
@@ -161,45 +171,13 @@ export class AuthService implements OnModuleInit {
       await this.usersService.clearPassword(passwordToRevoke);
     }
 
-    try {
-      await this.oauthAccountRepository.save(
-        this.oauthAccountRepository.create({
-          provider: profile.provider,
-          providerUserId: profile.providerUserId,
-          userId: user.id,
-        }),
-      );
-    } catch (err) {
-      user = await this.recoverFromLinkRace(profile, err);
-    }
-
+    await this.oauthAccountRepository.save(
+      this.oauthAccountRepository.create({
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+        userId: user.id,
+      }),
+    );
     return user;
-  }
-
-  /**
-   * Handles a lost race on the `oauth_account` insert: a second,
-   * concurrent callback for this same provider account (e.g. a
-   * double-click) won and already holds the link this one tried to
-   * create. From the user's side both requests are one successful login,
-   * so return the winner's user and sign in through it instead of
-   * surfacing the unique-violation 409 the global filter would otherwise
-   * produce. Anything else is rethrown untouched.
-   */
-  private async recoverFromLinkRace(
-    profile: OAuthProfile,
-    err: unknown,
-  ): Promise<User> {
-    const code = (err as QueryFailedError & { code?: string }).code;
-    if (!(err instanceof QueryFailedError) || code !== UNIQUE_VIOLATION) {
-      throw err;
-    }
-    const account = await this.oauthAccountRepository.findOneBy({
-      provider: profile.provider,
-      providerUserId: profile.providerUserId,
-    });
-    if (!account) {
-      throw err;
-    }
-    return this.usersService.findOne(account.userId);
   }
 }

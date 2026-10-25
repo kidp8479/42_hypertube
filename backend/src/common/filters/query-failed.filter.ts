@@ -2,9 +2,7 @@
 import { ArgumentsHost, Catch, ConflictException } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { QueryFailedError } from 'typeorm';
-
-/** Postgres error code for a unique-constraint violation. */
-export const UNIQUE_VIOLATION = '23505';
+import { isUniqueViolation } from '../utils/unique-violation.util';
 
 /**
  * Turns a Postgres unique-violation into a 409 instead of letting it
@@ -19,8 +17,7 @@ export const UNIQUE_VIOLATION = '23505';
 @Catch(QueryFailedError)
 export class QueryFailedFilter extends BaseExceptionFilter {
   catch(exception: QueryFailedError, host: ArgumentsHost) {
-    const code = (exception as QueryFailedError & { code?: string }).code;
-    if (code === UNIQUE_VIOLATION) {
+    if (isUniqueViolation(exception)) {
       super.catch(new ConflictException('Resource already exists'), host);
       return;
     }
