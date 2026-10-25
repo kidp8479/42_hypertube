@@ -1,5 +1,4 @@
-// Language picker, shown on every page as its banner until the base layout
-// (HYP-19) hosts it.
+// Language picker, in the app header of every page.
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -43,24 +42,22 @@ export function LanguageSwitcher() {
   }
 
   return (
-    // Until the base layout (HYP-19) owns the page header, the switcher is the
-    // banner landmark of every page.
-    <header className="flex justify-end gap-2 px-4 py-2">
-      <label>
-        {t('language.label')}{' '}
-        {/* The open option list takes the select's own background. */}
-        <select
-          className="min-h-target border border-edge bg-bg px-2 py-1"
-          value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
-          onChange={(event) => handleChange(event.target.value)}
-        >
-          {SUPPORTED_LANGUAGES.map((language) => (
-            <option key={language} value={language}>
-              {LANGUAGE_NAMES[language]}
-            </option>
-          ))}
-        </select>
-      </label>
-    </header>
+    // On a phone the label is for screen readers only, to keep the header on
+    // one row.
+    <label>
+      <span className="sr-only sm:not-sr-only">{t('language.label')} </span>
+      {/* The open option list takes the select's own background. */}
+      <select
+        className="min-h-target border border-edge bg-bg px-2 py-1"
+        value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
+        onChange={(event) => handleChange(event.target.value)}
+      >
+        {SUPPORTED_LANGUAGES.map((language) => (
+          <option key={language} value={language}>
+            {LANGUAGE_NAMES[language]}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

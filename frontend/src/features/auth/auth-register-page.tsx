@@ -123,7 +123,7 @@ export function RegisterPage() {
   }
 
   return (
-    <main>
+    <>
       <form className={FORM} onSubmit={handleSubmit} noValidate>
         <h1>{t('register.title')}</h1>
 
@@ -195,6 +195,6 @@ export function RegisterPage() {
           <Link to="/login">{t('register.logIn')}</Link>
         </p>
       </form>
-    </main>
+    </>
   );
 }

@@ -10,12 +10,12 @@ is recorded in [ADR-0006](../docs/adr/0006-frontend-architecture.md).
 ```
 src/
 ├── main.tsx          # entry point
-├── App.tsx           # the single route table (public routes + <RequireAuth> subtree)
-├── app/              # provider stack, language switcher and sync
+├── App.tsx           # the single route table, inside the layout (public routes + <RequireAuth> subtree)
+├── app/              # provider stack, layout (header, footer), language switcher and sync
 ├── features/auth/    # auth state machine, guard, auth pages (login, register, OAuth), auth strings (en/fr)
 ├── lib/              # fetch wrapper (apiFetch), token accessor, QueryClient, i18n setup and language rules
 └── test/             # Vitest setup and shared fixtures
-e2e/                  # Playwright specs (real browser, against a running stack)
+e2e/                  # Playwright specs (Chromium and Firefox, against a running stack)
 ```
 
 Files are kebab-case `<feature>-<descriptor>`, tests `.test.ts(x)`, styles
@@ -38,6 +38,6 @@ Run from the repo root through `make`:
 |---|---|
 | `make dev-frontend` | `dev` (Vite dev server on :5173) |
 | `make test-frontend` | `test` (Vitest, jsdom) |
-| `make test-e2e` | `test:e2e` (Playwright; needs the stack already up, `E2E_BASE_URL` overrides the default `https://localhost:8443`, the edge proxy) |
+| `make test-e2e` | `test:e2e` (Playwright in Chromium and Firefox; needs the stack already up, `E2E_BASE_URL` overrides the default `https://localhost:8443`, the edge proxy; once per machine: `npx playwright install chromium firefox`) |
 | `make lint-check-frontend` | `lint:check` (`--max-warnings 0`, ADR-0005) |
 | `make typecheck-frontend` | `typecheck` |

@@ -1,18 +1,16 @@
 // Protected `/` route: the placeholder landing page shown once logged in. It
-// proves the round trip works: it reads the bootstrapped user off the context
-// and offers a way back out. The video library (HYP-13) takes its place.
+// proves the round trip works: it reads the bootstrapped user off the context.
+// The video library (HYP-13) takes its place.
 import { Trans, useTranslation } from 'react-i18next';
-import { Button } from '../../ui/ui-button';
 import { useAuth } from './auth-context';
 
 /**
- * Landing page behind {@link RequireAuth}. Renders the current user's identity
- * and a logout control; it never redirects on logout itself - clearing the
- * auth state flips the guard to `anonymous`, which sends the user to `/login`.
+ * Landing page behind {@link RequireAuth}: renders the current user's
+ * identity. Logging out is in the app header.
  */
 export function HomePage() {
   const { t } = useTranslation('auth');
-  const { state, logout } = useAuth();
+  const { state } = useAuth();
 
   // RequireAuth only renders this component in the `authenticated` state, so
   // `state.user` is always set here - the `?.` is a type-level guard, not a
@@ -20,9 +18,10 @@ export function HomePage() {
   const user = state.user;
 
   return (
-    <main className="mx-auto my-12 flex max-w-lg flex-col items-start gap-4">
+    <div className="mx-auto my-12 flex max-w-lg flex-col items-start gap-4">
       <h1>Hypertube</h1>
-      <p>
+      {/* An email has no space to break at: let it wrap anywhere on a phone. */}
+      <p className="wrap-anywhere">
         <Trans
           t={t}
           i18nKey="home.signedIn"
@@ -30,7 +29,6 @@ export function HomePage() {
           components={{ strong: <strong /> }}
         />
       </p>
-      <Button onClick={logout}>{t('home.logout')}</Button>
-    </main>
+    </div>
   );
 }

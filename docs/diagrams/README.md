@@ -15,6 +15,7 @@ directly, so there is nothing to export.
 | Language | [`i18n.md`](i18n.md) | overview, which language wins, switching, registration |
 | Network | [`network.md`](network.md) | overview (edge proxy, ports, services), one request through the edge |
 | Database | [`database.md`](database.md) | overview (entity change, migration, boot, drift check) |
+| Layout | [`layout.md`](layout.md) | overview (header, main, footer around every route), header by session state |
 
 Domains still to come, each with its own page once built: video library
 and search (HYP-13), torrent download (HYP-12), streaming and transcoding

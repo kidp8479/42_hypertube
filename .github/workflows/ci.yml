@@ -94,9 +94,9 @@ jobs:
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci
-      - name: Install Playwright's chromium
+      - name: Install Playwright's chromium and firefox
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
       - name: Start the stack
         run: docker compose up -d --build
       # The proxy answers 502/503/504 while the backend is still booting (and

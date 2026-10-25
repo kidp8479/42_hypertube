@@ -47,7 +47,6 @@ export const authEn = {
   },
   home: {
     signedIn: 'Signed in as <strong>{{username}}</strong> ({{email}})',
-    logout: 'Log out',
   },
   oauth: {
     continueWith: 'Continue with {{provider}}',

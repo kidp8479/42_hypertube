@@ -55,7 +55,7 @@ export function LoginPage() {
   }
 
   return (
-    <main>
+    <>
       <form className={`${AUTH_COLUMN} max-w-80`} onSubmit={handleSubmit}>
         <h1>{t('login.title')}</h1>
 
@@ -103,6 +103,6 @@ export function LoginPage() {
           <Link to="/register">{t('login.createAccount')}</Link>
         </div>
       </form>
-    </main>
+    </>
   );
 }
