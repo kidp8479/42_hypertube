@@ -26,8 +26,9 @@ type Outcome =
   | 'errors.generic';
 
 // What each refusal of `PATCH /users/:id` means here. The form always sends
-// `currentPassword`, so a 400 on valid input is the account having no
-// password to confirm with (`UsersService.update`).
+// `currentPassword`, so a 400 is the account having no password to confirm
+// with (`UsersService.update`), or an address that passes the loose client
+// rule but not @IsEmail: the message names both.
 const REFUSALS: Partial<Record<number, Outcome>> = {
   400: 'credentials.noPassword',
   403: 'credentials.wrongPassword',

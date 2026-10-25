@@ -37,6 +37,14 @@ function validateProfilePicture(url: string): ValidationError | undefined {
     : { code: 'invalidUrl' };
 }
 
+// 100 is UpdateUserDto's @MaxLength: a longer one cannot be the password.
+function validateCurrentPassword(value: string): ValidationError | undefined {
+  if (value === '') {
+    return { code: 'required' };
+  }
+  return value.length > 100 ? { code: 'tooLong', max: 100 } : undefined;
+}
+
 function collect<F extends AccountField>(
   checks: Array<[F, ValidationError | undefined]>,
 ): FieldErrors<F> {
@@ -79,9 +87,6 @@ export function validateCredentials(
         ? validateConfirmPassword(values.password, values.confirmPassword)
         : undefined,
     ],
-    [
-      'currentPassword',
-      values.currentPassword === '' ? { code: 'required' } : undefined,
-    ],
+    ['currentPassword', validateCurrentPassword(values.currentPassword)],
   ]);
 }

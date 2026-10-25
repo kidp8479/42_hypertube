@@ -55,6 +55,12 @@ describe('validateCredentials', () => {
     ).toEqual({ currentPassword: { code: 'required' } });
   });
 
+  it('refuses a current password longer than the backend accepts', () => {
+    expect(
+      validateCredentials({ ...credentials, currentPassword: 'a'.repeat(101) }),
+    ).toEqual({ currentPassword: { code: 'tooLong', max: 100 } });
+  });
+
   it('checks a new password and its confirmation', () => {
     expect(
       validateCredentials({

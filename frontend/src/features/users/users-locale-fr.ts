@@ -29,7 +29,7 @@ export const usersFr: typeof usersEn = {
     wrongPassword: 'Le mot de passe actuel est incorrect.',
     emailTaken: 'Cette adresse e-mail est déjà utilisée par un autre compte.',
     noPassword:
-      "Ce compte n'a pas encore de mot de passe (il a été créé avec 42 ou GitHub) : son e-mail et son mot de passe ne peuvent pas être modifiés ici.",
+      "La modification a été refusée. Vérifiez l'adresse e-mail. Si ce compte a été créé avec 42 ou GitHub, il n'a pas encore de mot de passe : son e-mail et son mot de passe ne peuvent pas être modifiés ici.",
   },
   publicProfile: {
     loading: 'Chargement du profil...',

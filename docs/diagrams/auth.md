@@ -318,7 +318,7 @@ flowchart LR
     PATCH -- "200" --> U["updateUser: the header follows"]
     PATCH -- "409" --> T["username or email taken"]
     PATCH -- "403" --> W["current password is wrong"]
-    PATCH -- "400 (credentials form)" --> N["account has no password yet"]
+    PATCH -- "400 (credentials form)" --> N["no password yet,<br/>or an email @IsEmail refuses"]
 ```
 
 - An emptied picture is sent as `null`, which removes it.

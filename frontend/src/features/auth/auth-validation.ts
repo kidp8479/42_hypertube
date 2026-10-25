@@ -30,9 +30,10 @@ export type ValidationError =
   | { code: 'invalidUrl' };
 export type RegisterErrors = Partial<Record<RegisterField, ValidationError>>;
 
-// Deliberately loose (something@something.tld): a stricter pattern would
-// reject valid addresses, and the backend's @IsEmail has the final say.
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Deliberately loose (something@something.tld, a TLD of 2 characters or
+// more like @IsEmail asks): a stricter pattern would reject valid addresses,
+// and the backend's @IsEmail has the final say.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
 
 export function validateEmail(email: string): ValidationError | undefined {
   const trimmedEmail = email.trim();
