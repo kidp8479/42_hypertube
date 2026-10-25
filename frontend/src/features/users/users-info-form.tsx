@@ -47,8 +47,14 @@ function changesFrom(user: User, values: InfoValues): ProfileChanges {
   return changes;
 }
 
+/** Props of `InfoForm`. */
+export interface InfoFormProps {
+  /** The signed-in user, as last saved. */
+  user: User;
+}
+
 /** Edits the public part of one's own profile. Saves only the changed fields. */
-export function InfoForm({ user }: { user: User }) {
+export function InfoForm({ user }: InfoFormProps) {
   const { t } = useTranslation('users');
   const { t: tAuth } = useTranslation('auth');
   const { updateUser } = useAuth();

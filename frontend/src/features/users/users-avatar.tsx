@@ -3,6 +3,13 @@ import { useState } from 'react';
 
 const SIZES = { sm: 'size-6 text-xs', lg: 'size-20 text-lg' } as const;
 
+/** Props of `UserAvatar`. */
+export interface UserAvatarProps {
+  username: string;
+  picture: string | null;
+  size?: keyof typeof SIZES;
+}
+
 /**
  * Shows the profile picture, falling back to the username's initial when
  * there is none or it fails to load. The picture is an address the user
@@ -13,11 +20,7 @@ export function UserAvatar({
   username,
   picture,
   size = 'sm',
-}: {
-  username: string;
-  picture: string | null;
-  size?: keyof typeof SIZES;
-}) {
+}: UserAvatarProps) {
   // The address that failed, so a new address gets its own try.
   const [failedPicture, setFailedPicture] = useState<string | null>(null);
   const frame = `inline-flex flex-none items-center justify-center overflow-hidden rounded-round border border-edge ${SIZES[size]}`;

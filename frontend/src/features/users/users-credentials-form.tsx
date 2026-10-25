@@ -81,11 +81,17 @@ function savedOutcome(changes: ProfileChanges): Outcome {
     : 'credentials.savedPassword';
 }
 
+/** Props of `CredentialsForm`. */
+export interface CredentialsFormProps {
+  /** The signed-in user, as last saved. */
+  user: User;
+}
+
 /**
  * Changes the email and/or the password. The backend asks for the current
  * password, then ends every other session (ADR-0011): this one keeps going.
  */
-export function CredentialsForm({ user }: { user: User }) {
+export function CredentialsForm({ user }: CredentialsFormProps) {
   const { t } = useTranslation('users');
   const { t: tAuth } = useTranslation('auth');
   const { updateUser } = useAuth();
