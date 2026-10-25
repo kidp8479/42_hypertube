@@ -21,6 +21,7 @@ test('an edited first name is kept after a reload', async ({ page }) => {
 test("another user's profile shows the username, never the email", async ({
   page,
 }) => {
+  const issues = trackConsoleIssues(page);
   const suffix = `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
   const created = await page.request.post('/api/users', {
     data: {
@@ -43,4 +44,5 @@ test("another user's profile shows the username, never the email", async ({
   await expect(page.getByText(`e2e-other-${suffix}@example.com`)).toHaveCount(
     0,
   );
+  expect(issues).toEqual([]);
 });
