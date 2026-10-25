@@ -109,7 +109,9 @@ and additions specific to this project:
 - Lint: `lint:check` runs with `--max-warnings 0` and the complexity budget
   of ADR-0005. Over budget = split the function or file, never disable the
   rule inline. The pre-commit hook runs `make format-check` and
-  `make lint-check`.
+  `make lint-check`. This is the lint gate the shared `anti-slop` skill
+  refers to; prove it passes with `make lint-check` and `make typecheck`
+  output.
 - A new env variable touches four places: the Joi schema
   (`backend/src/config/env.validation.ts`, ADR-0003), `.env.example`,
   `docker-compose.yml` (pass-through to the container) and the `e2e` job
