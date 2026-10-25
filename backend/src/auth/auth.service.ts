@@ -17,7 +17,7 @@ import { OAuthAccount } from './entities/oauth-account.entity';
 import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
-import { isUniqueViolation } from '../common/filters/query-failed.filter';
+import { isUniqueViolation } from '../common/utils/unique-violation.util';
 
 /**
  * Credential verification and token issuance for the login flow, plus the
@@ -111,9 +111,8 @@ export class AuthService implements OnModuleInit {
    *    nothing else to do.
    * 2. Not linked yet - link to an existing local account with that email
    *    if one exists (revoking that account's password, see below),
-   *    otherwise create a fresh one. Matching by email is safe because a
-   *    strategy only returns an email its provider has verified, and
-   *    refuses the login otherwise (`OAuthProfile.email`).
+   *    otherwise create a fresh one. The email is provider-verified
+   *    (`OAuthProfile.email`).
    *
    * Revoking the password on link: local registration does not verify the
    * email, so an attacker could pre-register a victim's address with a
@@ -128,13 +127,10 @@ export class AuthService implements OnModuleInit {
    * dodge the case-insensitive match in case 2 and create a duplicate
    * account instead of linking to the existing one.
    *
-   * A unique violation runs the whole resolution once more: a concurrent
-   * request (a double-clicked callback, a local registration of the same
-   * address, a sign-up taking the same username) committed between the
-   * reads and the insert. The rerun sees what it committed and goes
-   * through the normal path, password revocation included, instead of
-   * answering the 409 of the global filter. A second violation is
-   * rethrown.
+   * A unique violation (a concurrent first login, registration or
+   * sign-up won the race to insert) runs the whole resolution once more,
+   * so the winner's rows go through the normal path instead of a 409. A
+   * second violation is rethrown (ADR-0007, 2026-10-25 amendment).
    */
   async resolveOAuthUser(profile: OAuthProfile): Promise<User> {
     try {
@@ -175,44 +171,13 @@ export class AuthService implements OnModuleInit {
       await this.usersService.clearPassword(passwordToRevoke);
     }
 
-    try {
-      await this.oauthAccountRepository.save(
-        this.oauthAccountRepository.create({
-          provider: profile.provider,
-          providerUserId: profile.providerUserId,
-          userId: user.id,
-        }),
-      );
-    } catch (err) {
-      user = await this.recoverFromLinkRace(profile, err);
-    }
-
+    await this.oauthAccountRepository.save(
+      this.oauthAccountRepository.create({
+        provider: profile.provider,
+        providerUserId: profile.providerUserId,
+        userId: user.id,
+      }),
+    );
     return user;
-  }
-
-  /**
-   * Handles a lost race on the `oauth_account` insert: a second,
-   * concurrent callback for this same provider account (e.g. a
-   * double-click) won and already holds the link this one tried to
-   * create. From the user's side both requests are one successful login,
-   * so return the winner's user and sign in through it instead of
-   * surfacing the unique-violation 409 the global filter would otherwise
-   * produce. Anything else is rethrown untouched.
-   */
-  private async recoverFromLinkRace(
-    profile: OAuthProfile,
-    err: unknown,
-  ): Promise<User> {
-    if (!isUniqueViolation(err)) {
-      throw err;
-    }
-    const account = await this.oauthAccountRepository.findOneBy({
-      provider: profile.provider,
-      providerUserId: profile.providerUserId,
-    });
-    if (!account) {
-      throw err;
-    }
-    return this.usersService.findOne(account.userId);
   }
 }

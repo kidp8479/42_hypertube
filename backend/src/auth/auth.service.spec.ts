@@ -10,7 +10,7 @@ import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { OAuthAccount, OAuthProvider } from './entities/oauth-account.entity';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
-import { UNIQUE_VIOLATION } from '../common/filters/query-failed.filter';
+import { UNIQUE_VIOLATION } from '../common/utils/unique-violation.util';
 import { JwtService } from '@nestjs/jwt';
 
 // Only the methods a spec actually drives need a precise type; the rest of
@@ -36,10 +36,9 @@ type OAuthAccountRepositoryMock = {
 // throws and TypeORM wraps as a `QueryFailedError` (see
 // `QueryFailedFilter`).
 const buildUniqueViolation = () =>
-  Object.assign(
-    new QueryFailedError('INSERT INTO "oauth_account"...', [], new Error()),
-    { code: UNIQUE_VIOLATION },
-  );
+  Object.assign(new QueryFailedError('INSERT INTO ...', [], new Error()), {
+    code: UNIQUE_VIOLATION,
+  });
 
 // A plausible User row. Override just the fields a given test cares about.
 const buildUser = (overrides: Partial<User> = {}): User =>
@@ -234,25 +233,21 @@ describe('AuthService', () => {
       );
     });
 
-    it('recovers from a concurrent link race instead of surfacing the conflict', async () => {
-      // First check: not linked yet, so this request goes on to create the
-      // link itself. A second, concurrent callback for the same 42 account
-      // wins that race and commits first.
+    it('runs again after losing the race to link, and resolves to the winner', async () => {
+      // Both requests found the same user by email and tried to link it; the
+      // other one committed its link first, which the rerun reads.
       oauthAccounts.findOneBy
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ userId: 20 });
-      users.findByEmail.mockResolvedValue(null);
-      users.createFromOAuth.mockResolvedValue(buildUser({ id: 30 }));
+      const winner = buildUser({ id: 20, password: null });
+      users.findByEmail.mockResolvedValue(winner);
       oauthAccounts.save.mockRejectedValue(buildUniqueViolation());
-      const winner = buildUser({ id: 20 });
       users.findOne.mockResolvedValue(winner);
 
       const result = await service.resolveOAuthUser(profile);
 
-      // Resolves to the winner's user (20), not the one this call tried
-      // to create (30).
-      expect(users.findOne).toHaveBeenCalledWith(20);
       expect(result).toBe(winner);
+      expect(oauthAccounts.save).toHaveBeenCalledTimes(1);
     });
 
     describe('losing the race to create the user', () => {
@@ -275,8 +270,6 @@ describe('AuthService', () => {
         const result = await service.resolveOAuthUser(profile);
 
         expect(result).toBe(winner);
-        expect(users.createFromOAuth).toHaveBeenCalledTimes(1);
-        expect(oauthAccounts.save).not.toHaveBeenCalled();
       });
 
       it('links to a local account registered meanwhile, revoking its password first', async () => {

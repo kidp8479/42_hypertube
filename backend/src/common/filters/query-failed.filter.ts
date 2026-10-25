@@ -2,17 +2,7 @@
 import { ArgumentsHost, Catch, ConflictException } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { QueryFailedError } from 'typeorm';
-
-/** Postgres error code for a unique-constraint violation. */
-export const UNIQUE_VIOLATION = '23505';
-
-/** True when `err` is a Postgres unique-constraint violation. */
-export function isUniqueViolation(err: unknown): err is QueryFailedError {
-  return (
-    err instanceof QueryFailedError &&
-    (err as QueryFailedError & { code?: string }).code === UNIQUE_VIOLATION
-  );
-}
+import { isUniqueViolation } from '../utils/unique-violation.util';
 
 /**
  * Turns a Postgres unique-violation into a 409 instead of letting it

@@ -5,6 +5,7 @@ import type { Request } from 'express';
 import { OAUTH_STATE_COOKIE } from './cookie-state.store';
 import { FortyTwoStrategy } from './fortytwo.strategy';
 import { OAuthProvider } from '../entities/oauth-account.entity';
+import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 const buildConfig = () =>
   ({
@@ -110,6 +111,18 @@ describe('FortyTwoStrategy', () => {
         firstName: 'Ada',
         lastName: 'Lovelace',
       });
+    });
+
+    it('refuses a profile without an email', () => {
+      expect(() =>
+        strategy.validate('token', 'refresh', {
+          id: 1,
+          email: '',
+          login: 'ada',
+          first_name: 'Ada',
+          last_name: 'Lovelace',
+        }),
+      ).toThrow(UnverifiedEmailException);
     });
   });
 

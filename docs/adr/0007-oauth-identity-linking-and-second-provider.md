@@ -29,8 +29,7 @@ provider vouches that email is verified.
   account: doing so would let an attacker who controls an unverified
   address on one provider claim someone else's account on another.
 - **A shared `OAuthProfile` shape** (`provider`, `providerUserId`,
-  `email`, `suggestedUsername`, `firstName`, `lastName`; an
-  `emailVerified` flag until the 2026-10-25 amendment) that every strategy's `validate()` maps into, so
+  `email`, `suggestedUsername`, `firstName`, `lastName`) that every strategy's `validate()` maps into, so
   `AuthService.resolveOAuthUser` stays provider-agnostic. A third provider
   costs one new strategy file, not a change to the linking logic.
 
@@ -57,7 +56,8 @@ provider vouches that email is verified.
   both pass the "not linked yet" check and race to create the same
   `(provider, providerUserId)` row. The database's unique constraint is
   the source of truth; the loser recovers by re-reading the link the
-  winner created and signs in through it, rather than surfacing the
+  winner created (since 2026-10-25, through a rerun of the whole
+  resolution) and signs in through it, rather than surfacing the
   unique-violation 409 to what is, from the user's side, a successful
   login.
   The user-creation step just before it is covered too, see the
@@ -211,6 +211,6 @@ state check would fail on every login.
   loser's user insert then hits the `email` or `username` constraint. The
   rerun sees what the winner committed: its link (that user), its user by
   email (linked, with any local password revoked first, as above), or a
-  free username. A second violation is rethrown and becomes the 409.
-  Re-reading only the user by email would have skipped that password
-  revocation for the registration race.
+  free username. A lost race on the link insert takes the same rerun,
+  which finds the winner's link. A second violation is rethrown and
+  becomes the 409.

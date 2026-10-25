@@ -134,9 +134,7 @@ flowchart TD
     F --> H["link identity to the new user"]
     G --> L
     H --> L
-    H -. "unique violation<br/>(concurrent callback)" .-> R["re-read the winner's link"]
-    R --> L
-    F -. "unique violation on email / username<br/>(concurrent first login or registration)" .-> C2["run the resolution once more<br/>(a second violation is a 409)"]
+    F & G & H -. "unique violation" .-> C2["another request inserted first:<br/>run the resolution once more<br/>(a second violation is a 409)"]
     C2 --> C
 ```
 
