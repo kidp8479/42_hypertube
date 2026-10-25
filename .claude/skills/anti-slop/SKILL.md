@@ -27,6 +27,11 @@ author but a good automatic net against an agent that over-produces.
 4. **Match the neighbours.** Same error handling, same naming, same file
    layout as the sibling files in that directory. Do not introduce a
    second pattern for a solved problem.
+5. **The third copy is the trigger.** About to write logic that already
+   exists twice? Stop and extract one helper, then migrate the existing
+   copies in the same change. Two copies whose reasons to change differ
+   stay separate. Extract to the narrowest shared place: same file, then
+   the feature folder, then a shared module.
 
 ## While writing - the budget
 
@@ -49,6 +54,14 @@ Over budget = split the function or the file, do not disable the rule.
 - No copy-pasted block (`sonarjs/no-identical-functions`): extract or
   parametrise.
 - No repeated string literal 4+ times: named constant.
+- No pass-through wrapper that only renames or reorders parameters. A
+  wrapper earns its place by adding something: validation, domain
+  language, a boundary.
+- Extracted a shared helper? The local versions it replaces are deleted
+  in the same change, not left beside it.
+- State it in the final message: duplication checked (yes / no), shared
+  helper introduced (yes / no, and why not if logic was repeated),
+  follow-up issue needed (yes / no).
 - No dead code: an export with no importer, a param never read, a file
   nothing references. If you added it "for later", delete it.
 - No stray `console.log`, no `TODO` without a linked Linear issue.

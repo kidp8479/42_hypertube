@@ -22,6 +22,15 @@ instantiated per project in the repo's own `CLAUDE.md`.
   `ci`, `refactor`, `test`, `build`, `style`). Body explains *why* when
   the diff does not.
 - Tied to an issue: `type(<PREFIX>-N): summary`.
+- Refactor commits stay separate from behavior commits, and their place
+  depends on the task:
+  - **Feature**: a small refactor of the code the feature touches (under
+    ~30 min, directly related) goes *first*, in its own `refactor`
+    commit, so the feature diff stays readable.
+  - **Bug fix**: fix plus regression test first, kept minimal. A refactor
+    comes *after*, as its own commit, only if the user agrees.
+  - **Refactor task**: run the tests before and after each step,
+    behavior identical, no "while I'm here" additions.
 
 ## Local gate before committing
 
@@ -248,6 +257,11 @@ Default (42 projects):
 - Tooling / infra / CI setup: the agent can drive autonomously.
 - Core project code: smaller steps, explain the *why*, let the user drive
   and react rather than accepting a large unattended scaffold.
+
+Multi-step plans: a side request or a deep dive mid-plan becomes
+sub-tasks of the current step, not a new plan. When it is done, show the
+plan again with what is done and the next step. "Resume at step N" starts
+from the plan already shown, not a rebuilt one.
 
 Personal projects: when the user asks for it, the agent can run a task
 end to end on its own and surface only the friction points (decisions,
