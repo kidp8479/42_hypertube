@@ -115,8 +115,12 @@ describe('session routes', () => {
       expect(setCookies(res)[0]).toContain(`${COOKIE}=r2`);
     });
 
-    it('is 401 with no cookie, and does not even look anything up', async () => {
-      await request(app.getHttpServer()).post('/auth/refresh').expect(401);
+    it('is 204 with no body when there is no cookie, and looks nothing up', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .expect(204);
+
+      expect(res.text).toBe('');
 
       expect(refresh.rotate).not.toHaveBeenCalled();
     });

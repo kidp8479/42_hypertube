@@ -183,7 +183,9 @@ a new access token **and the next cookie**: each refresh token works once.
 
 ```mermaid
 flowchart TD
-    A["POST /auth/refresh<br/>(cookie only, no Bearer)"] --> B{"token known, alive,<br/>not revoked?"}
+    A["POST /auth/refresh<br/>(cookie only, no Bearer)"] --> N{"cookie sent?"}
+    N -- no --> Z["204, no body<br/>(no session: a signed-out visitor)"]
+    N -- yes --> B{"token known, alive,<br/>not revoked?"}
     B -- no --> X["401 + clear the cookie"]
     B -- yes --> C{"already used?"}
     C -- "no" --> OK["mark it used, issue the next one<br/>200 + new access token + new cookie"]

@@ -6,6 +6,7 @@ import { getAuthToken, removeAuthToken, setAuthToken } from './token';
 export const API_BASE = '/api';
 
 const UNAUTHORIZED = 401;
+const NO_CONTENT = 204;
 
 /** A non-ok `fetch` response, surfaced with its status so callers can branch on it (401 -> logout, 403 -> ownership, ...). */
 export class ApiError extends Error {
@@ -25,9 +26,9 @@ let pendingRefresh: Promise<string | null> | null = null;
 
 /**
  * Trades the refresh cookie for a new access token (`POST /auth/refresh`,
- * ADR-0011). Resolves to the token to use from now on, or `null` when the
- * session is over (401). Throws on a network failure or a 5xx, which do not
- * end the session.
+ * ADR-0011). Resolves to the token to use from now on, or `null` when there
+ * is no session: 204 with no cookie, 401 for a dead one. Throws on a network
+ * failure or a 5xx, which do not end the session.
  *
  * Whoever changes the token while the call is in flight (a login, a logout)
  * wins: the answer is only stored, or the token only dropped, when the token
@@ -36,7 +37,7 @@ let pendingRefresh: Promise<string | null> | null = null;
 async function requestRefresh(): Promise<string | null> {
   const startedWith = getAuthToken();
   const response = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
-  if (response.status === UNAUTHORIZED) {
+  if (response.status === UNAUTHORIZED || response.status === NO_CONTENT) {
     if (getAuthToken() === startedWith) {
       removeAuthToken();
     }

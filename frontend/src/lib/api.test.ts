@@ -200,6 +200,17 @@ describe('refreshAccessToken', () => {
     expect(getAuthToken()).toBe('signed-in-meanwhile');
   });
 
+  it('reads a 204 (no cookie) as no session', async () => {
+    setAuthToken('expired');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 204 }),
+    );
+
+    await expect(refreshAccessToken()).resolves.toBeNull();
+    expect(getAuthToken()).toBeNull();
+  });
+
   it('throws on a 5xx without ending the session', async () => {
     setAuthToken('expired');
     vi.stubGlobal(

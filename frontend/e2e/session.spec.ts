@@ -1,6 +1,7 @@
 // Real-browser coverage for the session lifetime (HYP-78): the access token
 // lives in memory only, a reload restores the session from the refresh
-// cookie, a 401 is renewed in place, and logout ends the session for good.
+// cookie, a 401 is renewed in place, logout ends the session for good, and a
+// signed-out visit stays silent in the console.
 // Each test registers its own account through the API, like auth.spec.ts.
 import { test, expect, type Page } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
@@ -30,6 +31,26 @@ async function signUpAndSignIn(page: Page) {
 }
 
 test.describe('session lifetime', () => {
+  test('a signed-out visit logs nothing at all in the console', async ({
+    page,
+  }) => {
+    // Every console line, the browser's own network errors included: the
+    // startup refresh must not print a 401 for a visitor with no session.
+    const lines: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error' || msg.type() === 'warning') {
+        lines.push(msg.text());
+      }
+    });
+    const refreshed = page.waitForResponse('**/api/auth/refresh');
+
+    await page.goto('/login');
+
+    expect((await refreshed).status()).toBe(204);
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
+    expect(lines, lines.join('\n')).toEqual([]);
+  });
+
   test('a reload keeps the session, with no token in localStorage', async ({
     page,
   }) => {

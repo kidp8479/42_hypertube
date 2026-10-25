@@ -1,5 +1,5 @@
 meta {
-  name: 28 Refresh without a cookie -> 401
+  name: 28 Refresh without a cookie -> 204
   type: http
   seq: 28
 }
@@ -10,6 +10,11 @@ post {
   auth: none
 }
 
+docs {
+  No cookie means no session to renew: the normal state of a signed-out
+  visitor, whose SPA asks on every load. Not an error, so no 401.
+}
+
 assert {
-  res.status: eq 401
+  res.status: eq 204
 }
