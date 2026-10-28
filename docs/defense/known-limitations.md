@@ -145,5 +145,10 @@ shown as is in the header and on the profile pages.
   behind the same address. `referrerPolicy="no-referrer"` keeps the page
   address from leaking, not the IP. A public product would upload and serve
   the images itself.
+- **Console:** an address that does not load (a 404, a dead host) shows the
+  initial instead, but the browser still logs `Failed to load resource` on
+  every page that shows that avatar. It is the browser's own network log,
+  not a JS error, and it comes from the address the user typed. Avoid one
+  at the defense; hosted pictures (HYP-38) remove the case.
 - **Cost to fix later:** medium. Upload, check the type and size, store the
   file, serve it from the app; the column then holds a path instead of a URL.

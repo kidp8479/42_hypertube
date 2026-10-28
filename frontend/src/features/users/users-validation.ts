@@ -36,6 +36,16 @@ function isPictureHost(hostname: string): boolean {
   );
 }
 
+// `new URL` rather than the static `URL.parse`, which only exists from
+// Chrome 126 and is below the supported floor (Chrome 111).
+function parseUrl(value: string): URL | null {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
 function validateProfilePicture(url: string): ValidationError | undefined {
   const trimmedUrl = url.trim();
   if (trimmedUrl === '') {
@@ -44,7 +54,7 @@ function validateProfilePicture(url: string): ValidationError | undefined {
   if (trimmedUrl.length > 500) {
     return { code: 'tooLong', max: 500 };
   }
-  const parsed = /\s/.test(trimmedUrl) ? null : URL.parse(trimmedUrl);
+  const parsed = /\s/.test(trimmedUrl) ? null : parseUrl(trimmedUrl);
   return parsed?.protocol === 'https:' && isPictureHost(parsed.hostname)
     ? undefined
     : { code: 'invalidUrl' };
