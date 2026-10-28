@@ -15,9 +15,14 @@ RUN chown node:node /app
 RUN mkdir -p /app/dist && chown node:node /app/dist
 USER node
 COPY --chown=node:node package*.json ./
-RUN npm ci
+# The stamp dev-start.sh compares against: a fresh node_modules volume is
+# seeded from this layer, so it starts without reinstalling.
+RUN npm ci && sha256sum package-lock.json | cut -d' ' -f1 > node_modules/.lockfile-sha256
 COPY --chown=node:node . .
 EXPOSE 3000
+# Reinstalls first when the lockfile changed since the volume's last
+# install (HYP-86). `sh` so the bind-mounted script needs no exec bit.
+ENTRYPOINT ["sh", "./dev-start.sh"]
 CMD ["npm", "run", "start:dev"]
 
 FROM dev AS build

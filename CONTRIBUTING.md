@@ -177,7 +177,10 @@ instead of rediscovered every few sessions.
   (`cd backend && npm install ...`) updates `package.json` (bind-mounted,
   shared) but **not** what the running container sees. Install inside
   the container instead: `make be CMD="npm install <pkg>"` (add `-D` as
-  needed). Same reasoning applies to `frontend`/`make fe`.
+  needed). Same reasoning applies to `frontend`/`make fe`. After a pull
+  that changes a lockfile, nothing to do: on start, `dev-start.sh` sees
+  the lockfile hash differ from the one stamped in the volume and runs
+  `npm ci` first (`docker compose restart backend` if it was running).
 - **VSCode may silently ignore `.vscode/settings.json`'s
   `typescript.tsdk`.** The setting only takes effect once you explicitly
   accept it: Command Palette -> "TypeScript: Select TypeScript Version..."
