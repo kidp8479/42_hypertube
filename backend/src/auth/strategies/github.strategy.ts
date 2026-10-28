@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
 import { CookieStateStore } from './cookie-state.store';
-import { fetchJson } from './fetch-json.util';
+import { deliverProfile, fetchJson } from './fetch-json.util';
 import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 // snake_case fields mirror GitHub's /user JSON response as-is - mapped
@@ -55,34 +55,28 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     accessToken: string,
     done: (err?: unknown, profile?: GithubProfile) => void,
   ): void {
-    // Passport expects this method to return void, not a Promise - the
-    // async work stays inside this IIFE so the outer signature matches.
-    void (async () => {
-      try {
-        const headers = {
-          Authorization: `Bearer ${accessToken}`,
-          // The GitHub API rejects any request with no User-Agent.
-          'User-Agent': 'hypertube',
-        };
-        const profile = await fetchJson<GithubProfile>(
-          'https://api.github.com/user',
-          { headers },
-        );
+    deliverProfile(done, async () => {
+      const headers = {
+        Authorization: `Bearer ${accessToken}`,
+        // The GitHub API rejects any request with no User-Agent.
+        'User-Agent': 'hypertube',
+      };
+      const profile = await fetchJson<GithubProfile>(
+        'https://api.github.com/user',
+        { headers },
+      );
 
-        // Always resolved from /user/emails, never taken from /user: its
-        // `email` is only the profile's public address and carries no
-        // "verified" flag, while this list does. Needs the user:email scope
-        // requested above.
-        const emails = await fetchJson<GithubEmail[]>(
-          'https://api.github.com/user/emails',
-          { headers },
-        );
-        const primary = emails.find((e) => e.primary && e.verified);
-        done(undefined, { ...profile, email: primary?.email ?? null });
-      } catch (err: unknown) {
-        done(err);
-      }
-    })();
+      // Always resolved from /user/emails, never taken from /user: its
+      // `email` is only the profile's public address and carries no
+      // "verified" flag, while this list does. Needs the user:email scope
+      // requested above.
+      const emails = await fetchJson<GithubEmail[]>(
+        'https://api.github.com/user/emails',
+        { headers },
+      );
+      const primary = emails.find((e) => e.primary && e.verified);
+      return { ...profile, email: primary?.email ?? null };
+    });
   }
 
   validate(
