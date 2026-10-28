@@ -28,6 +28,17 @@ server {
     server_name _;
     access_log /dev/stdout noquery;
 
+    # Upstreams are looked up at request time, not once at start: a recreated
+    # backend or frontend container comes back with a new address, and a name
+    # resolved at start would keep pointing at the old one (502 until the proxy
+    # restarted, HYP-81). The resolver is the container's own DNS, read from
+    # /etc/resolv.conf by the image (NGINX_ENTRYPOINT_LOCAL_RESOLVERS in the
+    # Dockerfile): 127.0.0.11 on Docker, aardvark-dns on Podman. A variable in
+    # proxy_pass is what makes nginx use it.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+    set $backend http://backend:3000;
+    set $frontend http://frontend:5173;
+
     ssl_certificate     /etc/nginx/certs/tls.crt;
     ssl_certificate_key /etc/nginx/certs/tls.key;
     ssl_protocols       TLSv1.2 TLSv1.3;
@@ -43,9 +54,12 @@ server {
     add_header X-Frame-Options "DENY" always;
 
     # API: same contract as the Vite dev proxy, /api/<path> reaches the
-    # backend as /<path> (the trailing slash on proxy_pass strips the prefix).
+    # backend as /<path>. With a variable, proxy_pass no longer swaps the
+    # location prefix itself, so the rewrite strips it (the query string is
+    # kept).
     location /api/ {
-        proxy_pass http://backend:3000/;
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass $backend;
         include /etc/nginx/snippets/proxy-headers.conf;
         # The backend never sees /api, so it is told: cookies scoped to the
         # auth routes need the path the browser uses (ADR-0007).
@@ -54,14 +68,14 @@ server {
 
     # Swagger UI and its schema live at the backend root, not under /api.
     location /api-docs {
-        proxy_pass http://backend:3000;
+        proxy_pass $backend;
         include /etc/nginx/snippets/proxy-headers.conf;
     }
 
     # Everything else is the SPA. The upgrade headers carry Vite's HMR
     # websocket in dev.
     location / {
-        proxy_pass http://frontend:5173;
+        proxy_pass $frontend;
         proxy_http_version 1.1;
         include /etc/nginx/snippets/proxy-headers.conf;
         proxy_set_header Upgrade $http_upgrade;
