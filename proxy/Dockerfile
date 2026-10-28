@@ -13,5 +13,10 @@ COPY snippets/ /etc/nginx/snippets/
 COPY docker-entrypoint.d/ /docker-entrypoint.d/
 RUN chmod +x /docker-entrypoint.d/*.sh
 
+# Exports NGINX_LOCAL_RESOLVERS (the container's DNS servers, from
+# /etc/resolv.conf) before the templates render, for the `resolver` line of
+# default.conf.template (HYP-81).
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+
 # Unprivileged ports: rootless Podman (school) cannot bind 80 / 443.
 EXPOSE 8080 8443
