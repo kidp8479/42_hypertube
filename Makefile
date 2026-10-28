@@ -87,8 +87,9 @@ help:
 
 install: install-tooling install-backend install-frontend hooks-install
 
-# Root install is editor tooling only: it gives the TypeScript LSP a compiler
-# to find at the workspace root. backend/ and frontend/ build with their own.
+# Root install is tooling only: a TypeScript compiler for the editor's LSP
+# and the Bruno CLI for `make test-api`. backend/ and frontend/ build with
+# their own.
 install-tooling:
 	npm install
 
@@ -286,17 +287,16 @@ test-e2e:
 # through the edge proxy (https, self-signed certificate, hence --insecure).
 # --disable-cookies: the refresh scenario (requests 26 to 34) sets its cookie in
 # an explicit header, a jar would send a stale one on its own.
-# HYPERTUBE_HTTPS_PORT is passed from .env. Needs the stack up (`make up`);
-# npx fetches the CLI on first use, so it is not a project dependency. In the
-# Bruno app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
+# HYPERTUBE_HTTPS_PORT is passed from .env. Needs the stack up (`make up`) and
+# the root install (`make install-tooling`): the CLI is a pinned devDependency
+# of the root package.json, so its whole tree comes from the lockfile instead
+# of whatever was published minutes before the run (HYP-120). In the Bruno
+# app, set HYPERTUBE_HTTPS_PORT in the process environment or edit the
 # `local` environment. POST /users is rate-limited (10/h), a run uses 5: raise
 # THROTTLE_LIMIT_MULTIPLIER in .env for dev - see api/bruno/collection.bru.
-# Pinned, or each run would take whatever Bruno CLI is latest; CI runs this
-# same target. BRUNO_ARGS adds CLI flags (CI writes an HTML report).
-BRUNO_CLI := @usebruno/cli@4.2.1
-
+# CI runs this same target. BRUNO_ARGS adds CLI flags (CI writes an HTML report).
 test-api:
-	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --yes $(BRUNO_CLI) run --env local --insecure --disable-cookies $(BRUNO_ARGS)
+	cd api/bruno && HYPERTUBE_HTTPS_PORT=$(HTTPS_PORT) npx --no-install bru run --env local --insecure --disable-cookies $(BRUNO_ARGS)
 
 build:
 	cd backend && npm run build

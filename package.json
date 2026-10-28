@@ -2,8 +2,9 @@
   "name": "hypertube-tooling",
   "version": "0.0.0",
   "private": true,
-  "description": "Editor tooling only (TypeScript LSP). Not a workspace root: backend/ and frontend/ install and build on their own.",
+  "description": "Tooling only: the TypeScript LSP compiler and the Bruno CLI (make test-api). Not a workspace root: backend/ and frontend/ install and build on their own.",
   "devDependencies": {
+    "@usebruno/cli": "4.2.1",
     "typescript": "~6.0.3"
   }
 }

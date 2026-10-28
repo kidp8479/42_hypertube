@@ -49,6 +49,20 @@ updates:
       - dependency-name: "@eslint/js"
         update-types: ["version-update:semver-major"]
 
+  # --- root npm (tooling: TypeScript for the LSP, the Bruno CLI) ---
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+    groups:
+      tooling:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
   # --- GitHub Actions --- (majors kept: pinned by major tag, low blast radius)
   - package-ecosystem: github-actions
     directory: /
