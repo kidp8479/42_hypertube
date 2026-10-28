@@ -67,9 +67,12 @@ describe('FortyTwoStrategy', () => {
 
       expect(err).toBeUndefined();
       expect(profile?.email).toBe('ada@example.com');
-      expect(fetchMock).toHaveBeenCalledWith('https://api.intra.42.fr/v2/me', {
-        headers: { Authorization: 'Bearer a-token' },
-      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.intra.42.fr/v2/me',
+        expect.objectContaining({
+          headers: { Authorization: 'Bearer a-token' },
+        }),
+      );
     });
 
     it('reports a fetch failure through done() rather than throwing', async () => {

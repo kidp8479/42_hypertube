@@ -77,12 +77,12 @@ describe('GithubStrategy', () => {
       expect(fetchMock).toHaveBeenNthCalledWith(
         1,
         'https://api.github.com/user',
-        {
+        expect.objectContaining({
           headers: {
             Authorization: 'Bearer a-token',
             'User-Agent': 'hypertube',
           },
-        },
+        }),
       );
       expect(fetchMock).toHaveBeenNthCalledWith(
         2,

@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { OAuthProfile } from './oauth-profile.interface';
 import { OAuthProvider } from '../entities/oauth-account.entity';
 import { CookieStateStore } from './cookie-state.store';
-import { fetchJson } from './fetch-json.util';
+import { deliverProfile, fetchJson } from './fetch-json.util';
 import { UnverifiedEmailException } from '../exceptions/unverified-email.exception';
 
 // snake_case fields because this mirrors 42's /v2/me JSON response as-is -
@@ -42,19 +42,11 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
     accessToken: string,
     done: (err?: unknown, profile?: FortyTwoProfile) => void,
   ): void {
-    // Passport expects this method to return void, not a Promise - the
-    // async work stays inside this IIFE so the outer signature matches.
-    void (async () => {
-      try {
-        const profile = await fetchJson<FortyTwoProfile>(
-          'https://api.intra.42.fr/v2/me',
-          { headers: { Authorization: `Bearer ${accessToken}` } },
-        );
-        done(undefined, profile);
-      } catch (err: unknown) {
-        done(err);
-      }
-    })();
+    deliverProfile(done, () =>
+      fetchJson<FortyTwoProfile>('https://api.intra.42.fr/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }),
+    );
   }
 
   validate(
