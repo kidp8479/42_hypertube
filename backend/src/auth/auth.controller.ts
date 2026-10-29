@@ -25,7 +25,11 @@ import { Public } from './decorators/public.decorator';
 import { OAuthCallback } from './decorators/oauth-callback.decorator';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { spaCallbackUrl } from './spa-callback-url.util';
-import { scaledThrottleLimit } from '../config/throttle.config';
+import {
+  LOGIN_THROTTLE,
+  OAUTH_EXCHANGE_THROTTLE,
+  REFRESH_THROTTLE,
+} from '../config/throttle.config';
 import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -57,11 +61,10 @@ export class AuthController {
    * hint about which part failed (wrong password and unknown account are
    * indistinguishable, see {@link AuthService.validateUser}).
    */
-  // Brute-force ceiling: 5 attempts per minute per IP, and 5 per minute per
-  // identifier whatever the IP (LoginIdentifierThrottlerGuard). Well below what a
-  // human login needs and far under an automated guessing rate.
+  // LOGIN_THROTTLE per IP, and again per identifier whatever the IP
+  // (LoginIdentifierThrottlerGuard).
   @Public()
-  @Throttle({ default: { limit: scaledThrottleLimit(5), ttl: 60_000 } })
+  @Throttle({ default: LOGIN_THROTTLE })
   @UseGuards(LoginIdentifierThrottlerGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -96,10 +99,8 @@ export class AuthController {
    * revoked or already rotated (which also ends the whole session). The dead
    * cookie is cleared.
    */
-  // Higher than login: the SPA refreshes on every load and on a 401, but it is
-  // no guessing target (256 random bits).
   @Public()
-  @Throttle({ default: { limit: scaledThrottleLimit(20), ttl: 60_000 } })
+  @Throttle({ default: REFRESH_THROTTLE })
   @Post('refresh')
   async refresh(@Req() req: Request, @Res() res: Response): Promise<void> {
     const secret = readRefreshCookie(req);
@@ -205,7 +206,7 @@ export class AuthController {
    * expired code, without saying which.
    */
   @Public()
-  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
+  @Throttle({ default: OAUTH_EXCHANGE_THROTTLE })
   @Post('oauth/exchange')
   @HttpCode(HttpStatus.OK)
   async exchange(

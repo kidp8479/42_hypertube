@@ -14,7 +14,10 @@ import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
 import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
-import { scaledThrottleLimit } from '../config/throttle.config';
+import {
+  PROFILE_EDIT_THROTTLE,
+  REGISTER_THROTTLE,
+} from '../config/throttle.config';
 import {
   CurrentUser,
   type AuthUser,
@@ -39,10 +42,8 @@ export class UsersController {
   ) {}
 
   /** Registers an account (public). The response never carries the password hash. */
-  // Registration is rare per real user; cap it hard to blunt sign-up
-  // spam and (later) reset-email flooding from a single source.
   @Public()
-  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 3_600_000 } })
+  @Throttle({ default: REGISTER_THROTTLE })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -91,9 +92,7 @@ export class UsersController {
    * @throws {BadRequestException} 400 when `currentPassword` is missing, or
    * the account has no password to confirm with.
    */
-  // Checks a password when the email or the password changes, so it is
-  // throttled like a login attempt, with room for ordinary profile edits.
-  @Throttle({ default: { limit: scaledThrottleLimit(10), ttl: 60_000 } })
+  @Throttle({ default: PROFILE_EDIT_THROTTLE })
   @Patch(':id')
   async update(
     @Param('id', ParseIdPipe) id: number,
