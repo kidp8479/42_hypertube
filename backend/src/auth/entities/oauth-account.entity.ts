@@ -4,6 +4,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  Index,
   Unique,
   ManyToOne,
   JoinColumn,
@@ -41,9 +42,12 @@ export class OAuthAccount {
 
   /**
    * Explicit FK column alongside the `user` relation below, so callers
-   * can filter by owner (`findOneBy({ userId, provider })`) without
-   * loading or joining the full User row.
+   * can filter by owner without loading or joining the full User row.
+   * Indexed: Postgres does not index a foreign key on its own, and both
+   * the email claim (delete by owner) and the cascade on user deletion
+   * look rows up by it.
    */
+  @Index()
   @Column()
   userId!: number;
 
