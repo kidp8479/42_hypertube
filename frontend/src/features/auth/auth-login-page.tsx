@@ -2,19 +2,15 @@
 // Redirects to `/` on success (and immediately if already authenticated), and
 // shows a single generic error on failure - the backend never says which field
 // was wrong, so neither do we.
-import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
+import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import { AUTH_COLUMN, AUTH_LINKS } from './auth-form-classes';
-
-// Stored as a translation key, not a sentence, so it follows a language switch.
-type LoginError = 'login.badCredentials' | 'errors.generic';
 
 /** Router state `RegisterPage` hands off on a successful registration redirect. */
 interface LoginLocationState {
@@ -30,33 +26,24 @@ export function LoginPage() {
   const justRegistered = (location.state as LoginLocationState | null)
     ?.justRegistered;
 
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<LoginError | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useAccountForm({
+    initialValues: { identifier: '', password: '' },
+    send: async ({ identifier, password }) => {
+      await login(identifier, password);
+      navigate('/', { replace: true });
+    },
+    refusals: { 401: 'login.badCredentials' },
+  });
+  const badCredentials = form.outcome?.key === 'login.badCredentials';
 
   // Someone who is already logged in has no business on /login.
   if (state.status === 'authenticated') {
     return <Navigate to="/" replace />;
   }
 
-  async function handleSubmit(event: SyntheticEvent) {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      await login(identifier, password);
-      navigate('/', { replace: true });
-    } catch (caught) {
-      const is401 = caught instanceof ApiError && caught.status === 401;
-      setError(is401 ? 'login.badCredentials' : 'errors.generic');
-      setIsSubmitting(false);
-    }
-  }
-
   return (
     <>
-      <form className={`${AUTH_COLUMN} max-w-80`} onSubmit={handleSubmit}>
+      <form className={`${AUTH_COLUMN} max-w-80`} onSubmit={form.submit}>
         <h1>{t('login.title')}</h1>
 
         {justRegistered && (
@@ -66,28 +53,30 @@ export function LoginPage() {
         <Field
           label={t('fields.identifier')}
           type="text"
-          value={identifier}
-          onChange={(event) => setIdentifier(event.target.value)}
+          value={form.values.identifier}
+          onChange={(event) => form.setValue('identifier', event.target.value)}
           autoComplete="username"
           autoCapitalize="none"
-          invalid={error === 'login.badCredentials'}
+          invalid={badCredentials}
           required
         />
 
         <Field
           label={t('fields.password')}
           type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          value={form.values.password}
+          onChange={(event) => form.setValue('password', event.target.value)}
           autoComplete="current-password"
-          invalid={error === 'login.badCredentials'}
+          invalid={badCredentials}
           required
         />
 
-        {error && <Alert tone="error">{t(error)}</Alert>}
+        {form.outcome && (
+          <Alert tone={form.outcome.tone}>{t(form.outcome.key)}</Alert>
+        )}
 
-        <Button type="submit" variant="solid" disabled={isSubmitting}>
-          {isSubmitting ? t('login.submitting') : t('login.submit')}
+        <Button type="submit" variant="solid" disabled={form.isSubmitting}>
+          {form.isSubmitting ? t('login.submitting') : t('login.submit')}
         </Button>
 
         <OAuthButtons />

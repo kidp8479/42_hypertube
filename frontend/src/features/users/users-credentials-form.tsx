@@ -1,18 +1,13 @@
 // The profile page's second form: email and password, behind the current one.
-import { useState, type SyntheticEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
-import { useAuth } from '../auth/auth-context';
+import { useAccountForm, type FormOutcome } from '../auth/auth-account-form';
 import type { User } from '../auth/auth-types';
-import {
-  describeValidationError,
-  type FieldErrors,
-} from '../auth/auth-validation';
-import { updateProfile, type ProfileChanges } from './users-actions';
+import { describeValidationError } from '../auth/auth-validation';
+import type { ProfileChanges } from './users-actions';
+import { useUpdateProfile } from './users-queries';
 import {
   validateCredentials,
   type CredentialsField,
@@ -26,8 +21,7 @@ type Outcome =
   | 'credentials.nothingToChange'
   | 'credentials.wrongPassword'
   | 'credentials.emailTaken'
-  | 'credentials.noPassword'
-  | 'errors.generic';
+  | 'credentials.noPassword';
 
 // What each refusal of `PATCH /users/:id` means here. The form always sends
 // `currentPassword`, so a 400 is the account having no password to confirm
@@ -37,6 +31,11 @@ const REFUSALS: Partial<Record<number, Outcome>> = {
   400: 'credentials.noPassword',
   403: 'credentials.wrongPassword',
   409: 'credentials.emailTaken',
+};
+
+const NOTHING_TO_CHANGE: FormOutcome<Outcome> = {
+  key: 'credentials.nothingToChange',
+  tone: 'error',
 };
 
 const INPUTS: Record<
@@ -72,7 +71,7 @@ function changesFrom(user: User, values: CredentialsValues): ProfileChanges {
   return changes;
 }
 
-function savedOutcome(changes: ProfileChanges): Outcome {
+function savedKey(changes: ProfileChanges): Outcome {
   if (changes.email !== undefined && changes.password !== undefined) {
     return 'credentials.savedBoth';
   }
@@ -94,62 +93,47 @@ export interface CredentialsFormProps {
 export function CredentialsForm({ user }: CredentialsFormProps) {
   const { t } = useTranslation('users');
   const { t: tAuth } = useTranslation('auth');
-  const { updateUser } = useAuth();
-  const [values, setValues] = useState(() => emptyValues(user));
-  const [errors, setErrors] = useState<FieldErrors<CredentialsField>>({});
-  const [outcome, setOutcome] = useState<Outcome | null>(null);
-  // Through a mutation, so a 401 that survives the token refresh reaches the
-  // session-expired net (lib/query-client.ts).
-  const save = useMutation({
-    mutationFn: (changes: ProfileChanges) => updateProfile(user.id, changes),
-  });
-
-  async function handleSubmit(event: SyntheticEvent) {
-    event.preventDefault();
-    setOutcome(null);
-    const validationErrors = validateCredentials(values);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
-    const changes = changesFrom(user, values);
-    if (Object.keys(changes).length === 0) {
-      setOutcome('credentials.nothingToChange');
-      return;
-    }
-    try {
-      const saved = await save.mutateAsync({
+  const save = useUpdateProfile(user);
+  const form = useAccountForm({
+    initialValues: () => emptyValues(user),
+    validate: validateCredentials,
+    send: async (values: CredentialsValues) => {
+      const changes = changesFrom(user, values);
+      if (Object.keys(changes).length === 0) {
+        return { outcome: NOTHING_TO_CHANGE };
+      }
+      const saved = await save({
         ...changes,
         currentPassword: values.currentPassword,
       });
-      updateUser(saved);
-      setValues(emptyValues(saved));
-      setOutcome(savedOutcome(changes));
-    } catch (caught) {
-      const status = caught instanceof ApiError ? caught.status : 0;
-      setOutcome(REFUSALS[status] ?? 'errors.generic');
-    }
-  }
+      return {
+        outcome: { key: savedKey(changes), tone: 'success' },
+        values: emptyValues(saved),
+      };
+    },
+    refusals: REFUSALS,
+  });
 
   function input(field: CredentialsField, label: string, hint?: string) {
-    const error = errors[field];
+    const error = form.errors[field];
     return (
       <Field
         label={label}
         {...INPUTS[field]}
-        value={values[field]}
-        onChange={(e) => setValues({ ...values, [field]: e.target.value })}
+        value={form.values[field]}
+        onChange={(e) => form.setValue(field, e.target.value)}
         hint={hint}
         error={error && describeValidationError(field, error, tAuth)}
         invalid={
-          field === 'currentPassword' && outcome === 'credentials.wrongPassword'
+          field === 'currentPassword' &&
+          form.outcome?.key === 'credentials.wrongPassword'
         }
       />
     );
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+    <form className="flex flex-col gap-4" onSubmit={form.submit} noValidate>
       <h2 className="text-lg">{t('credentials.title')}</h2>
       <p className="m-0 text-muted">{t('credentials.intro')}</p>
       {input('email', tAuth('fields.email'))}
@@ -162,15 +146,13 @@ export function CredentialsForm({ user }: CredentialsFormProps) {
         {input('confirmPassword', tAuth('fields.confirmPassword'))}
       </div>
       {input('currentPassword', tAuth('fields.currentPassword'))}
-      {outcome && (
-        <Alert
-          tone={outcome.startsWith('credentials.saved') ? 'success' : 'error'}
-        >
-          {t(outcome)}
-        </Alert>
+      {form.outcome && (
+        <Alert tone={form.outcome.tone}>{t(form.outcome.key)}</Alert>
       )}
-      <Button type="submit" variant="solid" disabled={save.isPending}>
-        {save.isPending ? t('credentials.submitting') : t('credentials.submit')}
+      <Button type="submit" variant="solid" disabled={form.isSubmitting}>
+        {form.isSubmitting
+          ? t('credentials.submitting')
+          : t('credentials.submit')}
       </Button>
     </form>
   );

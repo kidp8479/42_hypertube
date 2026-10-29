@@ -2,7 +2,11 @@
 // optional new password. The shared field rules are covered by the register
 // spec.
 import { describe, expect, it } from 'vitest';
-import { validateCredentials, validateInfo } from './users-validation';
+import {
+  validateCredentials,
+  validateInfo,
+  type InfoField,
+} from './users-validation';
 
 const info = {
   username: 'ada',
@@ -11,20 +15,27 @@ const info = {
   profilePicture: '',
 };
 
+const pictureChanged = new Set<InfoField>(['profilePicture']);
+
 describe('validateInfo', () => {
   it('checks only the fields that changed', () => {
     const saved = { ...info, username: 'ab' };
     const picture = 'https://example.com/a.png';
 
-    expect(validateInfo({ ...saved, profilePicture: picture }, saved)).toEqual(
-      {},
-    );
+    const values = { ...saved, profilePicture: picture };
+
+    expect(validateInfo(values, pictureChanged)).toEqual({});
+    expect(
+      validateInfo(values, new Set<InfoField>(['username', 'profilePicture'])),
+    ).toEqual({ username: { code: 'tooShort', min: 3 } });
   });
 
   it('accepts an emptied picture (it removes the picture)', () => {
     const saved = { ...info, profilePicture: 'https://example.com/a.png' };
 
-    expect(validateInfo({ ...saved, profilePicture: '' }, saved)).toEqual({});
+    expect(
+      validateInfo({ ...saved, profilePicture: '' }, pictureChanged),
+    ).toEqual({});
   });
 
   it('accepts the picture addresses @IsUrl accepts', () => {
@@ -33,7 +44,9 @@ describe('validateInfo', () => {
       'https://example.com/a%20b.png',
       'https://bücher.example/a.png',
     ]) {
-      expect(validateInfo({ ...info, profilePicture }, info)).toEqual({});
+      expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual(
+        {},
+      );
     }
   });
 
@@ -49,9 +62,11 @@ describe('validateInfo', () => {
       'https://a..com/a.png',
       'https://-a.example.com/a.png',
     ]) {
-      expect(validateInfo({ ...info, profilePicture }, info)).toEqual({
-        profilePicture: { code: 'invalidUrl' },
-      });
+      expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual(
+        {
+          profilePicture: { code: 'invalidUrl' },
+        },
+      );
     }
   });
 
@@ -65,8 +80,8 @@ describe('validateInfo', () => {
       const valid = { ...info, profilePicture: 'https://example.com/a.png' };
       const invalid = { ...info, profilePicture: 'not a url' };
 
-      expect(validateInfo(valid, info)).toEqual({});
-      expect(validateInfo(invalid, info)).toEqual({
+      expect(validateInfo(valid, pictureChanged)).toEqual({});
+      expect(validateInfo(invalid, pictureChanged)).toEqual({
         profilePicture: { code: 'invalidUrl' },
       });
     } finally {
@@ -77,7 +92,7 @@ describe('validateInfo', () => {
   it('refuses a picture address longer than the column', () => {
     const profilePicture = `https://example.com/${'a'.repeat(500)}`;
 
-    expect(validateInfo({ ...info, profilePicture }, info)).toEqual({
+    expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual({
       profilePicture: { code: 'tooLong', max: 500 },
     });
   });

@@ -3,10 +3,9 @@
 // created" notice, so a fresh account always goes through the real login flow
 // once. Maps the backend 409 (duplicate email/username) to a generic conflict
 // message - like /login, never says which field clashed.
-import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
+import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
 import { registerRequest } from './auth-actions';
 import {
@@ -14,7 +13,6 @@ import {
   validateRegister,
   type RegisterField,
   type RegisterValues,
-  type RegisterErrors,
   type ValidationError,
 } from './auth-validation';
 import { DEFAULT_LANGUAGE } from '../../lib/languages';
@@ -25,11 +23,15 @@ import { Field } from '../../ui/ui-field';
 import { OAuthButtons } from './auth-oauth-buttons';
 import { AUTH_COLUMN, AUTH_LINKS } from './auth-form-classes';
 
-// The form-level error is stored as a translation key, not a sentence, so it
-// is translated at render time and follows a language switch.
-type FormError = 'register.conflict' | 'errors.generic';
-
 const FORM = `${AUTH_COLUMN} max-w-md`;
+const EMPTY_VALUES: RegisterValues = {
+  email: '',
+  password: '',
+  confirmPassword: '',
+  username: '',
+  lastName: '',
+  firstName: '',
+};
 // Pairs share a row when there is room, stack on a phone.
 const ROW = 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4';
 
@@ -74,57 +76,27 @@ export function RegisterPage() {
   const { state } = useAuth();
   const navigate = useNavigate();
 
-  const [values, setValues] = useState<RegisterValues>({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    username: '',
-    lastName: '',
-    firstName: '',
+  const form = useAccountForm({
+    initialValues: EMPTY_VALUES,
+    validate: validateRegister,
+    send: async (values: RegisterValues) => {
+      await registerRequest(
+        values,
+        isSupportedLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE,
+      );
+      navigate('/login', { replace: true, state: { justRegistered: true } });
+    },
+    refusals: { 409: 'register.conflict' },
   });
-  const [errors, setErrors] = useState<RegisterErrors>({});
-  const [formError, setFormError] = useState<FormError | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Someone who is already logged in has no business on /register either.
   if (state.status === 'authenticated') {
     return <Navigate to="/" replace />;
   }
 
-  function handleChange(field: keyof RegisterValues, value: string) {
-    setValues((prevValues) => ({
-      ...prevValues,
-      [field]: value,
-    }));
-  }
-
-  async function handleSubmit(event: SyntheticEvent) {
-    event.preventDefault();
-    setFormError(null);
-
-    const validationErrors = validateRegister(values);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await registerRequest(
-        values,
-        isSupportedLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE,
-      );
-      navigate('/login', { replace: true, state: { justRegistered: true } });
-    } catch (caught) {
-      const isConflict = caught instanceof ApiError && caught.status === 409;
-      setFormError(isConflict ? 'register.conflict' : 'errors.generic');
-      setIsSubmitting(false);
-    }
-  }
-
   return (
     <>
-      <form className={FORM} onSubmit={handleSubmit} noValidate>
+      <form className={FORM} onSubmit={form.submit} noValidate>
         <h1>{t('register.title')}</h1>
 
         <div className={ROW}>
@@ -132,60 +104,62 @@ export function RegisterPage() {
             field="firstName"
             type="text"
             autoComplete="given-name"
-            value={values.firstName}
-            error={errors.firstName}
-            onChange={handleChange}
+            value={form.values.firstName}
+            error={form.errors.firstName}
+            onChange={form.setValue}
           />
           <RegisterInput
             field="lastName"
             type="text"
             autoComplete="family-name"
-            value={values.lastName}
-            error={errors.lastName}
-            onChange={handleChange}
+            value={form.values.lastName}
+            error={form.errors.lastName}
+            onChange={form.setValue}
           />
         </div>
         <RegisterInput
           field="username"
           type="text"
           autoComplete="username"
-          value={values.username}
-          error={errors.username}
+          value={form.values.username}
+          error={form.errors.username}
           hint={t('hints.username')}
-          onChange={handleChange}
+          onChange={form.setValue}
         />
         <RegisterInput
           field="email"
           type="email"
           autoComplete="email"
-          value={values.email}
-          error={errors.email}
+          value={form.values.email}
+          error={form.errors.email}
           placeholder={t('placeholders.email')}
-          onChange={handleChange}
+          onChange={form.setValue}
         />
         <div className={ROW}>
           <RegisterInput
             field="password"
             type="password"
             autoComplete="new-password"
-            value={values.password}
-            error={errors.password}
+            value={form.values.password}
+            error={form.errors.password}
             hint={t('hints.password')}
-            onChange={handleChange}
+            onChange={form.setValue}
           />
           <RegisterInput
             field="confirmPassword"
             type="password"
             autoComplete="new-password"
-            value={values.confirmPassword}
-            error={errors.confirmPassword}
-            onChange={handleChange}
+            value={form.values.confirmPassword}
+            error={form.errors.confirmPassword}
+            onChange={form.setValue}
           />
         </div>
-        {formError && <Alert tone="error">{t(formError)}</Alert>}
+        {form.outcome && (
+          <Alert tone={form.outcome.tone}>{t(form.outcome.key)}</Alert>
+        )}
 
-        <Button type="submit" variant="solid" disabled={isSubmitting}>
-          {isSubmitting ? t('register.submitting') : t('register.submit')}
+        <Button type="submit" variant="solid" disabled={form.isSubmitting}>
+          {form.isSubmitting ? t('register.submitting') : t('register.submit')}
         </Button>
 
         <OAuthButtons />
