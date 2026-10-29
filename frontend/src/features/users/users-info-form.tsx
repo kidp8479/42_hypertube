@@ -7,38 +7,13 @@ import { useAccountForm } from '../auth/auth-account-form';
 import type { User } from '../auth/auth-types';
 import { describeValidationError } from '../auth/auth-validation';
 import type { ProfileChanges } from './users-actions';
+import { infoChanges, infoValues } from './users-changes';
 import { useUpdateProfile } from './users-queries';
 import {
   validateInfo,
   type InfoField,
   type InfoValues,
 } from './users-validation';
-
-function valuesOf(user: User): InfoValues {
-  return {
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    profilePicture: user.profilePicture ?? '',
-  };
-}
-
-// Only what differs from the saved profile is sent; an emptied picture is
-// sent as null, which removes it.
-function changesFrom(user: User, values: InfoValues): ProfileChanges {
-  const changes: ProfileChanges = {};
-  const saved = valuesOf(user);
-  for (const field of ['username', 'firstName', 'lastName'] as const) {
-    if (values[field].trim() !== saved[field]) {
-      changes[field] = values[field].trim();
-    }
-  }
-  const picture = values.profilePicture.trim();
-  if (picture !== saved.profilePicture) {
-    changes.profilePicture = picture === '' ? null : picture;
-  }
-  return changes;
-}
 
 const changedFields = (changes: ProfileChanges) =>
   new Set(Object.keys(changes) as InfoField[]);
@@ -55,19 +30,19 @@ export function InfoForm({ user }: InfoFormProps) {
   const { t: tAuth } = useTranslation('auth');
   const save = useUpdateProfile(user);
   const form = useAccountForm({
-    initialValues: () => valuesOf(user),
+    initialValues: () => infoValues(user),
     validate: (values: InfoValues) =>
-      validateInfo(values, changedFields(changesFrom(user, values))),
+      validateInfo(values, changedFields(infoChanges(user, values))),
     send: async (values: InfoValues) => {
-      const saved = await save(changesFrom(user, values));
+      const saved = await save(infoChanges(user, values));
       return {
         outcome: { key: 'info.saved', tone: 'success' },
-        values: valuesOf(saved),
+        values: infoValues(saved),
       };
     },
     refusals: { 409: 'info.usernameTaken' },
   });
-  const changes = changesFrom(user, form.values);
+  const changes = infoChanges(user, form.values);
 
   function input(field: InfoField, autoComplete: string, hint?: string) {
     const error = form.errors[field];
