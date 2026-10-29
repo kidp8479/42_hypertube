@@ -13,7 +13,7 @@ const MAX_BOOTSTRAP_RETRIES = 2;
  * network drop or a 5xx is transient and worth a couple of retries, so a
  * cold backend doesn't look like a logout.
  */
-function retryBootstrap(failureCount: number, error: unknown) {
+export function retryBootstrap(failureCount: number, error: unknown) {
   const transient = !(error instanceof ApiError) || error.status >= 500;
   return transient && failureCount < MAX_BOOTSTRAP_RETRIES;
 }

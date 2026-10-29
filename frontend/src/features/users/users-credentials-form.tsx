@@ -6,7 +6,12 @@ import { Field } from '../../ui/ui-field';
 import { useAccountForm, type FormOutcome } from '../auth/auth-account-form';
 import type { User } from '../auth/auth-types';
 import { describeValidationError } from '../auth/auth-validation';
-import type { ProfileChanges } from './users-actions';
+import {
+  credentialsChanges,
+  credentialsSavedKey,
+  credentialsValues,
+  type CredentialsSavedKey,
+} from './users-changes';
 import { useUpdateProfile } from './users-queries';
 import {
   validateCredentials,
@@ -15,9 +20,7 @@ import {
 } from './users-validation';
 
 type Outcome =
-  | 'credentials.savedEmail'
-  | 'credentials.savedPassword'
-  | 'credentials.savedBoth'
+  | CredentialsSavedKey
   | 'credentials.nothingToChange'
   | 'credentials.wrongPassword'
   | 'credentials.emailTaken'
@@ -48,38 +51,6 @@ const INPUTS: Record<
   currentPassword: { type: 'password', autoComplete: 'current-password' },
 };
 
-function emptyValues(user: User): CredentialsValues {
-  return {
-    email: user.email,
-    password: '',
-    confirmPassword: '',
-    currentPassword: '',
-  };
-}
-
-// The email goes only when it changed: the backend treats a new email as a
-// credential change, which ends the other sessions.
-function changesFrom(user: User, values: CredentialsValues): ProfileChanges {
-  const changes: ProfileChanges = {};
-  const email = values.email.trim().toLowerCase();
-  if (email !== user.email) {
-    changes.email = email;
-  }
-  if (values.password !== '') {
-    changes.password = values.password;
-  }
-  return changes;
-}
-
-function savedKey(changes: ProfileChanges): Outcome {
-  if (changes.email !== undefined && changes.password !== undefined) {
-    return 'credentials.savedBoth';
-  }
-  return changes.email !== undefined
-    ? 'credentials.savedEmail'
-    : 'credentials.savedPassword';
-}
-
 /** Props of `CredentialsForm`. */
 export interface CredentialsFormProps {
   /** The signed-in user, as last saved. */
@@ -95,10 +66,10 @@ export function CredentialsForm({ user }: CredentialsFormProps) {
   const { t: tAuth } = useTranslation('auth');
   const save = useUpdateProfile(user);
   const form = useAccountForm({
-    initialValues: () => emptyValues(user),
+    initialValues: () => credentialsValues(user),
     validate: validateCredentials,
     send: async (values: CredentialsValues) => {
-      const changes = changesFrom(user, values);
+      const changes = credentialsChanges(user, values);
       if (Object.keys(changes).length === 0) {
         return { outcome: NOTHING_TO_CHANGE };
       }
@@ -107,8 +78,8 @@ export function CredentialsForm({ user }: CredentialsFormProps) {
         currentPassword: values.currentPassword,
       });
       return {
-        outcome: { key: savedKey(changes), tone: 'success' },
-        values: emptyValues(saved),
+        outcome: { key: credentialsSavedKey(changes), tone: 'success' },
+        values: credentialsValues(saved),
       };
     },
     refusals: REFUSALS,
