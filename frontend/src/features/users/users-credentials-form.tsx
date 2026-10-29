@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
+import { FORM_ROW } from '../../ui/ui-form-classes';
 import { useAccountForm, type FormOutcome } from '../auth/auth-account-form';
 import type { User } from '../auth/auth-types';
 import { describeValidationError } from '../auth/auth-validation';
@@ -108,7 +109,7 @@ export function CredentialsForm({ user }: CredentialsFormProps) {
       <h2 className="text-lg">{t('credentials.title')}</h2>
       <p className="m-0 text-muted">{t('credentials.intro')}</p>
       {input('email', tAuth('fields.email'))}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4">
+      <div className={FORM_ROW}>
         {input(
           'password',
           t('credentials.newPassword'),
