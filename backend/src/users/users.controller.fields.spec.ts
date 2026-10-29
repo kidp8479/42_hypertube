@@ -13,6 +13,7 @@ import { App } from 'supertest/types';
 import { PreferredLanguage, User } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { PublicUserDto } from './dto/public-user.dto';
 import { RefreshTokenService } from '../auth/refresh-token.service';
 
 // Every request in this suite comes from user 7.
@@ -46,7 +47,7 @@ describe('UsersController response fields', () => {
   let app: INestApplication<App>;
   const usersService = {
     findAll: jest.fn(),
-    findOne: jest.fn(),
+    findOneForViewer: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -94,7 +95,9 @@ describe('UsersController response fields', () => {
 
   describe('findOne', () => {
     it("gives another user's id, username and picture, never the email", async () => {
-      usersService.findOne.mockResolvedValue(buildUser({ id: 42 }));
+      usersService.findOneForViewer.mockResolvedValue(
+        new PublicUserDto(buildUser({ id: 42 })),
+      );
 
       const res = await request(app.getHttpServer())
         .get('/users/42')
@@ -108,7 +111,7 @@ describe('UsersController response fields', () => {
     });
 
     it('gives the owner their own profile, email included', async () => {
-      usersService.findOne.mockResolvedValue(buildUser());
+      usersService.findOneForViewer.mockResolvedValue(buildUser());
 
       const res = await request(app.getHttpServer())
         .get('/users/7')

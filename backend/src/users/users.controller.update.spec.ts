@@ -29,7 +29,7 @@ const stubAuthGuard = {
 describe('PATCH /users/:id body', () => {
   let app: INestApplication<App>;
   const usersService = { update: jest.fn() };
-  const refreshTokens = { revokeAllForUser: jest.fn(), issue: jest.fn() };
+  const refreshTokens = { restartSessions: jest.fn() };
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -91,7 +91,7 @@ describe('PATCH /users/:id body', () => {
       user: { id: 7 },
       credentialsChanged: true,
     });
-    refreshTokens.issue.mockResolvedValue({
+    refreshTokens.restartSessions.mockResolvedValue({
       secret: 'r1',
       expiresAt: new Date(Date.now() + 60_000),
     });
@@ -108,11 +108,7 @@ describe('PATCH /users/:id body', () => {
       .expect(200);
 
     expect(usersService.update).toHaveBeenCalledWith(7, body);
-    expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(7);
-    expect(refreshTokens.issue).toHaveBeenCalledWith(7);
-    expect(
-      refreshTokens.revokeAllForUser.mock.invocationCallOrder[0],
-    ).toBeLessThan(refreshTokens.issue.mock.invocationCallOrder[0]);
+    expect(refreshTokens.restartSessions).toHaveBeenCalledWith(7);
     expect(res.headers['set-cookie']?.[0]).toMatch(
       /^refresh_token=r1;.*HttpOnly/,
     );
@@ -129,7 +125,7 @@ describe('PATCH /users/:id body', () => {
       .send({ firstName: 'Grace' })
       .expect(200);
 
-    expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+    expect(refreshTokens.restartSessions).not.toHaveBeenCalled();
     expect(res.headers['set-cookie']).toBeUndefined();
   });
 
@@ -141,7 +137,7 @@ describe('PATCH /users/:id body', () => {
       .send({ password: 'brand new pass', currentPassword: 'wrong' })
       .expect(403);
 
-    expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+    expect(refreshTokens.restartSessions).not.toHaveBeenCalled();
   });
 
   it.each(['http://example.com/a.png', 'javascript:alert(1)', 'not a url'])(

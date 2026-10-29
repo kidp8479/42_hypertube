@@ -26,7 +26,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserSummaryDto } from './dto/user-summary.dto';
-import { PublicUserDto } from './dto/public-user.dto';
 import { RefreshTokenService } from '../auth/refresh-token.service';
 import { setRefreshCookie } from '../auth/refresh-cookie.util';
 
@@ -68,24 +67,20 @@ export class UsersController {
   }
 
   /**
-   * Any profile can be read, but only the owner sees all of it: someone
-   * else gets the public fields, never the email (subject III.1, III.4).
-   * ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
+   * Any profile can be read, but only the owner sees all of it
+   * (`UsersService.findOneForViewer`). ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
    * service runs, so no query is ever built from it.
    */
   @Get(':id')
-  async findOne(
-    @Param('id', ParseIdPipe) id: number,
-    @CurrentUser() user: AuthUser,
-  ) {
-    const found = await this.usersService.findOne(id);
-    return user.id === id ? found : new PublicUserDto(found);
+  findOne(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
+    return this.usersService.findOneForViewer(id, user.id);
   }
 
   /**
    * Edits one's own profile: the registration fields plus `profilePicture`.
    * An email or password change needs `currentPassword`, then ends every
-   * session and opens a new one for the caller (`restartSessions`).
+   * session and opens a new one for the caller
+   * (`RefreshTokenService.restartSessions`).
    *
    * @throws {ForbiddenException} 403 on another user's id (the subject's
    * rule), or a wrong `currentPassword`.
@@ -106,7 +101,11 @@ export class UsersController {
     const { user: updated, credentialsChanged } =
       await this.usersService.update(id, updateUserDto);
     if (credentialsChanged) {
-      await this.restartSessions(id, req);
+      // On `req.res`, which keeps Nest's normal reply (no `@Res`).
+      const session = await this.refreshTokens.restartSessions(id);
+      if (req.res) {
+        setRefreshCookie(req, req.res, session);
+      }
     }
     return updated;
   }
@@ -123,18 +122,5 @@ export class UsersController {
       throw new ForbiddenException();
     }
     return this.usersService.remove(id);
-  }
-
-  /**
-   * Ends every session after a credential change, then opens one for the
-   * caller: this route never sees their refresh cookie (ADR-0011). The
-   * cookie goes on `req.res`, which keeps Nest's normal reply (no `@Res`).
-   */
-  private async restartSessions(userId: number, req: Request) {
-    await this.refreshTokens.revokeAllForUser(userId);
-    const issued = await this.refreshTokens.issue(userId);
-    if (req.res) {
-      setRefreshCookie(req, req.res, issued);
-    }
   }
 }

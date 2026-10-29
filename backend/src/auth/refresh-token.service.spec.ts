@@ -221,4 +221,22 @@ describe('RefreshTokenService', () => {
       );
     });
   });
+
+  describe('restartSessions', () => {
+    it('revokes every live token of the user before storing the new one', async () => {
+      const issued = await service.restartSessions(7);
+
+      // An old session surviving a credential change is the failure this
+      // guards against: the revoke must cover the user, and come first.
+      expect(repo.update).toHaveBeenCalledWith(
+        { userId: 7, revokedAt: IsNull() },
+        { revokedAt: NOW },
+      );
+      expect(repo.update.mock.invocationCallOrder[0]).toBeLessThan(
+        repo.save.mock.invocationCallOrder[0],
+      );
+      expect(firstSaved(repo).tokenHash).toBe(hashRefreshSecret(issued.secret));
+      expect(firstSaved(repo).revokedAt ?? null).toBeNull();
+    });
+  });
 });
