@@ -103,13 +103,15 @@ the id checked for ownership comes from the verified token
 
 | Scope | Limit | Where |
 |---|---|---|
-| Every route, per client IP (the address the edge proxy appended: `trust proxy`, ADR-0009) | 100 / 60 s | `ThrottlerModule.forRoot` in `app.module.ts`, `config/trust-proxy.config.ts` |
-| `POST /auth/login`, per IP | 5 / 60 s | `@Throttle` on `auth.controller.ts` |
+| Every route, per client IP (the address the edge proxy appended: `trust proxy`, ADR-0009) | 100 / 60 s | `DEFAULT_THROTTLE`, `ThrottlerModule.forRoot` in `app.module.ts`, `config/trust-proxy.config.ts` |
+| `POST /auth/login`, per IP | 5 / 60 s | `LOGIN_THROTTLE`, `@Throttle` on `auth.controller.ts` |
 | `POST /auth/login`, per identifier whatever the IP (trimmed and lower-cased; an unknown identifier counts the same, so a 429 reveals nothing; the trade-off is in `docs/diagrams/auth.md` section 10) | 5 / 60 s | `LoginIdentifierThrottlerGuard` (`auth/guards/`) |
-| `POST /users` (register) | 10 / 3600 s | `@Throttle` on `users.controller.ts` |
-| `POST /auth/oauth/exchange` | 10 / 60 s | `@Throttle` on `auth.controller.ts` |
-| Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts`, `config/env.validation.ts` |
-| Proof | | `auth/auth.throttle.spec.ts` |
+| `PATCH /users/:id` (checks the current password on an email or password change) | 10 / 60 s | `PROFILE_EDIT_THROTTLE`, `@Throttle` on `users.controller.ts` |
+| `POST /users` (register) | 10 / 3600 s | `REGISTER_THROTTLE`, `@Throttle` on `users.controller.ts` |
+| `POST /auth/refresh` | 20 / 60 s | `REFRESH_THROTTLE`, `@Throttle` on `auth.controller.ts` |
+| `POST /auth/oauth/exchange` | 10 / 60 s | `OAUTH_EXCHANGE_THROTTLE`, `@Throttle` on `auth.controller.ts` |
+| Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts` (every policy is named there), `config/env.validation.ts` |
+| Proof | | `auth/auth.throttle.spec.ts`, `config/throttle.config.spec.ts`, `auth/guards/login-identifier-throttler.guard.spec.ts` |
 
 Guard order in `app.module.ts` is deliberate: `ThrottlerGuard` is
 registered before `JwtAuthGuard`, so an unauthenticated flooder is capped
