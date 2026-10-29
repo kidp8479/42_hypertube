@@ -59,7 +59,7 @@ export function Field({
           <svg
             viewBox="0 0 12 12"
             aria-hidden="true"
-            className="mt-1 size-3 flex-none fill-none stroke-current stroke-[1.2px]"
+            className="mt-1 size-3 flex-none fill-none stroke-current stroke-1"
           >
             <circle cx="6" cy="6" r="5" />
             <path d="M6 3.2v3.4M6 8.4v.2" />

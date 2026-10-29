@@ -11,7 +11,7 @@ import { buttonClasses } from '../../ui/ui-button-classes';
 export function OAuthButtons() {
   const { t } = useTranslation('auth');
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2">
+    <div className="grid grid-fit-button gap-2">
       <a
         className={buttonClasses('outline')}
         href={`${API_BASE}/auth/42/login`}

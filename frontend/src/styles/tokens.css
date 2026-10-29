@@ -77,6 +77,17 @@
   }
 }
 
+/* Grids that put items side by side when there is room and stack them on a
+   phone, with no breakpoint: each column is at least the given width. */
+@utility grid-fit-field {
+  /* Two form fields: a name pair, a password and its confirmation. */
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+@utility grid-fit-button {
+  /* Buttons in a row: narrower, so two fit the 20rem login column. */
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
 /* Not utility values: the focus ring every focusable element shares. */
 :root {
   color-scheme: dark;

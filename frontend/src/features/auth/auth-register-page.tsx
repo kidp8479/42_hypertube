@@ -20,6 +20,7 @@ import { isSupportedLanguage } from '../../lib/language';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
+import { FORM_ROW } from '../../ui/ui-form-classes';
 import { OAuthButtons } from './auth-oauth-buttons';
 import { AUTH_COLUMN, AUTH_LINKS } from './auth-form-classes';
 
@@ -32,8 +33,6 @@ const EMPTY_VALUES: RegisterValues = {
   lastName: '',
   firstName: '',
 };
-// Pairs share a row when there is room, stack on a phone.
-const ROW = 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4';
 
 /** A labelled input plus its validation message, for one register field. */
 function RegisterInput({
@@ -99,7 +98,7 @@ export function RegisterPage() {
       <form className={FORM} onSubmit={form.submit} noValidate>
         <h1>{t('register.title')}</h1>
 
-        <div className={ROW}>
+        <div className={FORM_ROW}>
           <RegisterInput
             field="firstName"
             type="text"
@@ -135,7 +134,7 @@ export function RegisterPage() {
           placeholder={t('placeholders.email')}
           onChange={form.setValue}
         />
-        <div className={ROW}>
+        <div className={FORM_ROW}>
           <RegisterInput
             field="password"
             type="password"

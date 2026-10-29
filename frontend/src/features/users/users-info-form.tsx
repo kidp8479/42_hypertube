@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
+import { FORM_ROW } from '../../ui/ui-form-classes';
 import { useAccountForm } from '../auth/auth-account-form';
 import type { User } from '../auth/auth-types';
 import { describeValidationError } from '../auth/auth-validation';
@@ -66,7 +67,7 @@ export function InfoForm({ user }: InfoFormProps) {
     <form className="flex flex-col gap-4" onSubmit={form.submit} noValidate>
       <h2 className="text-lg">{t('info.title')}</h2>
       {input('username', 'username', tAuth('hints.username'))}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4">
+      <div className={FORM_ROW}>
         {input('firstName', 'given-name')}
         {input('lastName', 'family-name')}
       </div>
