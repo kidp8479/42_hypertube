@@ -1,4 +1,4 @@
-// Fresh-account helper shared by the e2e specs.
+// Fresh-account and sign-in helpers shared by the e2e specs.
 import { expect, type Page } from '@playwright/test';
 
 const PASSWORD = 'correct horse battery';
@@ -25,6 +25,13 @@ export async function createAccount(page: Page, tag: string) {
   return { id, username, email };
 }
 
+/** Fills and sends the login form of the page already open on `/login`. */
+export async function signIn(page: Page, identifier: string, password: string) {
+  await page.getByLabel('Username or email').fill(identifier);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+}
+
 /**
  * Registers a fresh account, then signs in through the login page. Returns
  * the username.
@@ -33,9 +40,7 @@ export async function signUpAndSignIn(page: Page) {
   const { username } = await createAccount(page, 's');
 
   await page.goto('/login');
-  await page.getByLabel('Username or email').fill(username);
-  await page.getByLabel('Password').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await signIn(page, username, PASSWORD);
   await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
   return username;
 }

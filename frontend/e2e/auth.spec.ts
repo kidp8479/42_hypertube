@@ -5,6 +5,7 @@
 // previous run's account.
 import { test, expect, type Page } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
+import { signIn } from './sign-up';
 
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
@@ -67,9 +68,7 @@ test.describe('register -> login', () => {
     ).toBeVisible();
 
     // Subject III.1: the login takes the username (an email works too).
-    await page.getByLabel('Username or email').fill(username);
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await signIn(page, username, password);
 
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole('main').getByText(username)).toBeVisible();
