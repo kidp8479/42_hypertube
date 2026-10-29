@@ -1,8 +1,15 @@
 // Client-side rules for the account forms (register here, the profile page
 // reuses the field rules). They only save a round trip: the backend DTOs
-// (CreateUserDto, UpdateUserDto) stay the authority, so the length limits
-// below mirror their @Length / @MaxLength values and must move with them.
+// (CreateUserDto, UpdateUserDto) stay the authority.
 import type { TFunction } from 'i18next';
+
+// Mirrors of CreateUserDto's @Length / @MaxLength: change them together.
+export const EMAIL_MAX_LENGTH = 255;
+export const USERNAME_MIN_LENGTH = 3;
+export const USERNAME_MAX_LENGTH = 30;
+export const NAME_MAX_LENGTH = 100;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 100;
 
 export type RegisterField =
   | 'email'
@@ -43,8 +50,8 @@ export function validateEmail(email: string): ValidationError | undefined {
   if (trimmedEmail === '') {
     return { code: 'required' };
   }
-  if (trimmedEmail.length > 255) {
-    return { code: 'tooLong', max: 255 };
+  if (trimmedEmail.length > EMAIL_MAX_LENGTH) {
+    return { code: 'tooLong', max: EMAIL_MAX_LENGTH };
   }
   if (!EMAIL_REGEX.test(trimmedEmail)) {
     return { code: 'invalidEmail' };
@@ -59,11 +66,11 @@ export function validateUsername(
   if (trimmedUsername === '') {
     return { code: 'required' };
   }
-  if (trimmedUsername.length < 3) {
-    return { code: 'tooShort', min: 3 };
+  if (trimmedUsername.length < USERNAME_MIN_LENGTH) {
+    return { code: 'tooShort', min: USERNAME_MIN_LENGTH };
   }
-  if (trimmedUsername.length > 30) {
-    return { code: 'tooLong', max: 30 };
+  if (trimmedUsername.length > USERNAME_MAX_LENGTH) {
+    return { code: 'tooLong', max: USERNAME_MAX_LENGTH };
   }
   // The login field reads a value with @ as an email.
   if (trimmedUsername.includes('@')) {
@@ -77,8 +84,8 @@ export function validateName(value: string): ValidationError | undefined {
   if (trimmedValue === '') {
     return { code: 'required' };
   }
-  if (trimmedValue.length > 100) {
-    return { code: 'tooLong', max: 100 };
+  if (trimmedValue.length > NAME_MAX_LENGTH) {
+    return { code: 'tooLong', max: NAME_MAX_LENGTH };
   }
   return undefined;
 }
@@ -86,11 +93,11 @@ export function validateName(value: string): ValidationError | undefined {
 export function validatePassword(
   password: string,
 ): ValidationError | undefined {
-  if (password.length < 8) {
-    return { code: 'tooShort', min: 8 };
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    return { code: 'tooShort', min: PASSWORD_MIN_LENGTH };
   }
-  if (password.length > 100) {
-    return { code: 'tooLong', max: 100 };
+  if (password.length > PASSWORD_MAX_LENGTH) {
+    return { code: 'tooLong', max: PASSWORD_MAX_LENGTH };
   }
   return undefined;
 }
