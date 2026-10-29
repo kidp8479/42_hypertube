@@ -2,6 +2,7 @@
 // so a field is checked the same way everywhere. UpdateUserDto stays the
 // authority.
 import {
+  PASSWORD_MAX_LENGTH,
   collectErrors,
   validateConfirmPassword,
   validateEmail,
@@ -20,7 +21,10 @@ export type CredentialsField =
   'email' | 'password' | 'confirmPassword' | 'currentPassword';
 export type CredentialsValues = Record<CredentialsField, string>;
 
-// 500 is the column length. Like the backend's @IsUrl: https only, no
+// UpdateUserDto's @MaxLength, the column length.
+const PROFILE_PICTURE_MAX_LENGTH = 500;
+
+// Like the backend's @IsUrl: https only, no
 // whitespace, and a host made of letter, digit and hyphen labels that ends in
 // a TLD of 2 letters or more (`https://localhost/a.png` and
 // `https://my_host.example.com/a.png` are refused there).
@@ -51,8 +55,8 @@ function validateProfilePicture(url: string): ValidationError | undefined {
   if (trimmedUrl === '') {
     return undefined;
   }
-  if (trimmedUrl.length > 500) {
-    return { code: 'tooLong', max: 500 };
+  if (trimmedUrl.length > PROFILE_PICTURE_MAX_LENGTH) {
+    return { code: 'tooLong', max: PROFILE_PICTURE_MAX_LENGTH };
   }
   const parsed = /\s/.test(trimmedUrl) ? null : parseUrl(trimmedUrl);
   return parsed?.protocol === 'https:' && isPictureHost(parsed.hostname)
@@ -60,12 +64,14 @@ function validateProfilePicture(url: string): ValidationError | undefined {
     : { code: 'invalidUrl' };
 }
 
-// 100 is UpdateUserDto's @MaxLength: a longer one cannot be the password.
+// UpdateUserDto caps it like a new password: a longer one cannot be it.
 function validateCurrentPassword(value: string): ValidationError | undefined {
   if (value === '') {
     return { code: 'required' };
   }
-  return value.length > 100 ? { code: 'tooLong', max: 100 } : undefined;
+  return value.length > PASSWORD_MAX_LENGTH
+    ? { code: 'tooLong', max: PASSWORD_MAX_LENGTH }
+    : undefined;
 }
 
 /**
