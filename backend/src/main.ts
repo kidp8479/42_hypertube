@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { QueryFailedFilter } from './common/filters/query-failed.filter';
 import { globalValidationPipe } from './common/pipes/global-validation.pipe';
+import { noStoreResponses } from './config/no-store.config';
 import { trustEdgeProxy } from './config/trust-proxy.config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -20,6 +21,9 @@ async function bootstrap() {
 
   // Behind the edge proxy: real client IP for the rate limiter, req.secure.
   trustEdgeProxy(app);
+
+  // Per-user data: the browser must refetch it, never replay a stored copy.
+  noStoreResponses(app);
 
   // Close DB connections and run module teardown on SIGTERM/SIGINT
   // (what `docker stop` sends) instead of dropping them.
