@@ -17,4 +17,5 @@ auth:bearer {
 assert {
   res.status: eq 200
   res.body.id: eq {{adaId}}
+  res.headers["cache-control"]: eq no-store
 }
