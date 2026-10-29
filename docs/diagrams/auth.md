@@ -73,6 +73,23 @@ flowchart TD
     I --> J["Redirect to /, token stored"]
 ```
 
+### Every account form: one submit flow (HYP-103)
+
+Login, register and the two profile forms run the same submit through
+`useAccountForm` (`features/auth/auth-account-form.ts`). Each form only
+brings its rules, its send and its table of refusals.
+
+```mermaid
+flowchart LR
+    S["submit"] --> C["clear the last message"] --> V{"validate"}
+    V -- "field errors" --> E["show them, send nothing"]
+    V -- ok --> X["send"]
+    X -- "resolves a result" --> O["its message (key + tone),<br/>maybe new values"]
+    X -- "resolves nothing" --> N["the page navigates<br/>(login, register)"]
+    X -- "ApiError listed in refusals" --> R["that refusal's message"]
+    X -- "anything else" --> G["generic message"]
+```
+
 ## 2. Session states in the SPA (HYP-45)
 
 `authReducer` (`auth-reducer.ts`): three states, five events. The events
