@@ -4,7 +4,7 @@
   "private": true,
   "description": "Tooling only: the TypeScript LSP compiler and the Bruno CLI (make test-api). Not a workspace root: backend/ and frontend/ install and build on their own.",
   "devDependencies": {
-    "@usebruno/cli": "4.2.1",
+    "@usebruno/cli": "4.3.0",
     "typescript": "~6.0.3"
   }
 }
