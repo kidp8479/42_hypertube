@@ -13,6 +13,7 @@ import { FindOperator } from 'typeorm';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PublicUserDto } from './dto/public-user.dto';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake repository stays loose.
@@ -284,6 +285,25 @@ describe('UsersService', () => {
         expect(user.firstName).toBe('F'.repeat(100));
         expect(user.lastName).toBe('L'.repeat(100));
       });
+    });
+  });
+
+  describe('findOneForViewer', () => {
+    const stored = { id: 7, username: 'ada', email: 'ada@example.com' };
+
+    it('gives the owner the whole profile', async () => {
+      repository.findOneBy.mockResolvedValue(stored);
+
+      await expect(service.findOneForViewer(7, 7)).resolves.toBe(stored);
+    });
+
+    it('gives anyone else the public fields only, never the email', async () => {
+      repository.findOneBy.mockResolvedValue(stored);
+
+      const seen = await service.findOneForViewer(7, 8);
+
+      expect(seen).toBeInstanceOf(PublicUserDto);
+      expect(seen).not.toHaveProperty('email');
     });
   });
 

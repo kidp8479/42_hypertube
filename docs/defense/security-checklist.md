@@ -73,7 +73,7 @@ the id checked for ownership comes from the verified token
 | `JWT_SECRET` >= 32 chars, and the `.env.example` placeholder is rejected at boot | `config/env.validation.ts` | `config/env.validation.spec.ts` |
 | Signing key asserted present at startup, not lazily | `jwt.strategy.ts` `config.getOrThrow('JWT_SECRET')` | |
 | One-click logout: `POST /auth/logout` (public, driven by the refresh cookie) revokes the whole session and clears the cookie, then the SPA discards its token and query cache | `auth.controller.ts`, `refresh-token.service.ts`, `frontend/src/features/auth/` | `auth/auth.session.spec.ts`, `auth.controller.spec.ts`, Bruno 33-34, `frontend/src/features/auth/auth-provider.test.tsx` |
-| An email or password change revokes every refresh-token family of the user and issues a new one to the caller only; a taken email (409) revokes nothing | `users.controller.ts` `update()` | `users.controller.update.spec.ts`, Bruno 39-42; ADR-0011 |
+| An email or password change revokes every refresh-token family of the user and issues a new one to the caller only; a taken email (409) revokes nothing | `refresh-token.service.ts` `restartSessions()`, called from `users.controller.ts` `update()` | `refresh-token.service.spec.ts` (the revoke covers the user and runs first), `users.controller.update.spec.ts`, Bruno 39-42; ADR-0011 |
 | Auto-linking a provider to an unverified account claims it first: password removed, every session revoked, other provider links deleted, email marked verified | `auth.service.ts` `resolveOAuthUser()` | `auth.service.spec.ts`; ADR-0007 |
 | Refresh tokens: 256 random bits in an `HttpOnly`, `SameSite=Strict`, `Secure` cookie scoped to the auth routes, only their SHA-256 stored, rotated on every use; a consumed token used again (after a 10 s tolerance) revokes its whole session; 7 days sliding, 30 days at most from the login | `auth/refresh-token.service.ts`, `auth/refresh-cookie.util.ts`, `auth/entities/refresh-token.entity.ts` | `refresh-token.service.spec.ts`, `refresh-cookie.util.spec.ts`, `auth.session.spec.ts`, Bruno 26-34; ADR-0011 |
 | Access token revocation before its expiry | stateless on purpose, nothing can renew it after a logout | **accepted limit** - 15 minutes, ADR-0011, `docs/defense/known-limitations.md` |
@@ -124,7 +124,7 @@ store is only needed once more than one backend instance runs (noted in
 | Control | Where | Proof |
 |---|---|---|
 | `PATCH /users/:id` and `DELETE /users/:id` return `403` unless `req.user.id === :id` | `users.controller.ts` `update()` / `remove()` | `users.controller.spec.ts` |
-| Any profile can be read, but the email stays private (subject III.1, III.4): `GET /users` gives `id` and `username` only, `GET /users/:id` gives `id`, `username` and `profilePicture` to anyone but the owner, who gets the full profile | `users.controller.ts` `findAll()` / `findOne()`, `dto/user-summary.dto.ts`, `dto/public-user.dto.ts` | `users.controller.fields.spec.ts`, Bruno 08 and 10 |
+| Any profile can be read, but the email stays private (subject III.1, III.4): `GET /users` gives `id` and `username` only, `GET /users/:id` gives `id`, `username` and `profilePicture` to anyone but the owner, who gets the full profile | `users.controller.ts` `findAll()`, `users.service.ts` `findOneForViewer()`, `dto/user-summary.dto.ts`, `dto/public-user.dto.ts` | `users.service.spec.ts` (owner or not), `users.controller.fields.spec.ts` (what is serialized), Bruno 08 and 10 |
 
 ## 9. Error handling / information leakage
 

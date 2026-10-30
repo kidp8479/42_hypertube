@@ -27,6 +27,7 @@ describe('UsersController path routing', () => {
   let app: INestApplication<App>;
   const usersService = {
     findOne: jest.fn(),
+    findOneForViewer: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
   };
@@ -52,21 +53,22 @@ describe('UsersController path routing', () => {
 
   it('rejects a non-numeric id with 400 and never calls the service', async () => {
     await request(app.getHttpServer()).get('/users/abc').expect(400);
-    expect(usersService.findOne).not.toHaveBeenCalled();
+    expect(usersService.findOneForViewer).not.toHaveBeenCalled();
   });
 
   it('rejects an id past the integer column range with 400', async () => {
     // Postgres would refuse it ("out of range for type integer") with a 500.
     await request(app.getHttpServer()).get('/users/99999999999').expect(400);
-    expect(usersService.findOne).not.toHaveBeenCalled();
+    expect(usersService.findOneForViewer).not.toHaveBeenCalled();
   });
 
   it('passes a numeric id through as a number', async () => {
-    usersService.findOne.mockResolvedValue({ id: 42 });
+    usersService.findOneForViewer.mockResolvedValue({ id: 42 });
 
     await request(app.getHttpServer()).get('/users/42').expect(200);
 
-    expect(usersService.findOne).toHaveBeenCalledWith(42);
+    // The id as a number, and the caller (7, from the guard) as the viewer.
+    expect(usersService.findOneForViewer).toHaveBeenCalledWith(42, 7);
   });
 
   it('routes GET /users/me to findMe, not the :id route', async () => {

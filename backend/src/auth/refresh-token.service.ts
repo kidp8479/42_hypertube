@@ -106,6 +106,16 @@ export class RefreshTokenService {
     );
   }
 
+  /**
+   * Ends every session of a user, then opens one for the caller: after a
+   * credential change no older session may survive, and the route that made
+   * the change never sees the caller's refresh cookie (ADR-0011).
+   */
+  async restartSessions(userId: number): Promise<IssuedRefreshToken> {
+    await this.revokeAllForUser(userId);
+    return this.issue(userId);
+  }
+
   private isDead(row: RefreshToken, now: Date): boolean {
     return (
       row.revokedAt !== null ||

@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Raw, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PublicUserDto } from './dto/public-user.dto';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { User } from './entities/user.entity';
 import * as argon2 from 'argon2';
@@ -65,6 +66,18 @@ export class UsersService {
       throw new NotFoundException(`User ${id} not found`);
     }
     return user;
+  }
+
+  /**
+   * A profile as `viewerId` may see it: all of it for its owner, the public
+   * fields for anyone else, never the email (subject III.1, III.4).
+   */
+  async findOneForViewer(
+    id: number,
+    viewerId: number,
+  ): Promise<User | PublicUserDto> {
+    const user = await this.findOne(id);
+    return id === viewerId ? user : new PublicUserDto(user);
   }
 
   /**
