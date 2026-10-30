@@ -19,9 +19,6 @@ export const authEn = {
   placeholders: {
     email: 'ada@example.com',
   },
-  errors: {
-    generic: 'Something went wrong. Please try again.',
-  },
   validation: {
     required: '{{field}} is required',
     invalidEmail: 'Invalid email address',

@@ -29,10 +29,4 @@ export const usersEn = {
     noPassword:
       'The change was refused. Check the email address. If this account was created with 42 or GitHub, it has no password yet, so its email and password cannot be changed here.',
   },
-  publicProfile: {
-    loading: 'Loading the profile...',
-  },
-  errors: {
-    generic: 'Something went wrong. Please try again.',
-  },
 };

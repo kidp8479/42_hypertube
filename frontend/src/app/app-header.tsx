@@ -10,12 +10,18 @@ import { LanguageSwitcher } from './language-switcher';
 
 const ROW = 'flex items-center gap-2 border-b border-line py-2 sm:gap-3';
 
+/** Props of `AccountLink`. */
+export interface AccountLinkProps {
+  /** The signed-in user. */
+  user: User;
+}
+
 /**
  * Who is signed in, as the link to their profile: the avatar and the
  * username. On a phone only the avatar shows; the username stays for screen
  * readers.
  */
-function AccountLink({ user }: { user: User }) {
+function AccountLink({ user }: AccountLinkProps) {
   return (
     <Link to="/profile" className="flex items-center gap-2 no-underline">
       <UserAvatar username={user.username} picture={user.profilePicture} />

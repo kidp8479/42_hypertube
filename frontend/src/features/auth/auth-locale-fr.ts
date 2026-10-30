@@ -21,9 +21,6 @@ export const authFr: typeof authEn = {
   placeholders: {
     email: 'ada@example.com',
   },
-  errors: {
-    generic: 'Une erreur est survenue. Veuillez réessayer.',
-  },
   validation: {
     required: 'Le champ « {{field}} » est obligatoire',
     invalidEmail: 'Adresse e-mail invalide',

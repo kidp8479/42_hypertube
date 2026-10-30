@@ -38,7 +38,6 @@ export type ValidationError =
 export type FieldErrors<F extends AccountField> = Partial<
   Record<F, ValidationError>
 >;
-export type RegisterErrors = FieldErrors<RegisterField>;
 
 // Deliberately loose (something@something.tld, a TLD of 2 characters or
 // more like @IsEmail asks): a stricter pattern would reject valid addresses,
@@ -132,7 +131,9 @@ export function collectErrors<F extends AccountField>(
  * Runs every register-form rule; an empty object means the form may be sent.
  * Values are checked trimmed, as `registerRequest` sends them.
  */
-export function validateRegister(values: RegisterValues): RegisterErrors {
+export function validateRegister(
+  values: RegisterValues,
+): FieldErrors<RegisterField> {
   return collectErrors<RegisterField>([
     ['email', validateEmail(values.email)],
     ['username', validateUsername(values.username)],

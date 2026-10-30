@@ -12,6 +12,10 @@ export const commonFr: typeof commonEn = {
     profile: 'Mon profil',
   },
   loading: 'Chargement…',
+  errors: {
+    generic: 'Une erreur est survenue. Veuillez réessayer.',
+    retry: 'Réessayer',
+  },
   notFound: {
     title: 'Page introuvable',
     body: "Il n'y a rien à cette adresse.",
