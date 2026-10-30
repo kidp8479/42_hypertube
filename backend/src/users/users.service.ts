@@ -6,14 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Raw, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { User } from './entities/user.entity';
+import { UsernameAllocator } from './username-allocator.service';
 import * as argon2 from 'argon2';
-import { randomUUID } from 'node:crypto';
 import { ARGON2_OPTIONS } from '../auth/argon2.config';
 
 /** What a profile update did: the saved row, and whether the email or the password changed. */
@@ -31,6 +31,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly usernames: UsernameAllocator,
   ) {}
 
   /**
@@ -118,65 +119,17 @@ export class UsersService {
   }
 
   /**
-   * Caps the number of sequential "is it taken?" queries a single OAuth
-   * signup can trigger - past this, a pre-seeded run of base/base1/base2/...
-   * would otherwise make this loop run indefinitely.
-   */
-  private static readonly MAX_USERNAME_ATTEMPTS = 50;
-
-  /**
-   * Mirror the `User` column lengths: an OAuth profile bypasses the DTO
+   * Mirrors the `User` column length: an OAuth profile bypasses the DTO
    * limits, and a value past the column makes Postgres reject the insert.
    */
-  private static readonly USERNAME_MAX_LENGTH = 30;
   private static readonly NAME_MAX_LENGTH = 100;
-
-  /** Appends `suffix` to `base`, shortening `base` so the result still fits the column. */
-  private static withSuffix(base: string, suffix: string): string {
-    return (
-      base.slice(0, UsersService.USERNAME_MAX_LENGTH - suffix.length) + suffix
-    );
-  }
-
-  /**
-   * Whether a username is taken, whatever the case: the unique index is on
-   * `LOWER(username)` (HYP-33), so the lookup compares the same way and `Ada`
-   * counts as taken when `ada` exists.
-   */
-  private async isUsernameTaken(username: string): Promise<boolean> {
-    const existing = await this.usersRepository.findOneBy({
-      username: Raw((column) => `LOWER(${column}) = LOWER(:username)`, {
-        username,
-      }),
-    });
-    return Boolean(existing);
-  }
-
-  /**
-   * Finds a username close to `base` that isn't already taken - tries
-   * `base` itself, then numeric suffixes (`base1`, `base2`, ...) on
-   * collision. See `MAX_USERNAME_ATTEMPTS` for the fallback once that
-   * search gets long.
-   */
-  private async findAvailableUsername(base: string): Promise<string> {
-    let username = base.slice(0, UsersService.USERNAME_MAX_LENGTH);
-    let counter = 1;
-    while (await this.isUsernameTaken(username)) {
-      if (counter > UsersService.MAX_USERNAME_ATTEMPTS) {
-        username = UsersService.withSuffix(base, randomUUID().slice(0, 8));
-        break;
-      }
-      username = UsersService.withSuffix(base, String(counter++));
-    }
-    return username;
-  }
 
   /**
    * Creates a `User` from a verified OAuth profile - no password, no
-   * registration form. `username` is derived from the provider's suggested
-   * value with a numeric-suffix fallback on collision (see
-   * `findAvailableUsername`); email/OAuth-account uniqueness is the
-   * caller's responsibility (see `AuthService.resolveOAuthUser`).
+   * registration form. `username` is the provider's suggested value, or the
+   * closest free one ({@link UsernameAllocator}); email/OAuth-account
+   * uniqueness is the caller's responsibility (see
+   * `AuthService.resolveOAuthUser`).
    */
   async createFromOAuth(profile: {
     email: string;
@@ -184,9 +137,7 @@ export class UsersService {
     firstName: string;
     lastName: string;
   }): Promise<User> {
-    const username = await this.findAvailableUsername(
-      profile.suggestedUsername,
-    );
+    const username = await this.usernames.available(profile.suggestedUsername);
     const user = this.usersRepository.create({
       email: profile.email,
       username,
