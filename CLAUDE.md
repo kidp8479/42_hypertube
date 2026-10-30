@@ -98,7 +98,7 @@ and additions specific to this project:
 - Compodoc docs (JSDoc `/** */`) on **every class and every React
   component**, always (defense evidence + onboarding), and on any method
   whose WHY is not obvious from reading it - public or private (e.g.
-  `AuthService.dummyHash`, `UsersService.findAvailableUsername`). No
+  `AuthService.dummyHash`, `UsernameAllocator.available`). No
   comment on a method when the name + signature already make the WHY
   clear. Full rule in `CONTRIBUTING.md` > Doc comments.
 - Commits: `type(HYP-N): summary`, with the Linear issue key, one logical

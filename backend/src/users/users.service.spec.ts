@@ -1,5 +1,5 @@
 // Unit spec for UsersService with a mocked repository: password hashing,
-// OAuth account creation (username fallback, column limits), update (with
+// OAuth account creation (column limits), update (with
 // re-authentication for a credential change) and 404s.
 import {
   BadRequestException,
@@ -9,8 +9,8 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
-import { FindOperator } from 'typeorm';
 import { UsersService } from './users.service';
+import { UsernameAllocator } from './username-allocator.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
@@ -26,16 +26,6 @@ type RepositoryMock = {
   update: jest.Mock;
   createQueryBuilder: jest.Mock;
 };
-
-// The username each `findOneBy` call looked for, in order. The lookup is a
-// raw operator (a case-insensitive comparison), so the name sits in its
-// parameters rather than in the `where` object itself.
-function lookedUpUsernames(findOneBy: jest.Mock): unknown[] {
-  const calls = findOneBy.mock.calls as [{ username: FindOperator<string> }][];
-  return calls.map(
-    ([where]) => where.username.objectLiteralParameters?.username as unknown,
-  );
-}
 
 // A valid registration payload. Override just the fields a test cares about.
 const buildCreateUserDto = (
@@ -53,11 +43,13 @@ describe('UsersService', () => {
   // --- shared setup ---
   let service: UsersService;
   let repository: RepositoryMock;
+  const usernames = { available: jest.fn().mockResolvedValue('ada') };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        { provide: UsernameAllocator, useValue: usernames },
         {
           // Hand the DI container a fake Repository<User> so UsersService
           // can be built without a real database connection.
@@ -170,14 +162,13 @@ describe('UsersService', () => {
       lastName: 'Lovelace',
     };
 
-    it('creates a password-less user with the suggested username when free', async () => {
-      repository.findOneBy.mockResolvedValue(null);
+    it('creates a password-less user with the username the allocator picked', async () => {
       repository.create.mockImplementation((data: Partial<User>) => data);
       repository.save.mockImplementation((data: Partial<User>) => data);
 
       const user = await service.createFromOAuth(oauthProfile);
 
-      expect(lookedUpUsernames(repository.findOneBy)).toEqual(['ada']);
+      expect(usernames.available).toHaveBeenCalledWith('ada');
       expect(user).toMatchObject({
         email: 'ada@example.com',
         username: 'ada',
@@ -186,96 +177,13 @@ describe('UsersService', () => {
       });
     });
 
-    it('falls back to a numeric suffix when the suggested username is taken', async () => {
-      repository.findOneBy
-        .mockResolvedValueOnce({ id: 1, username: 'ada' })
-        .mockResolvedValueOnce(null);
-      repository.create.mockImplementation((data: Partial<User>) => data);
-      repository.save.mockImplementation((data: Partial<User>) => data);
-
-      const user = await service.createFromOAuth(oauthProfile);
-
-      expect(lookedUpUsernames(repository.findOneBy)).toEqual(['ada', 'ada1']);
-      expect(user.username).toBe('ada1');
-    });
-
-    it('treats a username differing only by case as taken', async () => {
-      repository.findOneBy.mockResolvedValue(null);
-      repository.create.mockImplementation((data: Partial<User>) => data);
-      repository.save.mockImplementation((data: Partial<User>) => data);
-
-      await service.createFromOAuth(oauthProfile);
-
-      // The unique index is on LOWER(username): the lookup must compare the
-      // same way, or it calls `Ada` free for `ada` and the insert then fails.
-      const [[where]] = repository.findOneBy.mock.calls as [
-        [{ username: FindOperator<string> }],
-      ];
-      expect(where.username.getSql?.('"user"."username"')).toBe(
-        'LOWER("user"."username") = LOWER(:username)',
-      );
-    });
-
-    it('falls back to a random suffix once the numeric attempts are exhausted', async () => {
-      // Every candidate - 'ada', 'ada1', 'ada2', ... - looks taken, so the
-      // search runs past MAX_USERNAME_ATTEMPTS and has to bail out.
-      repository.findOneBy.mockResolvedValue({ id: 1 });
-      repository.create.mockImplementation((data: Partial<User>) => data);
-      repository.save.mockImplementation((data: Partial<User>) => data);
-
-      const user = await service.createFromOAuth(oauthProfile);
-
-      expect(repository.findOneBy.mock.calls.length).toBeGreaterThan(50);
-      expect(user.username).toMatch(/^ada[0-9a-f]{8}$/);
-    });
-
     describe('column length limits', () => {
-      // A GitHub login can reach 39 characters; the username column is 30.
-      const longLogin = 'a'.repeat(39);
-
       beforeEach(() => {
         repository.create.mockImplementation((data: Partial<User>) => data);
         repository.save.mockImplementation((data: Partial<User>) => data);
       });
 
-      it('truncates a suggested username to the column length', async () => {
-        repository.findOneBy.mockResolvedValue(null);
-
-        const user = await service.createFromOAuth({
-          ...oauthProfile,
-          suggestedUsername: longLogin,
-        });
-
-        expect(user.username).toBe('a'.repeat(30));
-      });
-
-      it('keeps a numeric suffix within the column length on collision', async () => {
-        repository.findOneBy
-          .mockResolvedValueOnce({ id: 1 })
-          .mockResolvedValueOnce(null);
-
-        const user = await service.createFromOAuth({
-          ...oauthProfile,
-          suggestedUsername: longLogin,
-        });
-
-        expect(user.username).toBe(`${'a'.repeat(29)}1`);
-      });
-
-      it('keeps the random fallback suffix within the column length', async () => {
-        repository.findOneBy.mockResolvedValue({ id: 1 });
-
-        const user = await service.createFromOAuth({
-          ...oauthProfile,
-          suggestedUsername: longLogin,
-        });
-
-        expect(user.username).toMatch(/^a{22}[0-9a-f]{8}$/);
-      });
-
       it('truncates first and last name to the column length', async () => {
-        repository.findOneBy.mockResolvedValue(null);
-
         const user = await service.createFromOAuth({
           ...oauthProfile,
           firstName: 'F'.repeat(255),

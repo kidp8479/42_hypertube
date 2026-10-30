@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
+import { UsernameAllocator } from './username-allocator.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { RefreshTokenModule } from '../auth/refresh-token.module';
@@ -14,7 +15,7 @@ import { RefreshTokenModule } from '../auth/refresh-token.module';
 @Module({
   imports: [TypeOrmModule.forFeature([User]), RefreshTokenModule],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UsernameAllocator],
   exports: [UsersService],
 })
 export class UsersModule {}
