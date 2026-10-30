@@ -33,10 +33,4 @@ export const usersFr: typeof usersEn = {
     noPassword:
       "La modification a été refusée. Vérifiez l'adresse e-mail. Si ce compte a été créé avec 42 ou GitHub, il n'a pas encore de mot de passe : son e-mail et son mot de passe ne peuvent pas être modifiés ici.",
   },
-  publicProfile: {
-    loading: 'Chargement du profil...',
-  },
-  errors: {
-    generic: 'Une erreur est survenue. Veuillez réessayer.',
-  },
 };

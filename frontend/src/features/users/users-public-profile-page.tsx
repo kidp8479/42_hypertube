@@ -2,9 +2,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { LoadingStatus } from '../../app/app-loading';
 import { NotFoundPage } from '../../app/app-not-found-page';
 import { ApiError } from '../../lib/api';
 import { Alert } from '../../ui/ui-alert';
+import { Button } from '../../ui/ui-button';
 import { useAuth } from '../auth/auth-context';
 import { fetchPublicUser } from './users-actions';
 import { UserAvatar } from './users-avatar';
@@ -31,11 +33,7 @@ export function PublicProfilePage() {
     return <Navigate to="/profile" replace />;
   }
   if (profile.isPending) {
-    return (
-      <p role="status" className="my-12 text-center text-muted">
-        {t('publicProfile.loading')}
-      </p>
-    );
+    return <LoadingStatus />;
   }
   if (profile.isError) {
     const { error } = profile;
@@ -45,15 +43,18 @@ export function PublicProfilePage() {
     return notFound ? (
       <NotFoundPage />
     ) : (
-      <div className="mx-auto my-12 max-w-md">
+      <div className="flex flex-col mx-auto my-12 gap-4 max-w-md">
         <Alert tone="error">{t('errors.generic')}</Alert>
+        <Button variant="outline" onClick={() => void profile.refetch()}>
+          {t('errors.retry')}
+        </Button>
       </div>
     );
   }
 
   const user = profile.data;
   return (
-    <div className="mx-auto my-12 flex max-w-md items-center gap-4">
+    <div className="flex items-center mx-auto my-12 gap-4 max-w-md">
       <UserAvatar
         username={user.username}
         picture={user.profilePicture}

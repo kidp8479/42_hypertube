@@ -10,6 +10,10 @@ export const commonEn = {
     profile: 'My profile',
   },
   loading: 'Loading…',
+  errors: {
+    generic: 'Something went wrong. Please try again.',
+    retry: 'Try again',
+  },
   notFound: {
     title: 'Page not found',
     body: 'There is nothing at this address.',

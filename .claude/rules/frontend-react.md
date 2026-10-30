@@ -69,6 +69,9 @@ message text.
   and `title`. Strings live in `<feature>-locale-<lang>.ts`, one key in
   every language.
 - Keys are semantic (`movies.list.empty`), never the English sentence.
+- A string several features share (the generic error, "loading") lives
+  once in the `common` namespace: every feature namespace falls back to it
+  (`fallbackNS` in `lib/i18n.ts`), so it is never copied per feature.
 - Variables go through interpolation (`t('key', { count })`) and plurals
   through i18next plural keys (`_one` / `_other`), never string
   concatenation.

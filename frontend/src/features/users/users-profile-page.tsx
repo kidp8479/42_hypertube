@@ -20,7 +20,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto my-12 flex max-w-md flex-col gap-10">
+    <div className="flex flex-col mx-auto my-12 gap-10 max-w-md">
       <div className="flex items-center gap-4">
         <UserAvatar
           username={user.username}
@@ -29,7 +29,7 @@ export function ProfilePage() {
         />
         <div>
           <h1 className="mb-1">{t('profile.title')}</h1>
-          <p className="m-0 text-muted wrap-anywhere">{user.username}</p>
+          <p className="m-0 wrap-anywhere text-muted">{user.username}</p>
         </div>
       </div>
       <InfoForm user={user} />

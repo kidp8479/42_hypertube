@@ -23,7 +23,7 @@ export function UserAvatar({
 }: UserAvatarProps) {
   // The address that failed, so a new address gets its own try.
   const [failedPicture, setFailedPicture] = useState<string | null>(null);
-  const frame = `inline-flex flex-none items-center justify-center overflow-hidden rounded-round border border-edge ${SIZES[size]}`;
+  const frame = `inline-flex flex-none items-center justify-center overflow-hidden ${SIZES[size]} rounded-round border border-edge`;
 
   if (picture && picture !== failedPicture) {
     return (

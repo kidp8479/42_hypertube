@@ -30,6 +30,9 @@ void i18n.use(initReactI18next).init({
   fallbackLng: DEFAULT_LANGUAGE,
   supportedLngs: SUPPORTED_LANGUAGES,
   defaultNS: 'auth',
+  // A key a feature namespace does not hold is looked up in `common`, so a
+  // shared string (the generic error) is written once.
+  fallbackNS: 'common',
   // React already escapes what it renders; escaping here too would double-encode.
   interpolation: { escapeValue: false },
 });
