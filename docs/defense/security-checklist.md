@@ -19,7 +19,7 @@ committed under `backend/src/`.
 | Control | Where | Proof |
 |---|---|---|
 | Passwords hashed with argon2id before insert | `users.service.ts` `create()` calls `argon2.hash(..., ARGON2_OPTIONS)` | `users.service.spec.ts`; ADR-0001 |
-| Hash cost pinned, not left to library defaults | `auth/argon2.config.ts` (m = 19 MiB, t = 2, p = 1, OWASP) | ADR-0004 |
+| Hash cost pinned, not left to library defaults | `config/argon2.config.ts` (m = 19 MiB, t = 2, p = 1, OWASP) | ADR-0004 |
 | Hash column kept out of normal reads | `user.entity.ts` `@Column({ select: false })` on `password` | `user.entity.spec.ts` |
 | Hash stripped from every response body even when loaded on purpose | `@Exclude()` on the column + global `ClassSerializerInterceptor` in `main.ts` | `users.controller.spec.ts` (serialized output has no `password`) |
 | Login reads the hash deliberately, never by default | `users.service.ts` `findForLogin()` (username or email) reads it through `findWithPassword()`, a query-builder `addSelect('user.password')` | `users.service.spec.ts` |

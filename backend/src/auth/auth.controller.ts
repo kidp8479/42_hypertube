@@ -21,7 +21,7 @@ import {
   readRefreshCookie,
   setRefreshCookie,
 } from './refresh-cookie.util';
-import { Public } from './decorators/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { OAuthCallback } from './decorators/oauth-callback.decorator';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { spaCallbackUrl } from './spa-callback-url.util';

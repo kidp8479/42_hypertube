@@ -11,7 +11,7 @@ import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entities/user.entity';
-import { ARGON2_OPTIONS } from './argon2.config';
+import { ARGON2_OPTIONS } from '../config/argon2.config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { Repository } from 'typeorm';

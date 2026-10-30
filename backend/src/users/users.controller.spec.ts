@@ -3,7 +3,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Request } from 'express';
-import { AuthUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../common/decorators/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { RefreshTokenService } from '../auth/refresh-token.service';

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { OAuthCallbackFilter } from '../filters/oauth-callback.filter';
-import { Public } from './public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 /**
  * `GET <provider>/callback`: public, guarded by the provider's Passport
