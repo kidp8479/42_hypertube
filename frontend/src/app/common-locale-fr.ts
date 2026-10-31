@@ -4,6 +4,7 @@ import type { commonEn } from './common-locale-en';
 export const commonFr: typeof commonEn = {
   language: {
     label: 'Langue',
+    notSaved: 'Non enregistrée sur votre compte',
   },
   header: {
     logout: 'Se déconnecter',
