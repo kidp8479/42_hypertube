@@ -67,9 +67,12 @@ server {
     }
 
     # Swagger UI and its schema live at the backend root, not under /api.
+    # The prefix header tells the backend the API it documents is under /api,
+    # so the document's server URL (and "Try it out") points there.
     location /api-docs {
         proxy_pass $backend;
         include /etc/nginx/snippets/proxy-headers.conf;
+        proxy_set_header X-Forwarded-Prefix /api;
     }
 
     # Everything else is the SPA: Vite in dev, the built files in prod. The

@@ -1,5 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { forwardedPrefix } from '../common/utils/forwarded-prefix.util';
 
 /**
  * Serves Swagger UI at `/api-docs` and the OpenAPI document at
@@ -11,6 +13,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
  * `JwtAuthGuard`; `@Public()` routes override it. Request and response
  * models come from the `@nestjs/swagger` compiler plugin (`nest-cli.json`),
  * which reads the DTO types and their class-validator rules.
+ *
+ * The server URL is set per request: `/api` behind the edge proxy, `/` on
+ * the backend's own port, so "Try it out" calls the API, never the SPA.
  */
 export function serveApiDocs(app: NestExpressApplication): void {
   const config = new DocumentBuilder()
@@ -24,5 +29,12 @@ export function serveApiDocs(app: NestExpressApplication): void {
     'api-docs',
     app,
     SwaggerModule.createDocument(app, config),
+    {
+      // Express is the HTTP adapter, so the request is an Express Request.
+      patchDocumentOnRequest: (req, _res, document) => ({
+        ...document,
+        servers: [{ url: forwardedPrefix(req as Request) || '/' }],
+      }),
+    },
   );
 }
