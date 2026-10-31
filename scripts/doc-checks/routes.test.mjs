@@ -85,7 +85,7 @@ test('a static route and a param route are covered separately', () => {
 });
 
 test('a planned route may be cited without a controller', () => {
-  const { root, files } = makeRepo({ ...BASE, 'README.md': 'POST /oauth/token and GET /movies/:movie_id' });
+  const { root, files } = makeRepo({ ...BASE, 'README.md': 'GET /comments and GET /movies/:movie_id' });
   assert.deepEqual(checkRoutes(root, files), []);
 });
 
