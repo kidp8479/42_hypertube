@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 /** UI language a user picked; defaults to English per the subject. */
 export enum PreferredLanguage {
@@ -57,7 +58,8 @@ export class User {
    * `{ select: { password: true } }` or a query builder `addSelect`.
    * `@Exclude` is the second line of defence: even when the hash is
    * loaded on purpose, ClassSerializerInterceptor drops it before the
-   * entity is serialised into an HTTP response.
+   * entity is serialised into an HTTP response. `@ApiHideProperty` keeps
+   * it out of the OpenAPI schema of `User`.
    *
    * `null` for an OAuth-only account (42, GitHub, ...) - nothing was
    * ever hashed because the user never set a password. `AuthService.
@@ -71,6 +73,7 @@ export class User {
    */
   @Column({ type: 'varchar', select: false, length: 255, nullable: true })
   @Exclude()
+  @ApiHideProperty()
   password!: string | null;
 
   /**
