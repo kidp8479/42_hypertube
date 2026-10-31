@@ -1,0 +1,28 @@
+meta {
+  name: 59 Pictures: an SVG is refused -> 400
+  type: http
+  seq: 59
+}
+
+put {
+  url: {{baseUrl}}/users/{{sessId}}/picture
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+body:multipart-form {
+  picture: @file(fixtures/not-an-image.svg)
+}
+
+docs {
+  The type is read from the file's first bytes, never from its name or the
+  declared MIME type. SVG is refused outright: it can carry script.
+}
+
+assert {
+  res.status: eq 400
+}

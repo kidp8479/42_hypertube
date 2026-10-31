@@ -36,6 +36,11 @@ tests {
     expect(res.body.paths["/users/{id}"].patch.responses).to.include.keys("403", "404", "409");
   });
 
+  test("registration takes JSON or a multipart form with the picture", function () {
+    expect(res.body.paths["/users"].post.requestBody.content).to.include.keys("application/json", "multipart/form-data");
+    expect(res.body.paths["/users/{id}/picture"].put.responses).to.include.keys("400", "403", "413");
+  });
+
   test("never documents the password hash", function () {
     expect(res.body.components.schemas.User.properties).to.not.have.property("password");
   });
