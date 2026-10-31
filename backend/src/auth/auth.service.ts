@@ -18,7 +18,7 @@ import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { isUniqueViolation } from '../common/utils/unique-violation.util';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 /**
  * Credential verification and token issuance for the login flow, plus the

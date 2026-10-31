@@ -47,7 +47,29 @@ flowchart TD
 ```
 
 Blue: the SPA (`frontend/src/features/auth`). Violet: the backend
-(`backend/src/auth`, `backend/src/users`). Grey: outside both.
+(`backend/src/auth`, `backend/src/users`, `backend/src/sessions`). Grey:
+outside both.
+
+### Backend folders: who depends on whom (HYP-117)
+
+Dependencies run one way. `users` changes an email or a password and must
+restart the sessions in the same response, so the sessions sit in their own
+folder below it instead of inside `auth`.
+
+```mermaid
+flowchart RL
+    auth["auth/<br/>login, OAuth, JWT guard"] --> users["users/<br/>accounts, PATCH /users/:id"]
+    auth --> sessions["sessions/<br/>refresh tokens, cookie"]
+    users --> sessions
+    auth --> common["common/ + config/<br/>@Public, @CurrentUser, cookie helpers,<br/>argon2 options"]
+    users --> common
+    sessions --> common
+    sessions -. "entity relation only<br/>(FK + cascade)" .-> users
+```
+
+The dotted arrow is the one exception: `RefreshToken` names `User` for its
+foreign key and the cascade on delete. It is a link in the data model, not a
+call; the Nest modules still form a one-way chain.
 
 What the overview hides, each covered below or in the ADRs: rate limits
 (section 10 and `security-checklist.md` section 7), the uniform 401 on login, the 403 on

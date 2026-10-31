@@ -7,7 +7,7 @@ import {
   INestApplication,
 } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { RefreshTokenService } from '../auth/refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';

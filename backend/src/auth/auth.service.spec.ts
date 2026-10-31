@@ -13,7 +13,7 @@ import { OAuthAccount, OAuthProvider } from './entities/oauth-account.entity';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { UNIQUE_VIOLATION } from '../common/utils/unique-violation.util';
 import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake stays loose.

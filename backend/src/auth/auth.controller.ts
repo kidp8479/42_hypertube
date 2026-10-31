@@ -15,12 +15,12 @@ import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 import {
   clearRefreshCookie,
   readRefreshCookie,
   setRefreshCookie,
-} from './refresh-cookie.util';
+} from '../sessions/refresh-cookie.util';
 import { Public } from '../common/decorators/public.decorator';
 import { OAuthCallback } from './decorators/oauth-callback.decorator';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
