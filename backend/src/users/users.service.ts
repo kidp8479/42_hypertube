@@ -16,6 +16,7 @@ import { UsernameAllocator } from './username-allocator.service';
 import * as argon2 from 'argon2';
 import { ARGON2_OPTIONS } from '../config/argon2.config';
 import { ProfilePictureStore } from './profile-picture.store';
+import { PasswordStrengthService } from './password-strength.service';
 
 /** What a profile update did: the saved row, and whether the email or the password changed. */
 interface ProfileUpdate {
@@ -34,6 +35,7 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     private readonly usernames: UsernameAllocator,
     private readonly pictures: ProfilePictureStore,
+    private readonly passwordStrength: PasswordStrengthService,
   ) {}
 
   /**
@@ -42,9 +44,12 @@ export class UsersService {
    * and `save()` performs the INSERT. An optional `picture` is stored
    * first and removed again if the insert fails (a taken email, say).
    *
+   * @throws {UnprocessableEntityException} 422 when the password is too
+   * easy to guess; checked first, before any hashing or file write.
    * @throws {BadRequestException} 400 when `picture` is not an accepted image.
    */
   async create(createUserDto: CreateUserDto, picture?: Buffer) {
+    this.passwordStrength.assertStrong(createUserDto.password, createUserDto);
     const hashedPassword = await argon2.hash(
       createUserDto.password,
       ARGON2_OPTIONS,
@@ -174,7 +179,9 @@ export class UsersService {
   /**
    * Applies a partial update by id. A new password is hashed, a new email
    * is marked unverified, and either change first checks `currentPassword`
-   * (see `confirmCredentialChange`). The email is compared normalised, so
+   * (see `confirmCredentialChange`), and a new password must pass the
+   * strength rule (422), checked against the profile as it will be saved.
+   * The email is compared normalised, so
    * sending the current one back is no change. A taken email or username
    * fails the save with a unique violation (409 through
    * `QueryFailedFilter`), before anything else happened.
@@ -196,6 +203,7 @@ export class UsersService {
 
     Object.assign(user, profile);
     if (password !== undefined) {
+      this.passwordStrength.assertStrong(password, user);
       user.password = await argon2.hash(password, ARGON2_OPTIONS);
     }
     if (emailChanged) {

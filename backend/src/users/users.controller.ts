@@ -85,6 +85,7 @@ export class UsersController {
     [400, 'Invalid input, or a picture that is not an image'],
     409,
     413,
+    422,
     429,
   )
   @Public()
@@ -175,6 +176,7 @@ export class UsersController {
     [403, "Another user's profile, or a wrong `currentPassword`"],
     404,
     409,
+    422,
     429,
   )
   @Throttle({ default: PROFILE_EDIT_THROTTLE })

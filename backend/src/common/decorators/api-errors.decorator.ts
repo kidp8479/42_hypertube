@@ -9,6 +9,7 @@ const DEFAULT_DESCRIPTIONS = {
   404: 'No resource with this id',
   409: 'Email or username already taken',
   413: 'The uploaded file is over the size cap',
+  422: 'The password is too easy to guess',
   429: 'Too many requests from this address (rate limit)',
 } as const;
 
