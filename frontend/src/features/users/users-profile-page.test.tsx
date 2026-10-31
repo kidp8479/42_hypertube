@@ -119,6 +119,7 @@ describe('ProfilePage email and password form', () => {
     [403, 'The current password is wrong.'],
     [409, 'This email address is already used by another account.'],
     [400, /has no password yet/],
+    [422, /This password is too easy to guess/],
   ])('reads a %i as "%s"', async (status, message) => {
     await submitNewEmail(new Response(null, { status }));
 

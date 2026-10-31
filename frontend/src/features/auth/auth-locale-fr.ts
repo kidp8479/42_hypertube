@@ -16,7 +16,7 @@ export const authFr: typeof authEn = {
   },
   hints: {
     username: '3 à 30 caractères, sans @',
-    password: '8 à 100 caractères',
+    password: '8 à 100 caractères, difficile à deviner',
     picture: 'Facultatif. JPEG, PNG ou WebP, 2 Mo au plus.',
   },
   picture: {
@@ -44,6 +44,8 @@ export const authFr: typeof authEn = {
     hasAccount: 'Vous avez déjà un compte ?',
     logIn: 'Se connecter',
     conflict: 'Un compte existe déjà avec cet e-mail ou ce nom d’utilisateur.',
+    weakPassword:
+      'Ce mot de passe est trop facile à deviner. Évitez les mots, les noms et les mots de passe courants : quelques mots sans rapport à la suite font l’affaire.',
   },
   login: {
     title: 'Connexion',
