@@ -1,4 +1,5 @@
-// Console error/warning collector shared by the e2e specs.
+// Console error/warning collector shared by the e2e specs, and the wait that
+// keeps a spec from tripping a browser console line no user would.
 import type { Page } from '@playwright/test';
 
 /**
@@ -21,4 +22,15 @@ export function trackConsoleIssues(page: Page) {
     issues.push(`[${type}] ${msg.text()}`);
   });
   return issues;
+}
+
+/**
+ * Waits until the page's web fonts have loaded. Firefox logs a font download
+ * that a reload or a navigation cuts short as a console error ("downloadable
+ * font: download failed", NS_BINDING_ABORTED). A person does not reload
+ * within milliseconds of the first paint, a spec does: call this before a
+ * reload or a second navigation (HYP-101, docs/defense/known-limitations.md).
+ */
+export async function fontsLoaded(page: Page) {
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }

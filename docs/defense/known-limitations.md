@@ -59,6 +59,28 @@ editing another user's profile, 404, 400 on invalid input).
   failures, which breaks REST semantics and the subject's HTTP-code
   requirement. Not worth it - this is correct behaviour.
 
+## Firefox logs a font download cut short by a reload
+
+Reloading or leaving a page in Firefox while its IBM Plex fonts are still
+downloading prints a red `downloadable font: download failed ...
+status=2152398850` line. The status is `NS_BINDING_ABORTED`: the navigation
+cancelled the request, the server did not refuse it.
+
+- **Why:** the browser logs it, not our code, for any `@font-face` download
+  a navigation interrupts; JavaScript cannot suppress it. Measured
+  (HYP-101): with the font slowed to 1.5 s, a reload mid-download logs it on
+  the dev and the prod build alike; with no delay, 0 times in 10 reloads. On
+  the defense machine the fonts come from localhost and load in a few
+  milliseconds, so a person cannot hit the window.
+- **Tests:** the e2e specs reload within milliseconds of the first paint and
+  did hit it now and then (3 runs in 36). They wait for `document.fonts.ready`
+  before a reload or a second navigation (`fontsLoaded` in
+  `frontend/e2e/console-issues.ts`), and keep failing on any other console
+  line.
+- **Cost to "fix":** inlining the fonts into the CSS would remove the
+  download (about 100 KB more CSS, the four fonts in base64, on every first
+  load); not worth it for a window only a slow network opens.
+
 ## Registration still confirms whether an email is registered
 
 `POST /users` with an already-registered email returns **409** (a taken
