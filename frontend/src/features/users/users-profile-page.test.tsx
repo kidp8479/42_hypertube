@@ -8,6 +8,12 @@ import { AuthContext } from '../auth/auth-context';
 import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { ProfilePage } from './users-profile-page';
 
+// The API keys section has its own spec; here it would add a request of its
+// own to every fetch these tests inspect.
+vi.mock('../api-keys/api-keys-section', () => ({
+  ApiKeysSection: () => null,
+}));
+
 function renderProfile(answer: Response) {
   const fetchMock = vi.fn().mockResolvedValue(answer);
   vi.stubGlobal('fetch', fetchMock);

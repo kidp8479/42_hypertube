@@ -8,6 +8,8 @@
 // logged-in user's saved language is known.
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { apiKeysEn } from '../features/api-keys/api-keys-locale-en';
+import { apiKeysFr } from '../features/api-keys/api-keys-locale-fr';
 import { commonEn } from '../app/common-locale-en';
 import { commonFr } from '../app/common-locale-fr';
 import { authEn } from '../features/auth/auth-locale-en';
@@ -19,8 +21,8 @@ import { readStoredLanguage, resolveLanguage } from './language';
 
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { auth: authEn, common: commonEn, users: usersEn },
-    fr: { auth: authFr, common: commonFr, users: usersFr },
+    en: { apiKeys: apiKeysEn, auth: authEn, common: commonEn, users: usersEn },
+    fr: { apiKeys: apiKeysFr, auth: authFr, common: commonFr, users: usersFr },
   },
   lng: resolveLanguage({
     userLanguage: undefined,
