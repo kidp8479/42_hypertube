@@ -27,6 +27,10 @@ export function readStoredLanguage(): SupportedLanguage | null {
   }
 }
 
+/**
+ * Remembers the manual choice on this browser, for logged-in users too, and
+ * logout leaves it in place: a language is not sensitive (HYP-63).
+ */
 export function storeLanguage(language: SupportedLanguage): void {
   try {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
