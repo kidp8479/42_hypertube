@@ -13,6 +13,15 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiExcludeEndpoint,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiErrors } from '../common/decorators/api-errors.decorator';
+import { AccessTokenDto } from './dto/access-token.dto';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { RefreshTokenService } from '../sessions/refresh-token.service';
@@ -43,6 +52,7 @@ import type { OAuthProfile } from './strategies/oauth-profile.interface';
  * token. All credential logic lives in {@link AuthService}, the refresh-token
  * lifecycle in {@link RefreshTokenService} (ADR-0011).
  */
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -63,6 +73,12 @@ export class AuthController {
    */
   // LOGIN_THROTTLE per IP, and again per identifier whatever the IP
   // (LoginIdentifierThrottlerGuard).
+  @ApiOperation({
+    summary: 'Log in with a username or email and a password',
+    description: 'Also sets the `refresh_token` cookie (HttpOnly).',
+  })
+  @ApiOkResponse({ type: AccessTokenDto })
+  @ApiErrors(400, [401, 'Wrong credentials, without saying which part'], 429)
   @Public()
   @Throttle({ default: LOGIN_THROTTLE })
   @UseGuards(LoginIdentifierThrottlerGuard)
@@ -99,6 +115,17 @@ export class AuthController {
    * revoked or already rotated (which also ends the whole session). The dead
    * cookie is cleared.
    */
+  @ApiOperation({
+    summary: 'Trade the refresh cookie for a new access token',
+    description:
+      'The `refresh_token` cookie is the credential, and is rotated on every call.',
+  })
+  @ApiOkResponse({ type: AccessTokenDto })
+  @ApiNoContentResponse({ description: 'No refresh cookie: signed out' })
+  @ApiErrors(
+    [401, 'Unknown, expired, revoked or already used refresh token'],
+    429,
+  )
   @Public()
   @Throttle({ default: REFRESH_THROTTLE })
   @Post('refresh')
@@ -130,6 +157,10 @@ export class AuthController {
    * do no more than end the caller's own session, and `SameSite=Strict`
    * keeps the cookie from being sent with it.
    */
+  @ApiOperation({
+    summary: 'Log out: end the session of the refresh cookie',
+  })
+  @ApiNoContentResponse({ description: 'Logged out, or nothing to end' })
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -149,6 +180,7 @@ export class AuthController {
    * not a fetch) and is redirected (302) to 42's authorize page, with a
    * fresh `state` bound to it by {@link CookieStateStore}.
    */
+  @ApiExcludeEndpoint()
   @Public()
   @UseGuards(AuthGuard('42'))
   @Get('42/login')
@@ -176,6 +208,7 @@ export class AuthController {
    * not a fetch) and is redirected (302) to GitHub's authorize page, with a
    * fresh `state` bound to it by {@link CookieStateStore}.
    */
+  @ApiExcludeEndpoint()
   @Public()
   @UseGuards(AuthGuard('github'))
   @Get('github/login')
@@ -205,6 +238,12 @@ export class AuthController {
    * @throws {UnauthorizedException} 401 for an unknown, already used or
    * expired code, without saying which.
    */
+  @ApiOperation({
+    summary: 'Trade the OAuth callback code for an access token',
+    description: 'Also sets the `refresh_token` cookie (HttpOnly).',
+  })
+  @ApiOkResponse({ type: AccessTokenDto })
+  @ApiErrors(400, [401, 'Unknown, used or expired code'], 429)
   @Public()
   @Throttle({ default: OAUTH_EXCHANGE_THROTTLE })
   @Post('oauth/exchange')

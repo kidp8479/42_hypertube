@@ -14,13 +14,22 @@ import { forwardedPrefix } from '../common/utils/forwarded-prefix.util';
  * models come from the `@nestjs/swagger` compiler plugin (`nest-cli.json`),
  * which reads the DTO types and their class-validator rules.
  *
+ * The OAuth login and callback routes are left out (`@ApiExcludeEndpoint`):
+ * "Try it out" would fetch them and follow the redirect to the provider,
+ * which the CSP blocks with a console error.
+ *
  * The server URL is set per request: `/api` behind the edge proxy, `/` on
  * the backend's own port, so "Try it out" calls the API, never the SPA.
  */
 export function serveApiDocs(app: NestExpressApplication): void {
   const config = new DocumentBuilder()
     .setTitle('Hypertube API')
-    .setDescription('RESTful API for the Hypertube project')
+    .setDescription(
+      'RESTful API for the Hypertube project. The 42 and GitHub logins are ' +
+        'browser navigations, not API calls, so they are not listed here: ' +
+        '`/api/auth/42/login` and `/api/auth/github/login` redirect to the ' +
+        'provider, which sends the browser back to `/api/auth/<provider>/callback`.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .addSecurityRequirements('bearer')

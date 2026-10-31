@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { OAuthCallbackFilter } from '../filters/oauth-callback.filter';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -21,10 +22,14 @@ import { Public } from '../../common/decorators/public.decorator';
  * (which carries the provider's `code` and `state`) on as the referrer.
  * The filter sets the same header on its own redirect, since a decorator
  * header is not applied when the handler throws.
+ *
+ * Left out of the OpenAPI document, like the login routes: they are browser
+ * navigations, and "Try it out" would fetch them and follow the redirect.
  */
 export const OAuthCallback = (strategy: '42' | 'github') =>
   applyDecorators(
     Public(),
+    ApiExcludeEndpoint(),
     UseGuards(AuthGuard(strategy)),
     UseFilters(OAuthCallbackFilter),
     Header('Referrer-Policy', 'no-referrer'),
