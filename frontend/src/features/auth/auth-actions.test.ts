@@ -93,6 +93,33 @@ describe('registerRequest', () => {
     expect(getAuthToken()).toBe('unrelated-token-from-a-prior-session');
     removeAuthToken();
   });
+
+  it('sends the same fields as a multipart form when a picture comes along', async () => {
+    apiFetchMock.mockResolvedValueOnce(undefined);
+    const picture = new File(['png'], 'me.png', { type: 'image/png' });
+
+    await registerRequest(
+      {
+        email: ' ada@example.com ',
+        username: 'adalovelace',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        password: 'correct horse',
+        confirmPassword: 'correct horse',
+      },
+      'en',
+      picture,
+    );
+
+    const [path, init] = apiFetchMock.mock.calls[0];
+    const form = init?.body as FormData;
+    expect(path).toBe('/users');
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get('email')).toBe('ada@example.com');
+    expect(form.get('preferredLanguage')).toBe('en');
+    expect(form.has('confirmPassword')).toBe(false);
+    expect(form.get('picture')).toBeInstanceOf(File);
+  });
 });
 
 describe('exchangeOAuthCode', () => {

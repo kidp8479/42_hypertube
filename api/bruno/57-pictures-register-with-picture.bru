@@ -1,0 +1,36 @@
+meta {
+  name: 57 Pictures: register with a picture (multipart)
+  type: http
+  seq: 57
+}
+
+post {
+  url: {{baseUrl}}/users
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  email: pic-{{runId}}@example.com
+  username: pic-{{runId}}
+  firstName: Frida
+  lastName: Kahlo
+  password: str0ng-p4ss-phrase
+  picture: @file(fixtures/avatar.png)
+}
+
+script:post-response {
+  bru.setVar("picUserId", res.body.id);
+  bru.setVar("picName", res.body.profilePicture);
+}
+
+docs {
+  Requests 57 to 62 cover the hosted profile pictures (HYP-38, ADR-0016):
+  the registration form carries the file, the server stores it under a random
+  name, and only the owner changes it afterwards.
+}
+
+assert {
+  res.status: eq 201
+  res.body.profilePicture: matches ^[0-9a-f-]{36}\.png$
+}

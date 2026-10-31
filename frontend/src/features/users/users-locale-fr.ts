@@ -9,12 +9,21 @@ export const usersFr: typeof usersEn = {
   },
   info: {
     title: 'Informations',
-    pictureHint:
-      'Une adresse d’image en https://. Laissez vide pour afficher votre initiale.',
     submit: 'Enregistrer',
     submitting: 'Enregistrement...',
     saved: 'Profil enregistré.',
     usernameTaken: "Ce nom d'utilisateur est déjà pris.",
+  },
+  picture: {
+    title: 'Photo',
+    hint: 'JPEG, PNG ou WebP, 2 Mo au plus. Sans photo, votre initiale est affichée.',
+    upload: 'Envoyer',
+    uploading: 'Envoi...',
+    remove: 'Retirer la photo',
+    saved: 'Photo mise à jour.',
+    removed: 'Photo retirée.',
+    refused: "Ce fichier n'est pas une image JPEG, PNG ou WebP.",
+    tooLarge: 'La photo dépasse 2 Mo.',
   },
   credentials: {
     title: 'E-mail et mot de passe',

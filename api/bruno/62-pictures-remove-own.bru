@@ -1,0 +1,20 @@
+meta {
+  name: 62 Pictures: remove one's own picture, back to the default avatar
+  type: http
+  seq: 62
+}
+
+delete {
+  url: {{baseUrl}}/users/{{sessId}}/picture
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.profilePicture: isNull
+}

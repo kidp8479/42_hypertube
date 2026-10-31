@@ -14,6 +14,7 @@ directly, so there is nothing to export.
 | Auth | [`auth.md`](auth.md) | overview, register (frontend), the account form submit flow (frontend), SPA session states, OAuth handshake, OAuth identity linking, OAuth callback page (frontend), refresh and rotation, logout, the SPA keeping the session, email and password change with the profile page (frontend), login rate limits |
 | Language | [`i18n.md`](i18n.md) | overview, which language wins, switching, registration |
 | Network | [`network.md`](network.md) | overview (edge proxy, ports, services), dev and prod stacks, one request through the edge |
+| Profile pictures | [`profile-pictures.md`](profile-pictures.md) | overview, storing an upload, showing a picture |
 | Database | [`database.md`](database.md) | overview (entity change, migration, boot, drift check) |
 | Layout | [`layout.md`](layout.md) | overview (header, main, footer around every route), header by session state |
 

@@ -21,14 +21,6 @@ describe('infoChanges', () => {
 
     expect(infoChanges(fakeUser, values)).toEqual({ lastName: 'Byron' });
   });
-
-  it('sends an emptied picture as null, which removes it', () => {
-    const user = { ...fakeUser, profilePicture: 'https://example.com/a.png' };
-    const values = { ...infoValues(user), profilePicture: ' ' };
-
-    expect(infoValues(user).profilePicture).toBe('https://example.com/a.png');
-    expect(infoChanges(user, values)).toEqual({ profilePicture: null });
-  });
 });
 
 describe('credentialsChanges', () => {

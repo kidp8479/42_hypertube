@@ -157,25 +157,19 @@ on the much older minimums of the marking sheet (Firefox 41, Chrome 46).
   Tailwind v4 for v3 and transpiling down the whole bundle. Not worth it for
   a project graded on current browsers.
 
-## Profile pictures are linked, not hosted
+## Profile pictures keep their metadata
 
-A profile picture is an https address the user types (`PATCH /users/:id`),
-shown as is in the header and on the profile pages.
+An uploaded picture is stored as sent (ADR-0016): its type is checked from
+its first bytes, but it is not re-encoded.
 
-- **Why:** the subject asks for a profile picture, not for an image store;
-  an upload with validation, resizing and storage is HYP-38's work.
-- **Real-world:** the image host sees the IP address of everyone who views
-  that profile (a tracking pixel), and the picture can change or disappear
-  behind the same address. `referrerPolicy="no-referrer"` keeps the page
-  address from leaking, not the IP. A public product would upload and serve
-  the images itself.
-- **Console:** an address that does not load (a 404, a dead host) shows the
-  initial instead, but the browser still logs `Failed to load resource` on
-  every page that shows that avatar. It is the browser's own network log,
-  not a JS error, and it comes from the address the user typed. Avoid one
-  at the defense; hosted pictures (HYP-38) remove the case.
-- **Cost to fix later:** medium. Upload, check the type and size, store the
-  file, serve it from the app; the column then holds a path instead of a URL.
+- **Why:** re-encoding takes an image library with a native build (`sharp`),
+  for a gain the subject does not grade.
+- **Real-world:** a photo straight from a phone carries its EXIF data, the
+  place it was taken included, and anyone who can open the picture can read
+  it. A public product would re-encode every upload, which also strips
+  anything hidden after the image data.
+- **Cost to fix later:** low. Re-encode in `ProfilePictureStore.storeFor`
+  before the file is written, and add `sharp` to both backend images.
 
 ## The dev stack's SPA has no Content-Security-Policy
 

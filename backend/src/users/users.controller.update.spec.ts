@@ -140,27 +140,12 @@ describe('PATCH /users/:id body', () => {
     expect(refreshTokens.restartSessions).not.toHaveBeenCalled();
   });
 
-  it.each(['http://example.com/a.png', 'javascript:alert(1)', 'not a url'])(
-    'rejects the profile picture %s with 400: https URLs only',
-    async (profilePicture) => {
-      await request(app.getHttpServer())
-        .patch('/users/7')
-        .send({ profilePicture })
-        .expect(400);
-
-      expect(usersService.update).not.toHaveBeenCalled();
-    },
-  );
-
-  it('accepts an https profile picture URL', async () => {
-    usersService.update.mockResolvedValue({
-      user: {},
-      credentialsChanged: false,
-    });
-
+  it('refuses a profilePicture field with 400: the picture is a file, sent to its own route', async () => {
     await request(app.getHttpServer())
       .patch('/users/7')
       .send({ profilePicture: 'https://example.com/a.png' })
-      .expect(200);
+      .expect(400);
+
+    expect(usersService.update).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,23 @@
+meta {
+  name: 61 Pictures: another user's picture -> 403
+  type: http
+  seq: 61
+}
+
+put {
+  url: {{baseUrl}}/users/{{picUserId}}/picture
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+body:multipart-form {
+  picture: @file(fixtures/avatar.png)
+}
+
+assert {
+  res.status: eq 403
+}

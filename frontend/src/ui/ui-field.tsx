@@ -2,6 +2,42 @@
 // assistive technology, so no page rebuilds that by hand.
 import { useId, type InputHTMLAttributes } from 'react';
 
+/** The small caps label above a form control. */
+export const FIELD_LABEL =
+  'font-mono text-xs leading-label font-medium tracking-caps text-muted uppercase';
+
+/** Props of `FieldMessage`. */
+export interface FieldMessageProps {
+  /** What the control's `aria-describedby` points at. */
+  id: string;
+  hint?: string;
+  error?: string;
+}
+
+/** The line under a form control: its error when there is one, else its hint. */
+export function FieldMessage({ id, hint, error }: FieldMessageProps) {
+  if (error) {
+    return (
+      <span id={id} className="flex items-start gap-2 text-sm text-alert">
+        <svg
+          viewBox="0 0 12 12"
+          aria-hidden="true"
+          className="mt-1 size-3 flex-none fill-none stroke-current stroke-1"
+        >
+          <circle cx="6" cy="6" r="5" />
+          <path d="M6 3.2v3.4M6 8.4v.2" />
+        </svg>
+        <span>{error}</span>
+      </span>
+    );
+  }
+  return hint ? (
+    <span id={id} className="font-mono text-xs leading-label text-muted">
+      {hint}
+    </span>
+  ) : null;
+}
+
 /** Props of `Field`: every native input attribute plus its texts. */
 export interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -38,10 +74,7 @@ export function Field({
       .join(' ') || undefined;
   return (
     <div className="grid content-start gap-2">
-      <label
-        htmlFor={inputId}
-        className="font-mono text-xs leading-label font-medium tracking-caps text-muted uppercase"
-      >
+      <label htmlFor={inputId} className={FIELD_LABEL}>
         {label}
       </label>
       <input
@@ -51,30 +84,7 @@ export function Field({
         aria-invalid={error || invalid ? true : undefined}
         aria-describedby={describedBy}
       />
-      {error && (
-        <span
-          id={messageId}
-          className="flex items-start gap-2 text-sm text-alert"
-        >
-          <svg
-            viewBox="0 0 12 12"
-            aria-hidden="true"
-            className="mt-1 size-3 flex-none fill-none stroke-current stroke-1"
-          >
-            <circle cx="6" cy="6" r="5" />
-            <path d="M6 3.2v3.4M6 8.4v.2" />
-          </svg>
-          <span>{error}</span>
-        </span>
-      )}
-      {!error && hint && (
-        <span
-          id={messageId}
-          className="font-mono text-xs leading-label text-muted"
-        >
-          {hint}
-        </span>
-      )}
+      <FieldMessage id={messageId} error={error} hint={hint} />
     </div>
   );
 }

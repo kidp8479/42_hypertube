@@ -1,4 +1,4 @@
-// The profile page's first form: username, names and profile picture.
+// The profile page's information form: username and names.
 import { useTranslation } from 'react-i18next';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
@@ -50,7 +50,7 @@ export function InfoForm({ user }: InfoFormProps) {
     return (
       <Field
         label={tAuth(`fields.${field}`)}
-        type={field === 'profilePicture' ? 'url' : 'text'}
+        type="text"
         autoComplete={autoComplete}
         value={form.values[field]}
         onChange={(e) => form.setValue(field, e.target.value)}
@@ -71,7 +71,6 @@ export function InfoForm({ user }: InfoFormProps) {
         {input('firstName', 'given-name')}
         {input('lastName', 'family-name')}
       </div>
-      {input('profilePicture', 'photo', t('info.pictureHint'))}
       {form.outcome && (
         <Alert tone={form.outcome.tone}>{t(form.outcome.key)}</Alert>
       )}

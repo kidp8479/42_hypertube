@@ -1,0 +1,22 @@
+meta {
+  name: 58 Pictures: a stored picture is served without a token
+  type: http
+  seq: 58
+}
+
+get {
+  url: {{baseUrl}}/pictures/{{picName}}
+  body: none
+  auth: none
+}
+
+docs {
+  Public on purpose: an <img> cannot send the bearer token. The name is
+  random, so a user id does not reveal it.
+}
+
+assert {
+  res.status: eq 200
+  res.headers["content-type"]: eq image/png
+  res.headers["cache-control"]: eq public, max-age=31536000, immutable
+}

@@ -12,11 +12,16 @@ export const authFr: typeof authEn = {
     firstName: 'Prénom',
     lastName: 'Nom',
     currentPassword: 'Mot de passe actuel',
-    profilePicture: 'URL de la photo de profil',
+    profilePicture: 'Photo de profil',
   },
   hints: {
     username: '3 à 30 caractères, sans @',
     password: '8 à 100 caractères',
+    picture: 'Facultatif. JPEG, PNG ou WebP, 2 Mo au plus.',
+  },
+  picture: {
+    choose: 'Choisir une photo',
+    empty: 'Aucune photo choisie',
   },
   placeholders: {
     email: 'ada@example.com',
@@ -29,7 +34,8 @@ export const authFr: typeof authEn = {
     tooLong: 'Le champ « {{field}} » doit contenir au plus {{max}} caractères',
     mismatch: 'Les mots de passe ne correspondent pas',
     containsAt: 'Le champ « {{field}} » ne peut pas contenir @',
-    invalidUrl: 'Saisissez une adresse en https://',
+    notAnImage: 'Choisissez une image JPEG, PNG ou WebP',
+    fileTooLarge: 'La photo doit faire {{max}} Mo au plus',
   },
   register: {
     title: 'Créer votre compte',

@@ -41,6 +41,10 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
       THROTTLE_LIMIT_MULTIPLIER: ${THROTTLE_LIMIT_MULTIPLIER:-1}
+    volumes:
+      # Uploaded profile pictures (HYP-38, ADR-0016): outside the source tree
+      # and outside anything nginx serves; only the backend reads them.
+      - pictures:/var/lib/hypertube/pictures
     depends_on:
       db:
         condition: service_healthy
@@ -84,4 +88,5 @@ services:
 
 volumes:
   db_data:
+  pictures:
   proxy_certs:

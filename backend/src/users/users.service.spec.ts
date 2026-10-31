@@ -1,6 +1,7 @@
 // Unit spec for UsersService with a mocked repository: password hashing,
 // OAuth account creation (column limits), update (with
-// re-authentication for a credential change) and 404s.
+// re-authentication for a credential change), the picture's file kept in
+// step with its column, and 404s.
 import {
   BadRequestException,
   ForbiddenException,
@@ -14,6 +15,7 @@ import { UsernameAllocator } from './username-allocator.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
+import { ProfilePictureStore } from './profile-picture.store';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake repository stays loose.
@@ -44,12 +46,22 @@ describe('UsersService', () => {
   let service: UsersService;
   let repository: RepositoryMock;
   const usernames = { available: jest.fn().mockResolvedValue('ada') };
+  // Stores nothing: hands `persist` a fixed name, as the real store would a
+  // fresh one.
+  const pictures = {
+    storeFor: jest.fn(
+      (_bytes: Buffer, persist: (name: string) => Promise<unknown>) =>
+        persist('new.png'),
+    ),
+    delete: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: UsernameAllocator, useValue: usernames },
+        { provide: ProfilePictureStore, useValue: pictures },
         {
           // Hand the DI container a fake Repository<User> so UsersService
           // can be built without a real database connection.
@@ -93,13 +105,28 @@ describe('UsersService', () => {
       expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
     });
 
-    it('does not set a profile picture (left null until the upload flow)', async () => {
+    it('registers without a picture as null: the default avatar', async () => {
       repository.create.mockImplementation((data: Partial<User>) => data);
       repository.save.mockImplementation((data: Partial<User>) => data);
 
       const user = await service.create(buildCreateUserDto());
 
-      expect(user.profilePicture).toBeUndefined();
+      expect(user.profilePicture).toBeNull();
+      expect(pictures.storeFor).not.toHaveBeenCalled();
+    });
+
+    it('stores a picture and saves the user with its name', async () => {
+      repository.create.mockImplementation((data: Partial<User>) => data);
+      repository.save.mockImplementation((data: Partial<User>) => data);
+      const bytes = Buffer.from('png bytes');
+
+      const user = await service.create(buildCreateUserDto(), bytes);
+
+      expect(pictures.storeFor).toHaveBeenCalledWith(
+        bytes,
+        expect.any(Function),
+      );
+      expect(user.profilePicture).toBe('new.png');
     });
   });
 
@@ -344,12 +371,58 @@ describe('UsersService', () => {
       expect(repository.save).not.toHaveBeenCalled();
     });
 
-    it('remove throws 404', async () => {
-      repository.delete.mockResolvedValue({ affected: 0 });
+    it('remove throws 404 and deletes nothing', async () => {
+      repository.findOneBy.mockResolvedValue(null);
 
       await expect(service.remove(999)).rejects.toBeInstanceOf(
         NotFoundException,
       );
+      expect(repository.delete).not.toHaveBeenCalled();
+    });
+
+    it('setPicture throws 404 before storing anything', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+
+      await expect(
+        service.setPicture(999, Buffer.from('png')),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(pictures.storeFor).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('the picture file follows its column', () => {
+    const withPicture = (profilePicture: string | null) =>
+      Object.assign(new User(), { id: 7, profilePicture });
+
+    beforeEach(() => {
+      repository.save.mockImplementation((user: User) => Promise.resolve(user));
+    });
+
+    it('setPicture points the row at the new file, then deletes the old one', async () => {
+      repository.findOneBy.mockResolvedValue(withPicture('old.png'));
+
+      const user = await service.setPicture(7, Buffer.from('png'));
+
+      expect(user.profilePicture).toBe('new.png');
+      expect(pictures.delete).toHaveBeenCalledWith('old.png');
+    });
+
+    it('clearPicture sets null and deletes the file', async () => {
+      repository.findOneBy.mockResolvedValue(withPicture('old.png'));
+
+      const user = await service.clearPicture(7);
+
+      expect(user.profilePicture).toBeNull();
+      expect(pictures.delete).toHaveBeenCalledWith('old.png');
+    });
+
+    it('remove deletes the account, then its picture', async () => {
+      repository.findOneBy.mockResolvedValue(withPicture('old.png'));
+
+      await service.remove(7);
+
+      expect(repository.delete).toHaveBeenCalledWith(7);
+      expect(pictures.delete).toHaveBeenCalledWith('old.png');
     });
   });
 });

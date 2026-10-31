@@ -1,5 +1,5 @@
-// Spec for ProfilePage: what each form sends to PATCH /users/:id, and how
-// each refusal reads.
+// Spec for ProfilePage: what each form sends (PATCH /users/:id, the picture
+// routes), and how each refusal reads.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -129,5 +129,44 @@ describe('ProfilePage email and password form', () => {
       screen.getByText('Change the email or enter a new password first.'),
     ).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProfilePage picture form', () => {
+  const picture = new File(['png'], 'me.png', { type: 'image/png' });
+
+  it('uploads the picked file, then shows the saved profile', async () => {
+    const saved = { ...fakeUser, profilePicture: 'a.png' };
+    const { fetchMock, updateUser, user } = renderProfile(json(saved));
+
+    await user.upload(screen.getByLabelText('Profile picture'), picture);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+    expect(await screen.findByText('Picture updated.')).toBeInTheDocument();
+    const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(path).toBe(`/api/users/${fakeUser.id}/picture`);
+    expect(init.method).toBe('PUT');
+    expect((init.body as FormData).get('picture')).toBeInstanceOf(File);
+    expect(updateUser).toHaveBeenCalledWith(saved);
+  });
+
+  it('says so when the backend reads the file as no image (400)', async () => {
+    const { user } = renderProfile(new Response(null, { status: 400 }));
+
+    await user.upload(screen.getByLabelText('Profile picture'), picture);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+    expect(
+      await screen.findByText('This file is not a JPEG, PNG or WebP image.'),
+    ).toBeInTheDocument();
+  });
+
+  it('offers no upload before a file is picked', () => {
+    renderProfile(json(fakeUser));
+
+    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Remove picture' }),
+    ).not.toBeInTheDocument();
   });
 });

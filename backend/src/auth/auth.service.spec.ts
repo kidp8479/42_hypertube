@@ -57,7 +57,7 @@ const buildUser = (overrides: Partial<User> = {}): User =>
     firstName: 'Ada',
     lastName: 'Lovelace',
     password: 'set-me-in-the-test',
-    profilePicture: 'https://example.com/avatar.png',
+    profilePicture: '3f2b8c1e-6d4a-4b7e-9a51-0c2d7e8f9a10.png',
     emailVerified: false,
     preferredLanguage: 'en',
     createdAt: new Date(),

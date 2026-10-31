@@ -7,6 +7,12 @@ import { test, expect, type Page } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
 import { signIn } from './sign-up';
 
+// An 8x8 PNG: small enough to inline, real enough for the browser to draw.
+const AVATAR_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGN4kGCAFTEMLQkAHuRcAXZg/9cAAAAASUVORK5CYII=',
+  'base64',
+);
+
 function uniqueSuffix() {
   return `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
 }
@@ -74,6 +80,39 @@ test.describe('register -> login', () => {
     await expect(page.getByRole('main').getByText(username)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
 
+    expect(consoleIssues, consoleIssues.join('\n')).toEqual([]);
+  });
+
+  test('registers with a profile picture, then shows it in the header', async ({
+    page,
+  }) => {
+    const consoleIssues = trackConsoleIssues(page);
+    const suffix = uniqueSuffix();
+    const username = `e2ep${suffix}`;
+    const password = 'correct horse battery';
+
+    await page.goto('/register');
+    await fillRegisterForm(page, {
+      email: `e2e-p-${suffix}@example.com`,
+      username,
+      firstName: 'E2E',
+      lastName: 'Tester',
+      password,
+    });
+    await page.getByLabel('Profile picture').setInputFiles({
+      name: 'me.png',
+      mimeType: 'image/png',
+      buffer: AVATAR_PNG,
+    });
+    await page.getByRole('button', { name: 'Register' }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    await signIn(page, username, password);
+
+    const avatar = page.getByRole('banner').locator('img');
+    await expect(avatar).toHaveAttribute('src', /^\/api\/pictures\//);
+    await expect
+      .poll(() => avatar.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBe(8);
     expect(consoleIssues, consoleIssues.join('\n')).toEqual([]);
   });
 

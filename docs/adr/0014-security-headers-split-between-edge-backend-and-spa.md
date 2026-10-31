@@ -38,9 +38,9 @@ with HSTS, frame options and nosniff turned off.
   violation in the console, which the defense forbids. The policy shipped
   enforcing, after the e2e suite (which fails on any console error) passed
   under it in Chromium and Firefox.
-- **`img-src` allows any https host.** Profile pictures are links to any
-  host (HYP-87). The stricter list of image hosts can come with uploads
-  (HYP-38).
+- **`img-src` allows any https host.** Profile pictures are served by the
+  app itself (ADR-0016); the https allowance is kept for the movie covers,
+  which come from the metadata provider's host (HYP-13).
 
 ## Consequences
 

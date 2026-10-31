@@ -36,7 +36,7 @@ const buildUser = (overrides: Partial<User> = {}): User =>
     firstName: 'Ada',
     lastName: 'Lovelace',
     password: '$argon2id$v=19$m=19456,t=2,p=1$hash',
-    profilePicture: 'https://example.com/7.png',
+    profilePicture: '3f2b8c1e-6d4a-4b7e-9a51-0c2d7e8f9a10.png',
     preferredLanguage: PreferredLanguage.FR,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-02T00:00:00Z'),

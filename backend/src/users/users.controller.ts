@@ -9,11 +9,16 @@ import {
   Delete,
   ForbiddenException,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import {
+  ApiBody,
+  ApiConsumes,
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
@@ -39,6 +44,7 @@ import { UserSummaryDto } from './dto/user-summary.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 import { User } from './entities/user.entity';
 import { RefreshTokenService } from '../sessions/refresh-token.service';
+import { PICTURE_UPLOAD_LIMITS } from './profile-picture.store';
 import { setRefreshCookie } from '../sessions/refresh-cookie.util';
 
 /**
@@ -53,14 +59,45 @@ export class UsersController {
     private readonly refreshTokens: RefreshTokenService,
   ) {}
 
-  /** Registers an account (public). The response never carries the password hash. */
-  @ApiOperation({ summary: 'Register an account' })
-  @ApiErrors(400, 409, 429)
+  /**
+   * Registers an account (public). JSON, or multipart when the form carries
+   * a `picture` file. The response never carries the password hash.
+   */
+  @ApiOperation({
+    summary: 'Register an account',
+    description:
+      'Send multipart/form-data to attach a `picture` (JPEG, PNG or WebP, 2 MB at most).',
+  })
+  @ApiConsumes('application/json', 'multipart/form-data')
+  @ApiExtraModels(CreateUserDto)
+  @ApiBody({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(CreateUserDto) },
+        {
+          type: 'object',
+          properties: { picture: { type: 'string', format: 'binary' } },
+        },
+      ],
+    },
+  })
+  @ApiErrors(
+    [400, 'Invalid input, or a picture that is not an image'],
+    409,
+    413,
+    429,
+  )
   @Public()
   @Throttle({ default: REGISTER_THROTTLE })
+  @UseInterceptors(
+    FileInterceptor('picture', { limits: PICTURE_UPLOAD_LIMITS }),
+  )
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() picture?: Express.Multer.File,
+  ) {
+    return this.usersService.create(createUserDto, picture?.buffer);
   }
 
   /** Every user, as id and username only (subject III.4). */
@@ -112,7 +149,8 @@ export class UsersController {
   }
 
   /**
-   * Edits one's own profile: the registration fields plus `profilePicture`.
+   * Edits one's own profile: the registration fields (the picture has its
+   * own route, `PUT /users/:id/picture`).
    * An email or password change needs `currentPassword`, then ends every
    * session and opens a new one for the caller
    * (`RefreshTokenService.restartSessions`).

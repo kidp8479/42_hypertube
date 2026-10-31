@@ -14,7 +14,6 @@ export interface ProfileChanges {
   username?: string;
   firstName?: string;
   lastName?: string;
-  profilePicture?: string | null;
   email?: string;
   password?: string;
   currentPassword?: string;
@@ -25,14 +24,35 @@ export async function updateProfile(
   userId: number,
   changes: ProfileChanges,
 ): Promise<User> {
-  const saved = await apiFetch<User>(`/users/${userId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(changes),
-  });
-  if (!saved) {
-    throw new Error('PATCH /users/:id answered with no body');
+  return savedProfile(
+    await apiFetch<User>(`/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    }),
+  );
+}
+
+/** Uploads one's own picture (`PUT /users/:id/picture`); resolves to the profile as saved. */
+export async function uploadPicture(userId: number, file: File): Promise<User> {
+  const body = new FormData();
+  body.append('picture', file);
+  return savedProfile(
+    await apiFetch<User>(`/users/${userId}/picture`, { method: 'PUT', body }),
+  );
+}
+
+/** Back to the default avatar (`DELETE /users/:id/picture`). */
+export async function removePicture(userId: number): Promise<User> {
+  return savedProfile(
+    await apiFetch<User>(`/users/${userId}/picture`, { method: 'DELETE' }),
+  );
+}
+
+function savedProfile(user: User | undefined): User {
+  if (!user) {
+    throw new Error('the profile write answered with no body');
   }
-  return saved;
+  return user;
 }
 
 /** Reads a profile through `GET /users/:id`. */

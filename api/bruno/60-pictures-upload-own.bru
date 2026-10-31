@@ -1,0 +1,24 @@
+meta {
+  name: 60 Pictures: upload one's own picture
+  type: http
+  seq: 60
+}
+
+put {
+  url: {{baseUrl}}/users/{{sessId}}/picture
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+body:multipart-form {
+  picture: @file(fixtures/avatar.png)
+}
+
+assert {
+  res.status: eq 200
+  res.body.profilePicture: matches ^[0-9a-f-]{36}\.png$
+}

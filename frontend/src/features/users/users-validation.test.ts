@@ -1,6 +1,6 @@
-// Spec for the profile forms' own rules: the picture address and the
-// optional new password. The shared field rules are covered by the register
-// spec.
+// Spec for the profile forms' own rules: only the changed fields are
+// checked, and the new password is optional. The shared field rules are
+// covered by the register spec.
 import { describe, expect, it } from 'vitest';
 import {
   validateCredentials,
@@ -12,89 +12,17 @@ const info = {
   username: 'ada',
   firstName: 'Ada',
   lastName: 'Lovelace',
-  profilePicture: '',
 };
-
-const pictureChanged = new Set<InfoField>(['profilePicture']);
 
 describe('validateInfo', () => {
   it('checks only the fields that changed', () => {
-    const saved = { ...info, username: 'ab' };
-    const picture = 'https://example.com/a.png';
+    // A 2-letter username an OAuth login set, outside the register rules.
+    const values = { ...info, username: 'ab', lastName: 'Byron' };
 
-    const values = { ...saved, profilePicture: picture };
-
-    expect(validateInfo(values, pictureChanged)).toEqual({});
+    expect(validateInfo(values, new Set<InfoField>(['lastName']))).toEqual({});
     expect(
-      validateInfo(values, new Set<InfoField>(['username', 'profilePicture'])),
+      validateInfo(values, new Set<InfoField>(['username', 'lastName'])),
     ).toEqual({ username: { code: 'tooShort', min: 3 } });
-  });
-
-  it('accepts an emptied picture (it removes the picture)', () => {
-    const saved = { ...info, profilePicture: 'https://example.com/a.png' };
-
-    expect(
-      validateInfo({ ...saved, profilePicture: '' }, pictureChanged),
-    ).toEqual({});
-  });
-
-  it('accepts the picture addresses @IsUrl accepts', () => {
-    for (const profilePicture of [
-      'https://example.com:8080/a.png',
-      'https://example.com/a%20b.png',
-      'https://bücher.example/a.png',
-    ]) {
-      expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual(
-        {},
-      );
-    }
-  });
-
-  it('refuses a picture address that @IsUrl would refuse', () => {
-    for (const profilePicture of [
-      'http://example.com/a.png',
-      'javascript:alert(1)',
-      'not a url',
-      'https://localhost/a.png',
-      'https://example.c/a.png',
-      'https://example.com/my photo.png',
-      'https://my_host.example.com/a.png',
-      'https://a..com/a.png',
-      'https://-a.example.com/a.png',
-    ]) {
-      expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual(
-        {
-          profilePicture: { code: 'invalidUrl' },
-        },
-      );
-    }
-  });
-
-  it('checks the picture on a browser without URL.parse (before Chrome 126)', () => {
-    // Shadowed, not deleted: jsdom's URL inherits `parse` from Node's.
-    Object.defineProperty(URL, 'parse', {
-      value: undefined,
-      configurable: true,
-    });
-    try {
-      const valid = { ...info, profilePicture: 'https://example.com/a.png' };
-      const invalid = { ...info, profilePicture: 'not a url' };
-
-      expect(validateInfo(valid, pictureChanged)).toEqual({});
-      expect(validateInfo(invalid, pictureChanged)).toEqual({
-        profilePicture: { code: 'invalidUrl' },
-      });
-    } finally {
-      Reflect.deleteProperty(URL, 'parse');
-    }
-  });
-
-  it('refuses a picture address longer than the column', () => {
-    const profilePicture = `https://example.com/${'a'.repeat(500)}`;
-
-    expect(validateInfo({ ...info, profilePicture }, pictureChanged)).toEqual({
-      profilePicture: { code: 'tooLong', max: 500 },
-    });
   });
 });
 
