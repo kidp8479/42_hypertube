@@ -2,7 +2,7 @@
 import { User } from '../entities/user.entity';
 
 /**
- * Another user's profile: id, username and picture URL (subject III.4). The
+ * Another user's profile: id, username and picture name (subject III.4). The
  * email, the names and the language stay private to the owner, who gets the
  * full profile instead. Built field by field from the entity, so a column
  * added to `User` later stays private until it is added here.

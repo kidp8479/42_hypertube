@@ -8,6 +8,7 @@ const DEFAULT_DESCRIPTIONS = {
   403: 'Not the owner of this resource',
   404: 'No resource with this id',
   409: 'Email or username already taken',
+  413: 'The uploaded file is over the size cap',
   429: 'Too many requests from this address (rate limit)',
 } as const;
 

@@ -16,8 +16,8 @@ import { PreferredLanguage } from '../entities/user.entity';
  * Payload accepted at registration (`POST /users`).
  *
  * Server-managed columns (`id`, `createdAt`, `updatedAt`) are never part
- * of the input. `profilePicture` is not part of it either: it is set
- * afterwards through `PATCH /users/:id` (`UpdateUserDto`).
+ * of the input. The optional picture travels beside these fields as the
+ * `picture` file of a multipart body, not as a DTO field.
  */
 export class CreateUserDto {
   @NormalizeEmail()

@@ -15,6 +15,7 @@ import { User } from './entities/user.entity';
 import { UsernameAllocator } from './username-allocator.service';
 import * as argon2 from 'argon2';
 import { ARGON2_OPTIONS } from '../config/argon2.config';
+import { ProfilePictureStore } from './profile-picture.store';
 
 /** What a profile update did: the saved row, and whether the email or the password changed. */
 interface ProfileUpdate {
@@ -32,23 +33,31 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly usernames: UsernameAllocator,
+    private readonly pictures: ProfilePictureStore,
   ) {}
 
   /**
    * Builds a User from the DTO, then inserts it. `create()` runs no SQL -
    * it's the in-memory step where password hashing and defaults belong -
-   * and `save()` performs the INSERT.
+   * and `save()` performs the INSERT. An optional `picture` is stored
+   * first and removed again if the insert fails (a taken email, say).
+   *
+   * @throws {BadRequestException} 400 when `picture` is not an accepted image.
    */
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, picture?: Buffer) {
     const hashedPassword = await argon2.hash(
       createUserDto.password,
       ARGON2_OPTIONS,
     );
-    const user = this.usersRepository.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-    return this.usersRepository.save(user);
+    const insert = (profilePicture: string | null) =>
+      this.usersRepository.save(
+        this.usersRepository.create({
+          ...createUserDto,
+          password: hashedPassword,
+          profilePicture,
+        }),
+      );
+    return picture ? this.pictures.storeFor(picture, insert) : insert(null);
   }
 
   /** Every user, id and username only: the list never needs more (subject III.4). */
@@ -225,13 +234,46 @@ export class UsersService {
   }
 
   /**
-   * Deletes a user by id. Throws {@link NotFoundException} (404) when the
-   * id matches no row, so a DELETE never silently succeeds on nothing.
+   * Replaces a user's picture with `bytes`; the old file is deleted once the
+   * row points at the new one.
+   *
+   * @throws {BadRequestException} 400 when `bytes` is not an accepted image.
+   * @throws {NotFoundException} 404 when the id matches no row.
+   */
+  async setPicture(id: number, bytes: Buffer): Promise<User> {
+    const user = await this.findOne(id);
+    return this.pictures.storeFor(bytes, (name) =>
+      this.pointPictureAt(user, name),
+    );
+  }
+
+  /**
+   * Back to the default avatar: the column is `null` and the file deleted.
+   *
+   * @throws {NotFoundException} 404 when the id matches no row.
+   */
+  async clearPicture(id: number): Promise<User> {
+    return this.pointPictureAt(await this.findOne(id), null);
+  }
+
+  /** Saves `user` with a new picture name, then deletes the file it replaced. */
+  private async pointPictureAt(user: User, name: string | null) {
+    const previous = user.profilePicture;
+    user.profilePicture = name;
+    const saved = await this.usersRepository.save(user);
+    await this.pictures.delete(previous);
+    return saved;
+  }
+
+  /**
+   * Deletes a user by id, then their picture file.
+   *
+   * @throws {NotFoundException} 404 when the id matches no row, so a DELETE
+   * never silently succeeds on nothing.
    */
   async remove(id: number) {
-    const result = await this.usersRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`User ${id} not found`);
-    }
+    const { profilePicture } = await this.findOne(id);
+    await this.usersRepository.delete(id);
+    await this.pictures.delete(profilePicture);
   }
 }
