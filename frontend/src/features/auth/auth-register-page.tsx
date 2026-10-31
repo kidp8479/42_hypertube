@@ -2,7 +2,8 @@
 // No auto-login on success - redirects to /login instead with an "account
 // created" notice, so a fresh account always goes through the real login flow
 // once. Maps the backend 409 (duplicate email/username) to a generic conflict
-// message - like /login, never says which field clashed.
+// message - like /login, never says which field clashed - and the 422 of a
+// password too easy to guess to its own message.
 import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -92,7 +93,7 @@ export function RegisterPage() {
       });
       navigate('/login', { replace: true, state: { justRegistered: true } });
     },
-    refusals: { 409: 'register.conflict' },
+    refusals: { 409: 'register.conflict', 422: 'register.weakPassword' },
   });
 
   // A refused picture keeps the form from sending: registering without it

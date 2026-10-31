@@ -25,7 +25,8 @@ type Outcome =
   | 'credentials.nothingToChange'
   | 'credentials.wrongPassword'
   | 'credentials.emailTaken'
-  | 'credentials.noPassword';
+  | 'credentials.noPassword'
+  | 'credentials.weakPassword';
 
 // What each refusal of `PATCH /users/:id` means here. The form always sends
 // `currentPassword`, so a 400 is the account having no password to confirm
@@ -35,6 +36,7 @@ const REFUSALS: Partial<Record<number, Outcome>> = {
   400: 'credentials.noPassword',
   403: 'credentials.wrongPassword',
   409: 'credentials.emailTaken',
+  422: 'credentials.weakPassword',
 };
 
 const NOTHING_TO_CHANGE: FormOutcome<Outcome> = {

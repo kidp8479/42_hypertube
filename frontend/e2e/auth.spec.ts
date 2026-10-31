@@ -152,3 +152,26 @@ test.describe('register -> login', () => {
     await expect(page).toHaveURL(/\/register$/);
   });
 });
+
+test('a French word as password is refused, with a message saying why', async ({
+  page,
+}) => {
+  const consoleIssues = trackConsoleIssues(page);
+  const suffix = uniqueSuffix();
+
+  await page.goto('/register');
+  await fillRegisterForm(page, {
+    email: `e2e-w-${suffix}@example.com`,
+    username: `e2ew${suffix}`,
+    firstName: 'E2E',
+    lastName: 'Tester',
+    password: 'boulangerie',
+  });
+  await page.getByRole('button', { name: 'Register' }).click();
+
+  await expect(
+    page.getByText(/This password is too easy to guess/),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/register$/);
+  expect(consoleIssues, consoleIssues.join('\n')).toEqual([]);
+});

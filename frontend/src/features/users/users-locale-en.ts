@@ -35,6 +35,8 @@ export const usersEn = {
     savedBoth: 'Email and password updated.',
     nothingToChange: 'Change the email or enter a new password first.',
     wrongPassword: 'The current password is wrong.',
+    weakPassword:
+      'This password is too easy to guess. Avoid words, names and common passwords: a few unrelated words in a row work well.',
     emailTaken: 'This email address is already used by another account.',
     noPassword:
       'The change was refused. Check the email address. If this account was created with 42 or GitHub, it has no password yet, so its email and password cannot be changed here.',

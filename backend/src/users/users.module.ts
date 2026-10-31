@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { UsernameAllocator } from './username-allocator.service';
+import { PasswordStrengthService } from './password-strength.service';
 import { UsersController } from './users.controller';
 import { ProfilePictureController } from './profile-picture.controller';
 import {
@@ -25,6 +26,7 @@ import { RefreshTokenModule } from '../sessions/refresh-token.module';
   providers: [
     UsersService,
     UsernameAllocator,
+    PasswordStrengthService,
     ProfilePictureStore,
     { provide: PICTURES_DIR, useValue: DEFAULT_PICTURES_DIR },
   ],

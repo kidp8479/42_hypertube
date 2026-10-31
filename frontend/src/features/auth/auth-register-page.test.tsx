@@ -82,6 +82,18 @@ describe('RegisterPage', () => {
     expect(registerRequest).toHaveBeenCalledWith(expect.anything(), 'fr', null);
   });
 
+  it('says the password is too easy to guess (422)', async () => {
+    vi.mocked(registerRequest).mockRejectedValue(new ApiError(422));
+    const { user } = renderRegisterPage();
+    await fillValidForm(user);
+
+    await user.click(screen.getByRole('button', { name: 'Register' }));
+
+    expect(
+      await screen.findByText(/This password is too easy to guess/),
+    ).toBeInTheDocument();
+  });
+
   it('sends the picked picture with the account', async () => {
     vi.mocked(registerRequest).mockResolvedValue(undefined);
     const { user } = renderRegisterPage();

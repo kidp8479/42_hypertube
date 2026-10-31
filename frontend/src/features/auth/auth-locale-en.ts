@@ -14,7 +14,7 @@ export const authEn = {
   },
   hints: {
     username: '3 to 30 characters, no @',
-    password: '8 to 100 characters',
+    password: '8 to 100 characters, hard to guess',
     picture: 'Optional. JPEG, PNG or WebP, 2 MB at most.',
   },
   picture: {
@@ -41,6 +41,8 @@ export const authEn = {
     hasAccount: 'Already have an account?',
     logIn: 'Sign in',
     conflict: 'An account with this email or username already exists.',
+    weakPassword:
+      'This password is too easy to guess. Avoid words, names and common passwords: a few unrelated words in a row work well.',
   },
   login: {
     title: 'Sign in',

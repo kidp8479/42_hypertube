@@ -34,6 +34,7 @@ might ask us to justify.
 | [0014](0014-security-headers-split-between-edge-backend-and-spa.md) | Security headers: the edge, the backend and the SPA server each own a set | accepted |
 | [0015](0015-api-keys-per-user-for-the-client-credentials-grant.md) | API keys per user for the client-credentials grant | accepted |
 | [0016](0016-profile-pictures-uploaded-and-stored-on-a-volume.md) | Profile pictures are uploaded and stored on a volume | accepted |
+| [0017](0017-password-strength-zxcvbn-and-a-french-lexicon.md) | Password strength: zxcvbn plus a full French lexicon, checked by the server | accepted |
 
 ## Planned
 
@@ -43,7 +44,6 @@ becomes a numbered ADR when the decision is actually taken - not before.
 | Trigger | Decision to record |
 |---------|--------------------|
 | password reset (HYP-34) | reset-token shape: random, single-use, short TTL, hashed at rest (mirrors ADR-0001) |
-| password strength (HYP-37) | zxcvbn score threshold vs blocklist, and why |
 | BitTorrent client | from-scratch protocol vs allowed low-level libs (`bencode`, `parse-torrent`) - the eliminatory "no ready-made streaming" constraint, spelled out |
 | streaming | piece selection / download ordering and the threshold at which the stream starts |
 | transcoding | on-the-fly ffmpeg, which container/codecs, cache of converted files |

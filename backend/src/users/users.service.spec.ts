@@ -1,11 +1,13 @@
 // Unit spec for UsersService with a mocked repository: password hashing,
 // OAuth account creation (column limits), update (with
-// re-authentication for a credential change), the picture's file kept in
-// step with its column, and 404s.
+// re-authentication for a credential change), the password strength check
+// and its place in each flow, the picture's file kept in step with its
+// column, and 404s.
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -16,6 +18,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 import { ProfilePictureStore } from './profile-picture.store';
+import { PasswordStrengthService } from './password-strength.service';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake repository stays loose.
@@ -55,6 +58,12 @@ describe('UsersService', () => {
     ),
     delete: jest.fn(),
   };
+  // Accepts every password unless a test says otherwise; the rule itself is
+  // covered by password-strength.service.spec.ts.
+  const passwordStrength = { assertStrong: jest.fn() };
+  const weak = () => {
+    throw new UnprocessableEntityException();
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -62,6 +71,7 @@ describe('UsersService', () => {
         UsersService,
         { provide: UsernameAllocator, useValue: usernames },
         { provide: ProfilePictureStore, useValue: pictures },
+        { provide: PasswordStrengthService, useValue: passwordStrength },
         {
           // Hand the DI container a fake Repository<User> so UsersService
           // can be built without a real database connection.
@@ -103,6 +113,21 @@ describe('UsersService', () => {
       // The encoded hash carries its parameters; assert argon2id with the
       // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults.
       expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
+    });
+
+    it('refuses a weak password before hashing or storing anything', async () => {
+      passwordStrength.assertStrong.mockImplementationOnce(weak);
+      const dto = buildCreateUserDto();
+
+      await expect(
+        service.create(dto, Buffer.from('png')),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      expect(passwordStrength.assertStrong).toHaveBeenCalledWith(
+        dto.password,
+        dto,
+      );
+      expect(pictures.storeFor).not.toHaveBeenCalled();
+      expect(repository.save).not.toHaveBeenCalled();
     });
 
     it('registers without a picture as null: the default avatar', async () => {
@@ -298,6 +323,38 @@ describe('UsersService', () => {
         argon2.verify(stored.password as string, 'brand new pass'),
       ).resolves.toBe(true);
       expect(stored).not.toHaveProperty('currentPassword');
+    });
+
+    it('checks a new password against the profile it is saved with', async () => {
+      await service.update(1, {
+        password: 'brand new pass',
+        firstName: 'Augusta',
+        currentPassword: 'current pass',
+      });
+
+      expect(passwordStrength.assertStrong).toHaveBeenCalledWith(
+        'brand new pass',
+        expect.objectContaining({ firstName: 'Augusta' }),
+      );
+    });
+
+    it('refuses a weak new password with 422, saving nothing', async () => {
+      passwordStrength.assertStrong.mockImplementationOnce(weak);
+
+      await expect(
+        service.update(1, {
+          password: 'motdepasse',
+          currentPassword: 'current pass',
+        }),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+
+    it('asks for the current password before judging the new one', async () => {
+      await expect(
+        service.update(1, { password: 'brand new pass', currentPassword: 'x' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(passwordStrength.assertStrong).not.toHaveBeenCalled();
     });
 
     it('marks a new email unverified', async () => {

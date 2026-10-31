@@ -38,6 +38,8 @@ export const usersFr: typeof usersEn = {
     nothingToChange:
       "Modifiez d'abord l'e-mail ou saisissez un nouveau mot de passe.",
     wrongPassword: 'Le mot de passe actuel est incorrect.',
+    weakPassword:
+      'Ce mot de passe est trop facile à deviner. Évitez les mots, les noms et les mots de passe courants : quelques mots sans rapport à la suite font l’affaire.',
     emailTaken: 'Cette adresse e-mail est déjà utilisée par un autre compte.',
     noPassword:
       "La modification a été refusée. Vérifiez l'adresse e-mail. Si ce compte a été créé avec 42 ou GitHub, il n'a pas encore de mot de passe : son e-mail et son mot de passe ne peuvent pas être modifiés ici.",
