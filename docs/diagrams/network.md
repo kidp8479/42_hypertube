@@ -127,3 +127,20 @@ flowchart LR
 
 The dev SPA (Vite) has no CSP: its inline react-refresh script and injected
 `<style>` tags would need `unsafe-inline`.
+
+## 4. Swagger UI through the edge (HYP-40)
+
+The OpenAPI document is built per request: its server URL is the prefix the
+proxy announces, so "Try it out" calls `/api/...`, and the bearer token is
+required everywhere except on `@Public()` routes.
+
+```mermaid
+flowchart LR
+    ui["Swagger UI<br/>https://localhost:8443/api-docs"]
+    proxy["proxy (nginx)"]
+    backend["backend<br/>serveApiDocs()"]
+    ui -- "GET /api-docs-json" --> proxy
+    proxy -- "X-Forwarded-Prefix: /api" --> backend
+    backend -- "servers: [/api]<br/>security: bearer unless @Public()" --> ui
+    ui -- "Try it out: /api/users/me<br/>+ Authorization: Bearer" --> proxy
+```
