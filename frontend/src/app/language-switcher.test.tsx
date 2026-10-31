@@ -1,5 +1,5 @@
-// Spec for LanguageSwitcher: switching the UI, remembering the choice, and
-// saving it on the account when logged in.
+// Spec for LanguageSwitcher: switching the UI, remembering the choice,
+// saving it on the account when logged in, and saying when that save failed.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,10 +10,10 @@ import type { AuthState } from '../features/auth/auth-reducer';
 import { fakeUser, fakeAuth } from '../test/fixtures';
 import { LanguageSwitcher } from './language-switcher';
 
-function renderSwitcher(state: AuthState) {
+function renderSwitcher(state: AuthState, updateUser = vi.fn()) {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider value={fakeAuth(state)}>
+      <AuthContext.Provider value={fakeAuth(state, { updateUser })}>
         <LanguageSwitcher />
       </AuthContext.Provider>
     </QueryClientProvider>,
@@ -57,5 +57,49 @@ describe('LanguageSwitcher', () => {
     expect(url).toBe(`/api/users/${fakeUser.id}`);
     expect(init.method).toBe('PATCH');
     expect(init.body).toBe(JSON.stringify({ preferredLanguage: 'fr' }));
+  });
+
+  it('hands the saved profile to the auth context', async () => {
+    const saved = { ...fakeUser, preferredLanguage: 'fr' };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify(saved))),
+    );
+    const updateUser = vi.fn();
+    const user = renderSwitcher(authenticated, updateUser);
+
+    await user.selectOptions(screen.getByLabelText('Language'), 'fr');
+
+    await waitFor(() => expect(updateUser).toHaveBeenCalledWith(saved));
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
+  it('says the language is not on the account when the save fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
+    );
+    const user = renderSwitcher(authenticated);
+
+    await user.selectOptions(screen.getByLabelText('Language'), 'fr');
+
+    // The UI keeps the new language, the message is in it.
+    expect(
+      await screen.findByText('Non enregistrée sur votre compte'),
+    ).toBeInTheDocument();
+    expect(i18n.language).toBe('fr');
+  });
+
+  it('leaves a 401 to the session-expired net, with no message here', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
+    );
+    const user = renderSwitcher(authenticated);
+
+    await user.selectOptions(screen.getByLabelText('Language'), 'fr');
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 });

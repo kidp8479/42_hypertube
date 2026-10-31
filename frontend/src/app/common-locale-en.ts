@@ -2,6 +2,7 @@
 export const commonEn = {
   language: {
     label: 'Language',
+    notSaved: 'Not saved to your account',
   },
   header: {
     logout: 'Log out',
