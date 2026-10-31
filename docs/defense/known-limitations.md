@@ -174,3 +174,19 @@ shown as is in the header and on the profile pages.
   at the defense; hosted pictures (HYP-38) remove the case.
 - **Cost to fix later:** medium. Upload, check the type and size, store the
   file, serve it from the app; the column then holds a path instead of a URL.
+
+## The dev stack's SPA has no Content-Security-Policy
+
+The CSP of the single-page app is sent by the frontend's prod nginx
+(`frontend/nginx.conf`, ADR-0014). The dev stack (`make up`) serves the SPA
+from Vite, without one; the API and `/api-docs` have helmet's CSP in both.
+
+- **Why:** the page Vite serves in dev has an inline react-refresh script and
+  injects CSS as `<style>` tags. A policy that allows them (`unsafe-inline`)
+  protects nothing, and one that does not breaks hot reload.
+- **Real-world:** only the prod build is deployed, and it enforces the policy.
+- **Cost:** the e2e suite in CI runs the dev stack, so a change that adds a
+  new kind of resource (an inline script, a font or image from another host,
+  the video player's `media-src`) must be checked on `make up-prod`, with the
+  browser console open: a CSP violation is a console error. (The full e2e
+  suite does not fit under the prod rate limits.)
