@@ -14,7 +14,6 @@ const METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
 // Cited in the docs on purpose, not built yet (see the traceability matrix).
 // Written as shapes: every `:param` is `:p` (see `shapeKey`).
 export const PLANNED = new Set([
-  'POST /oauth/token',
   'GET /movies',
   'GET /movies/:p',
   'GET /comments',

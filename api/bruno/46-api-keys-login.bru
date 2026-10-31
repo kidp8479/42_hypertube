@@ -1,0 +1,32 @@
+meta {
+  name: 46 API keys: the key owner logs in
+  type: http
+  seq: 46
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "identifier": "sess-{{runId}}",
+    "password": "an0ther-p4ss-phrase"
+  }
+}
+
+script:post-response {
+  bru.setVar("keyToken", res.body.access_token);
+}
+
+docs {
+  Requests 46 to 56 walk an API key through its life (ADR-0015): create it,
+  buy a token with POST /oauth/token, use it as its owner, see what it cannot
+  do, revoke it.
+}
+
+assert {
+  res.status: eq 200
+}

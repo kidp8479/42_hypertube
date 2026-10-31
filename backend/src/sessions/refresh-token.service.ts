@@ -7,10 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { parseDuration } from '../config/duration.util';
 import { RefreshToken } from './entities/refresh-token.entity';
-import {
-  generateRefreshSecret,
-  hashRefreshSecret,
-} from './refresh-secret.util';
+import { generateSecret, hashSecret } from '../common/utils/random-secret.util';
 
 /** Longest a session may last from its login, however often it is refreshed. */
 const ABSOLUTE_CAP_MS = 30 * 86_400_000;
@@ -63,7 +60,7 @@ export class RefreshTokenService {
   ): Promise<IssuedRefreshToken & { userId: number }> {
     const now = new Date();
     const row = await this.tokens.findOneBy({
-      tokenHash: hashRefreshSecret(secret),
+      tokenHash: hashSecret(secret),
     });
     if (!row || this.isDead(row, now)) {
       throw new UnauthorizedException();
@@ -88,7 +85,7 @@ export class RefreshTokenService {
   /** Ends the session a refresh token belongs to (logout). Never fails. */
   async revokeFamilyOf(secret: string): Promise<void> {
     const row = await this.tokens.findOneBy({
-      tokenHash: hashRefreshSecret(secret),
+      tokenHash: hashSecret(secret),
     });
     if (row) {
       await this.revokeFamily(row.familyId, new Date());
@@ -163,7 +160,7 @@ export class RefreshTokenService {
     familyStartedAt: Date,
     now: Date,
   ): Promise<IssuedRefreshToken> {
-    const secret = generateRefreshSecret();
+    const secret = generateSecret();
     // Sliding window, but never past the absolute cap of the session.
     const expiresAt = new Date(
       Math.min(
@@ -175,7 +172,7 @@ export class RefreshTokenService {
       this.tokens.create({
         userId,
         familyId,
-        tokenHash: hashRefreshSecret(secret),
+        tokenHash: hashSecret(secret),
         expiresAt,
         familyStartedAt,
         rotatedAt: null,

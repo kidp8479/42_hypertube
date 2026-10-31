@@ -9,7 +9,8 @@ docs {
   Requests 26 to 34 walk a session through login, refresh, reuse of a rotated
   token and logout (ADR-0011) and wait 15 s once, to get out of the 10 s
   tolerance for a rotated token: a run takes about 20 s. Requests 35 to 44
-  change that user's password and email (HYP-84).
+  change that user's password and email (HYP-84), 46 to 56 give them an API
+  key and buy a token with it (POST /oauth/token, ADR-0015).
 
   Rate limits: POST /users is capped at 10 per hour per IP and a run uses 6.
   The dev stack multiplies every limit by THROTTLE_LIMIT_MULTIPLIER (set in

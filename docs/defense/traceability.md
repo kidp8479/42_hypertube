@@ -54,8 +54,8 @@ control, its code path, its proof, and the accepted gaps) lives in
 
 | Requirement | Issue | Where handled | Proof | State |
 |---|---|---|---|---|
-| `POST /oauth/token` (client + secret -> token) | HYP-15 | n/a | n/a | todo |
-| Imposed endpoints (`/users`, `/users/:id`, `/movies`, `/movies/:id`, `/comments`, `/comments/:id`, `/movies/:movie_id/comments`) | HYP-15 | `/users`, `/users/:id` exist | n/a | partial |
+| `POST /oauth/token` (client + secret -> token) | HYP-122 | API keys per user (`api-clients/`), `OAuthTokenController`; the token acts as the key's owner (ADR-0015) | `oauth-token.*.spec.ts`, `api-clients.*.spec.ts`, Bruno 46 to 56 | done |
+| Imposed endpoints (`/users`, `/users/:id`, `/movies`, `/movies/:id`, `/comments`, `/comments/:id`, `/movies/:movie_id/comments`) | HYP-15 | `/users`, `/users/:id` exist, and answer a token from `POST /oauth/token` like a login token | Bruno 52, 53 | partial |
 | Correct HTTP codes (403 on editing another profile, etc.) | HYP-10 | `PATCH`/`DELETE /users/:id` -> 403 when `user.id !== :id` | HTTP-level guard tests | partial - full table in `rest-proof.md` (todo) |
 | `GET /movies`, `GET /movies/:id` need a token (a user's, or a client-credentials token from `POST /oauth/token`): "any user" of III.4 is any API client holding a token, while the library stays for connected users | HYP-15 | default-deny `JwtAuthGuard`, no `@Public()` on movie data | n/a | todo |
 | `PATCH` / `DELETE /comments/:id` are the author's only (403 otherwise); `PATCH` takes the documented `comment` and `username`; author and date of a new comment are set by the server | HYP-15 | n/a | n/a | todo |

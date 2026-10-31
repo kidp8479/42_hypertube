@@ -1,0 +1,27 @@
+meta {
+  name: 48 API keys: the list has no secret
+  type: http
+  seq: 48
+}
+
+get {
+  url: {{baseUrl}}/api-clients
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.length: eq 1
+}
+
+tests {
+  test("no secret, no hash", function () {
+    expect(res.body[0]).to.not.have.property("secret");
+    expect(res.body[0]).to.not.have.property("secretHash");
+  });
+}

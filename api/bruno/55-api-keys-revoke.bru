@@ -1,0 +1,19 @@
+meta {
+  name: 55 API keys: revoke it
+  type: http
+  seq: 55
+}
+
+delete {
+  url: {{baseUrl}}/api-clients/{{apiKeyId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+assert {
+  res.status: eq 200
+}

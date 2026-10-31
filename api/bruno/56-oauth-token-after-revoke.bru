@@ -1,0 +1,22 @@
+meta {
+  name: 56 OAuth: a revoked key buys nothing
+  type: http
+  seq: 56
+}
+
+post {
+  url: {{baseUrl}}/oauth/token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "client": "{{apiClient}}",
+    "secret": "{{apiSecret}}"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

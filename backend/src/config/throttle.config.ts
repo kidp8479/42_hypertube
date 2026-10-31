@@ -67,3 +67,12 @@ export const OAUTH_EXCHANGE_THROTTLE: ThrottlePolicy = {
   limit: scaledThrottleLimit(10),
   ttl: MINUTE,
 };
+
+/**
+ * `POST /oauth/token`: a script may ask for a token every 15 minutes or after
+ * a restart, and the secret is no guessing target (256 random bits).
+ */
+export const OAUTH_TOKEN_THROTTLE: ThrottlePolicy = {
+  limit: scaledThrottleLimit(20),
+  ttl: MINUTE,
+};

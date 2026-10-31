@@ -9,6 +9,7 @@ import {
   Delete,
   ForbiddenException,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
@@ -22,6 +23,7 @@ import {
 import { ApiErrors } from '../common/decorators/api-errors.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
+import { SessionTokenGuard } from '../common/guards/session-token.guard';
 import {
   PROFILE_EDIT_THROTTLE,
   REGISTER_THROTTLE,
@@ -161,14 +163,16 @@ export class UsersController {
   }
 
   /**
-   * Deletes one's own account.
+   * Deletes one's own account. Not with a token bought with an API key: a
+   * leaked script secret must not be able to erase the account.
    *
    * @throws {ForbiddenException} 403 on another user's id.
    * @throws {NotFoundException} 404 when the id matches no row.
    */
   @ApiOperation({ summary: "Delete one's own account" })
   @ApiOkResponse({ description: 'Deleted; the body is empty' })
-  @ApiErrors(401, [403, "Another user's account"], 404)
+  @ApiErrors(401, [403, "Another user's account, or an API client token"], 404)
+  @UseGuards(SessionTokenGuard)
   @Delete(':id')
   remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     if (user.id !== id) {

@@ -1,0 +1,19 @@
+meta {
+  name: 52 OAuth: the token reads the users
+  type: http
+  seq: 52
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{clientToken}}
+}
+
+assert {
+  res.status: eq 200
+}
