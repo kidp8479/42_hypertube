@@ -17,7 +17,7 @@ flowchart LR
 
     subgraph net["Compose network"]
         proxy["proxy - nginx<br/>TLS, edge headers"]
-        frontend["frontend - Vite dev server :5173"]
+        frontend["frontend<br/>dev: Vite :5173<br/>prod: nginx, built files :80"]
         backend["backend - NestJS :3000"]
         db[("db - Postgres :5432")]
     end
@@ -25,7 +25,7 @@ flowchart LR
     browser --> p8080 -- "301 to HTTPS" --> proxy
     browser --> p8443 --> proxy
 
-    proxy -- "/ (and the HMR websocket)" --> frontend
+    proxy -- "/ (and the HMR websocket in dev)" --> frontend
     proxy -- "/api/* (prefix stripped)" --> backend
     proxy -- "/api-docs" --> backend
     backend --> db
@@ -41,6 +41,26 @@ flowchart LR
 Amber: the edge. Violet: the services. Grey: the browser and the host ports.
 The proxy is the only way in: the backend and the frontend publish no host
 port. Bruno and the e2e suite go through it too.
+
+## Dev and prod stacks (HYP-17)
+
+The same services in two builds, chosen by which compose files are stacked
+([ADR-0013](../adr/0013-compose-base-with-dev-and-prod-files.md)).
+
+```mermaid
+flowchart LR
+    base["docker-compose.yml<br/>shared: services, env,<br/>db, proxy, certificates"]
+    dev["docker-compose.dev.yml<br/>dev targets, mounted source,<br/>node_modules volumes"]
+    prod["docker-compose.prod.yml<br/>prod targets, NODE_ENV=production,<br/>real rate limits"]
+    base --> devstack["make up<br/>backend: nest --watch<br/>frontend: Vite :5173"]
+    dev --> devstack
+    base --> prodstack["make up-prod<br/>backend: node dist/main<br/>frontend: nginx, static SPA :80"]
+    prod --> prodstack
+```
+
+The proxy picks the SPA's address from `PROXY_FRONTEND_UPSTREAM`. Both stacks
+are one compose project: `make up-prod` replaces the dev containers, `make up`
+switches back, and the database volume stays.
 
 ## 1. One request through the edge
 

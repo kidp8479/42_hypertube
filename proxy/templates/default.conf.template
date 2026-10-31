@@ -37,7 +37,7 @@ server {
     # proxy_pass is what makes nginx use it.
     resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
     set $backend http://backend:3000;
-    set $frontend http://frontend:5173;
+    set $frontend http://${PROXY_FRONTEND_UPSTREAM};
 
     ssl_certificate     /etc/nginx/certs/tls.crt;
     ssl_certificate_key /etc/nginx/certs/tls.key;
@@ -72,8 +72,8 @@ server {
         include /etc/nginx/snippets/proxy-headers.conf;
     }
 
-    # Everything else is the SPA. The upgrade headers carry Vite's HMR
-    # websocket in dev.
+    # Everything else is the SPA: Vite in dev, the built files in prod. The
+    # upgrade headers carry Vite's HMR websocket in dev.
     location / {
         proxy_pass $frontend;
         proxy_http_version 1.1;

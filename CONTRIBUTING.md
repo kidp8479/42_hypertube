@@ -172,7 +172,7 @@ Recurring local-setup traps, collected here so they are fixed once
 instead of rediscovered every few sessions.
 
 - **The backend container's `node_modules` is a separate named volume**
-  (`backend_node_modules:/app/node_modules` in `docker-compose.yml`),
+  (`backend_node_modules:/app/node_modules` in `docker-compose.dev.yml`),
   not the bind-mounted `./backend`. Installing a package on the host
   (`cd backend && npm install ...`) updates `package.json` (bind-mounted,
   shared) but **not** what the running container sees. Install inside

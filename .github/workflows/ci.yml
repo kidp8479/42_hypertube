@@ -63,6 +63,9 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     env:
+      # Every `docker compose` call below runs the dev stack (ADR-0013); the
+      # prod build step names its files itself.
+      COMPOSE_FILE: docker-compose.yml:docker-compose.dev.yml
       POSTGRES_USER: hypertube_ci
       POSTGRES_PASSWORD: hypertube_ci_password
       POSTGRES_DB: hypertube_ci
@@ -144,6 +147,10 @@ jobs:
           name: bruno-report
           path: api/bruno/bruno-report.html
           retention-days: 7
+      # The prod stages are not what the suites above run (ADR-0013): build
+      # them so a Dockerfile change that breaks only prod fails here.
+      - name: Build the prod images
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend frontend
       - name: Tear down the stack
         if: always()
         run: docker compose down -v

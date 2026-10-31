@@ -1,0 +1,20 @@
+# Prod stack (HYP-17): docker-compose.yml + this file, `make up-prod`. The
+# prod stages of both Dockerfiles: the backend runs the compiled `dist/` with
+# production dependencies only, the frontend is the built SPA served as
+# static files by nginx. No source is mounted.
+services:
+  backend:
+    image: hypertube-backend:prod
+    build:
+      target: prod
+    environment:
+      # Production mode: no SQL logging, and the env schema refuses a
+      # THROTTLE_LIMIT_MULTIPLIER other than 1, so the real limits are pinned
+      # here whatever a dev .env raised them to.
+      NODE_ENV: production
+      THROTTLE_LIMIT_MULTIPLIER: 1
+
+  frontend:
+    image: hypertube-frontend:prod
+    build:
+      target: prod
