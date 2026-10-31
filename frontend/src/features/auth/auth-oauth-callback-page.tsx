@@ -8,6 +8,7 @@ import { OAuthCodeRejectedError } from './auth-actions';
 import { Alert } from '../../ui/ui-alert';
 import { useAuth } from './auth-context';
 import { AUTH_COLUMN } from './auth-form-classes';
+import { useOAuthExchange } from './auth-queries';
 
 /** The backend's `?error=` reasons, plus `expired` for a rejected code. */
 type OAuthErrorCode = 'cancelled' | 'email_unverified' | 'failed' | 'expired';
@@ -43,7 +44,8 @@ function readCallbackParams(params: URLSearchParams) {
  */
 export function OAuthCallbackPage() {
   const { t } = useTranslation('auth');
-  const { state, loginWithOAuthCode } = useAuth();
+  const { state } = useAuth();
+  const exchange = useOAuthExchange();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [{ code, error: initialError }] = useState(() =>
@@ -70,15 +72,15 @@ export function OAuthCallbackPage() {
       return;
     }
     exchangeStarted.current = true;
-    loginWithOAuthCode(code).then(
-      () => navigate('/', { replace: true }),
-      (caught: unknown) => {
+    exchange(code, {
+      onSuccess: () => navigate('/', { replace: true }),
+      onError: (caught) => {
         setError(
           caught instanceof OAuthCodeRejectedError ? 'expired' : 'failed',
         );
       },
-    );
-  }, [code, bootstrapping, loginWithOAuthCode, navigate]);
+    });
+  }, [code, bootstrapping, exchange, navigate]);
 
   return (
     <div className={`${AUTH_COLUMN} max-w-80`}>

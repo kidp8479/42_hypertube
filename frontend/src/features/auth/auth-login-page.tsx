@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
+import { useLogin } from './auth-queries';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
@@ -20,7 +21,8 @@ interface LoginLocationState {
 /** The `/login` page: the username-or-email + password form and the OAuth buttons. */
 export function LoginPage() {
   const { t } = useTranslation('auth');
-  const { state, login } = useAuth();
+  const { state } = useAuth();
+  const signIn = useLogin();
   const navigate = useNavigate();
   const location = useLocation();
   const justRegistered = (location.state as LoginLocationState | null)
@@ -29,7 +31,7 @@ export function LoginPage() {
   const form = useAccountForm({
     initialValues: { identifier: '', password: '' },
     send: async ({ identifier, password }) => {
-      await login(identifier, password);
+      await signIn({ identifier, password });
       navigate('/', { replace: true });
     },
     refusals: { 401: 'login.badCredentials' },

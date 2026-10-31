@@ -5,10 +5,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ApiError } from '../../lib/api';
+import { queryClient, setUnauthorizedHandler } from '../../lib/query-client';
 import { AuthContext, type AuthContextValue } from './auth-context';
 import type { AuthState } from './auth-reducer';
 import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { LoginPage } from './auth-login-page';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // `/` renders a marker so "navigated home" is observable as a DOM change.
 // `initialState` lets a test arrive on /login the way RegisterPage's redirect
@@ -20,16 +22,18 @@ function renderLoginPage(
   const login = vi.fn<AuthContextValue['login']>();
   const value = fakeAuth(state, { login });
   render(
-    <AuthContext.Provider value={value}>
-      <MemoryRouter
-        initialEntries={[{ pathname: '/login', state: initialState }]}
-      >
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<p>home page</p>} />
-        </Routes>
-      </MemoryRouter>
-    </AuthContext.Provider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthContext.Provider value={value}>
+        <MemoryRouter
+          initialEntries={[{ pathname: '/login', state: initialState }]}
+        >
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<p>home page</p>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>,
   );
   return { login, user: userEvent.setup() };
 }
@@ -126,5 +130,33 @@ describe('LoginPage', () => {
     expect(
       screen.queryByText('Account created. Please sign in.'),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps a wrong password away from the session-expired net', async () => {
+    // The app's own client, whose cache handlers hold the 401 net.
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
+    const login = vi
+      .fn<AuthContextValue['login']>()
+      .mockRejectedValue(new ApiError(401));
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthContext.Provider
+          value={fakeAuth({ status: 'anonymous', user: null }, { login })}
+        >
+          <MemoryRouter initialEntries={['/login']}>
+            <LoginPage />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>,
+    );
+
+    await fillAndSubmit(userEvent.setup());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Invalid username, email or password.',
+    );
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    setUnauthorizedHandler(null);
   });
 });

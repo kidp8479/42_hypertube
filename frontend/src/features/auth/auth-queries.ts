@@ -1,9 +1,15 @@
-// The startup identity check: restores the session from the refresh cookie
-// and loads the `/users/me` profile into the query cache.
+// The startup identity check (restores the session from the refresh cookie
+// and loads the `/users/me` profile into the query cache), and the auth
+// writes as mutations.
+import { useMutation } from '@tanstack/react-query';
 import { ApiError, apiFetch, refreshAccessToken } from '../../lib/api';
-import { queryClient } from '../../lib/query-client';
+import type { SupportedLanguage } from '../../lib/languages';
+import { CREDENTIAL_CHECK, queryClient } from '../../lib/query-client';
 import { getAuthToken } from '../../lib/token';
+import { registerRequest } from './auth-actions';
+import { useAuth } from './auth-context';
 import type { User } from './auth-types';
+import type { RegisterValues } from './auth-validation';
 
 const MAX_BOOTSTRAP_RETRIES = 2;
 
@@ -36,4 +42,39 @@ export function restoreSession(): Promise<User | null> {
     },
     retry: retryBootstrap,
   });
+}
+
+/**
+ * Login as a mutation, like every write. Its 401 is "wrong credentials", for
+ * the form to show, never the session-expired net (`CREDENTIAL_CHECK`).
+ */
+export function useLogin() {
+  const { login } = useAuth();
+  return useMutation({
+    mutationFn: (credentials: { identifier: string; password: string }) =>
+      login(credentials.identifier, credentials.password),
+    meta: CREDENTIAL_CHECK,
+  }).mutateAsync;
+}
+
+/**
+ * Trades the OAuth callback's single-use code for a session. A rejected code
+ * is the page's to explain, not the session-expired net's.
+ */
+export function useOAuthExchange() {
+  const { loginWithOAuthCode } = useAuth();
+  return useMutation({
+    mutationFn: (code: string) => loginWithOAuthCode(code),
+    meta: CREDENTIAL_CHECK,
+  }).mutate;
+}
+
+/** Creates an account (`POST /users`) as a mutation. */
+export function useRegister() {
+  return useMutation({
+    mutationFn: (variables: {
+      values: RegisterValues;
+      language: SupportedLanguage;
+    }) => registerRequest(variables.values, variables.language),
+  }).mutateAsync;
 }

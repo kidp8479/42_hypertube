@@ -11,6 +11,7 @@ import type { AuthState } from './auth-reducer';
 import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { RegisterPage } from './auth-register-page';
 import { registerRequest } from './auth-actions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('./auth-actions', () => ({
   registerRequest: vi.fn(),
@@ -31,14 +32,16 @@ function renderRegisterPage(
 ) {
   const value = fakeAuth(state);
   render(
-    <AuthContext.Provider value={value}>
-      <MemoryRouter initialEntries={['/register']}>
-        <Routes>
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginStub />} />
-        </Routes>
-      </MemoryRouter>
-    </AuthContext.Provider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthContext.Provider value={value}>
+        <MemoryRouter initialEntries={['/register']}>
+          <Routes>
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginStub />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </QueryClientProvider>,
   );
   return { user: userEvent.setup() };
 }
