@@ -1,6 +1,5 @@
 // App bootstrap: global pipes/interceptors/filters, CORS, Swagger, listen.
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor } from '@nestjs/common';
@@ -8,6 +7,7 @@ import { QueryFailedFilter } from './common/filters/query-failed.filter';
 import { globalValidationPipe } from './common/pipes/global-validation.pipe';
 import { noStoreResponses } from './config/no-store.config';
 import { securityHeaders } from './config/security-headers.config';
+import { serveApiDocs } from './config/swagger.config';
 import { trustEdgeProxy } from './config/trust-proxy.config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -53,18 +53,8 @@ async function bootstrap() {
     origin: config.getOrThrow<string>('FRONTEND_ORIGIN'),
   });
 
-  // Swagger UI is served in every environment on purpose: /api-docs is the
-  // RESTful-API evidence shown at the defense (HYP-15). In a real public
-  // deployment it would be gated behind auth or disabled in production -
-  // see docs/defense/known-limitations.md.
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Hypertube API')
-    .setDescription('RESTful API for the Hypertube project')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api-docs', app, swaggerDocument);
+  // Swagger UI and the OpenAPI document, the REST evidence for the defense.
+  serveApiDocs(app);
 
   await app.listen(config.get<number>('PORT') ?? 3000);
 }

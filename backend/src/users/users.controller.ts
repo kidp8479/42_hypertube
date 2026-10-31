@@ -12,6 +12,14 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import { ApiErrors } from '../common/decorators/api-errors.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 import {
@@ -26,6 +34,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserSummaryDto } from './dto/user-summary.dto';
+import { PublicUserDto } from './dto/public-user.dto';
+import { User } from './entities/user.entity';
 import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { setRefreshCookie } from '../sessions/refresh-cookie.util';
 
@@ -33,6 +43,7 @@ import { setRefreshCookie } from '../sessions/refresh-cookie.util';
  * Account CRUD (`/users`). Registration is public; every mutating route on
  * an existing profile requires the caller to own it (403 otherwise).
  */
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -41,6 +52,8 @@ export class UsersController {
   ) {}
 
   /** Registers an account (public). The response never carries the password hash. */
+  @ApiOperation({ summary: 'Register an account' })
+  @ApiErrors(400, 409, 429)
   @Public()
   @Throttle({ default: REGISTER_THROTTLE })
   @Post()
@@ -49,6 +62,9 @@ export class UsersController {
   }
 
   /** Every user, as id and username only (subject III.4). */
+  @ApiOperation({ summary: 'List every user, as id and username' })
+  @ApiOkResponse({ type: [UserSummaryDto] })
+  @ApiErrors(401)
   @Get()
   async findAll() {
     const users = await this.usersService.findAll();
@@ -61,6 +77,9 @@ export class UsersController {
    * to /users/me would bind ":id" = "me" and ParseIdPipe would 400 before
    * this handler ran.
    */
+  @ApiOperation({ summary: "The caller's own profile, every field" })
+  @ApiOkResponse({ type: User })
+  @ApiErrors(401)
   @Get('me')
   findMe(@CurrentUser() user: AuthUser) {
     return this.usersService.findOne(user.id);
@@ -71,6 +90,20 @@ export class UsersController {
    * (`UsersService.findOneForViewer`). ParseIdPipe rejects a malformed or out-of-range :id with 400 before the
    * service runs, so no query is ever built from it.
    */
+  @ApiOperation({
+    summary:
+      'A profile: every field for its owner, public fields for anyone else',
+  })
+  @ApiExtraModels(User, PublicUserDto)
+  @ApiOkResponse({
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(User) },
+        { $ref: getSchemaPath(PublicUserDto) },
+      ],
+    },
+  })
+  @ApiErrors([400, 'The id is not a positive integer'], 401, 404)
   @Get(':id')
   findOne(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     return this.usersService.findOneForViewer(id, user.id);
@@ -87,6 +120,23 @@ export class UsersController {
    * @throws {BadRequestException} 400 when `currentPassword` is missing, or
    * the account has no password to confirm with.
    */
+  @ApiOperation({
+    summary: "Edit one's own profile",
+    description:
+      'Changing the email or the password takes `currentPassword`, and ends every other session.',
+  })
+  @ApiOkResponse({ type: User })
+  @ApiErrors(
+    [
+      400,
+      'Invalid input, or `currentPassword` missing for an email or password change',
+    ],
+    401,
+    [403, "Another user's profile, or a wrong `currentPassword`"],
+    404,
+    409,
+    429,
+  )
   @Throttle({ default: PROFILE_EDIT_THROTTLE })
   @Patch(':id')
   async update(
@@ -116,6 +166,9 @@ export class UsersController {
    * @throws {ForbiddenException} 403 on another user's id.
    * @throws {NotFoundException} 404 when the id matches no row.
    */
+  @ApiOperation({ summary: "Delete one's own account" })
+  @ApiOkResponse({ description: 'Deleted; the body is empty' })
+  @ApiErrors(401, [403, "Another user's account"], 404)
   @Delete(':id')
   remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
     if (user.id !== id) {

@@ -1,10 +1,7 @@
 import type { Request } from 'express';
+import { forwardedPrefix } from './forwarded-prefix.util';
 
 const AUTH_PATH = '/auth';
-// The edge proxy serves the API under a prefix it strips (`/api`) and says so
-// in X-Forwarded-Prefix. Only a plain path is trusted: the value ends up in a
-// Set-Cookie header.
-const FORWARDED_PREFIX = /^(\/[A-Za-z0-9_-]+)+$/;
 
 /**
  * Reads one cookie from a `Cookie` header by hand: the app sets two cookies,
@@ -29,9 +26,7 @@ export function readCookie(
  * request. Both auth cookies (the OAuth state and the refresh token) use it.
  */
 export function authCookiePath(req: Request): string {
-  const prefix = req.headers['x-forwarded-prefix'];
-  const trusted = typeof prefix === 'string' && FORWARDED_PREFIX.test(prefix);
-  return `${trusted ? prefix : ''}${AUTH_PATH}`;
+  return `${forwardedPrefix(req)}${AUTH_PATH}`;
 }
 
 /**

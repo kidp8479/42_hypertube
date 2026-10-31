@@ -20,8 +20,8 @@ including in a production build.
   disable it in production, or put `/api-docs` behind auth / an IP
   allowlist, or serve a filtered public document (`SwaggerModule`
   `include:` option) separate from the full internal one.
-- **Cost to fix later:** low. Wrap the `SwaggerModule.setup()` call in a
-  `NODE_ENV !== 'production'` check, or protect the route.
+- **Cost to fix later:** low. Wrap the `serveApiDocs()` call (`config/swagger.config.ts`)
+  in a `NODE_ENV !== 'production'` check, or protect the route.
 
 ## Rate-limiting counter is in-process, not shared
 

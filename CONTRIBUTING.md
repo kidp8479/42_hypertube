@@ -351,6 +351,25 @@ change an entity:
 
 `make migration-run`, `-revert` and `-show` apply, undo the last and list them.
 
+### OpenAPI (Swagger)
+
+`/api-docs` is the REST evidence shown at the defense. The
+`@nestjs/swagger` compiler plugin (`nest-cli.json`) builds the request and
+response models from the DTO types and their class-validator rules, so a
+DTO needs no `@ApiProperty`. A new route adds:
+
+- `@ApiOperation({ summary })`: one short line for the evaluator, not the
+  doc comment (which is for developers).
+- `@ApiErrors(...)` (`common/decorators/`) with the error codes it answers,
+  429 only on a throttled route.
+- `@ApiOkResponse({ type })` when the handler returns a plain object, which
+  the plugin cannot describe.
+
+The bearer token is required on every operation unless the route is
+`@Public()`, which also marks it public in the document. A browser
+navigation (the OAuth routes) is left out with `@ApiExcludeEndpoint()`:
+"Try it out" would fetch it and follow the redirect.
+
 ### HTTP status codes
 
 Rely on Nest's default success code for the verb (`GET`/`PATCH`/`DELETE` -> 200,

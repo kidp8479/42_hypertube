@@ -1,0 +1,45 @@
+meta {
+  name: 45 OpenAPI document: models, security, server URL
+  type: http
+  seq: 45
+}
+
+get {
+  url: {{baseUrl}}/../api-docs-json
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("the API is under /api behind the proxy", function () {
+    expect(res.body.servers).to.deep.equal([{ url: "/api" }]);
+  });
+
+  test("DTO fields carry their class-validator rules", function () {
+    const username = res.body.components.schemas.CreateUserDto.properties.username;
+    expect(username.minLength).to.equal(3);
+    expect(username.maxLength).to.equal(30);
+  });
+
+  test("the bearer token is required by default, public routes opt out", function () {
+    expect(res.body.security).to.deep.equal([{ bearer: [] }]);
+    expect(res.body.paths["/users/me"].get.security).to.equal(undefined);
+    expect(res.body.paths["/auth/login"].post.security).to.deep.equal([{}]);
+  });
+
+  test("the error codes are listed", function () {
+    expect(res.body.paths["/users/{id}"].patch.responses).to.include.keys("403", "404", "409");
+  });
+
+  test("never documents the password hash", function () {
+    expect(res.body.components.schemas.User.properties).to.not.have.property("password");
+  });
+
+  test("leaves out the OAuth browser navigations", function () {
+    expect(res.body.paths).to.not.have.property("/auth/42/login");
+  });
+}
