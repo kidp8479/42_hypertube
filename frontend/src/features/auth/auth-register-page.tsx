@@ -3,6 +3,7 @@
 // created" notice, so a fresh account always goes through the real login flow
 // once. Maps the backend 409 (duplicate email/username) to a generic conflict
 // message - like /login, never says which field clashed.
+import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAccountForm } from './auth-account-form';
@@ -22,6 +23,7 @@ import { Button } from '../../ui/ui-button';
 import { Field } from '../../ui/ui-field';
 import { FORM_ROW } from '../../ui/ui-form-classes';
 import { OAuthButtons } from './auth-oauth-buttons';
+import { PictureField, type PicturePick } from './auth-picture-field';
 import { AUTH_COLUMN, AUTH_LINKS } from './auth-form-classes';
 
 const FORM = `${AUTH_COLUMN} max-w-md`;
@@ -76,6 +78,7 @@ export function RegisterPage() {
   const navigate = useNavigate();
 
   const register = useRegister();
+  const [picture, setPicture] = useState<PicturePick>({ file: null });
   const form = useAccountForm({
     initialValues: EMPTY_VALUES,
     validate: validateRegister,
@@ -85,11 +88,22 @@ export function RegisterPage() {
         language: isSupportedLanguage(i18n.language)
           ? i18n.language
           : DEFAULT_LANGUAGE,
+        picture: picture.file,
       });
       navigate('/login', { replace: true, state: { justRegistered: true } });
     },
     refusals: { 409: 'register.conflict' },
   });
+
+  // A refused picture keeps the form from sending: registering without it
+  // would drop what the user just picked. Its message is already shown.
+  function submit(event: SyntheticEvent) {
+    if (picture.error) {
+      event.preventDefault();
+      return;
+    }
+    void form.submit(event);
+  }
 
   // Someone who is already logged in has no business on /register either.
   if (state.status === 'authenticated') {
@@ -98,7 +112,7 @@ export function RegisterPage() {
 
   return (
     <>
-      <form className={FORM} onSubmit={form.submit} noValidate>
+      <form className={FORM} onSubmit={submit} noValidate>
         <h1>{t('register.title')}</h1>
 
         <div className={FORM_ROW}>
@@ -156,6 +170,7 @@ export function RegisterPage() {
             onChange={form.setValue}
           />
         </div>
+        <PictureField hint={t('hints.picture')} onPick={setPicture} />
         {form.outcome && (
           <Alert tone={form.outcome.tone}>{t(form.outcome.key)}</Alert>
         )}

@@ -75,6 +75,8 @@ export function useRegister() {
     mutationFn: (variables: {
       values: RegisterValues;
       language: SupportedLanguage;
-    }) => registerRequest(variables.values, variables.language),
+      picture: File | null;
+    }) =>
+      registerRequest(variables.values, variables.language, variables.picture),
   }).mutateAsync;
 }

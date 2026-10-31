@@ -10,11 +10,16 @@ export const authEn = {
     firstName: 'First name',
     lastName: 'Last name',
     currentPassword: 'Current password',
-    profilePicture: 'Profile picture URL',
+    profilePicture: 'Profile picture',
   },
   hints: {
     username: '3 to 30 characters, no @',
     password: '8 to 100 characters',
+    picture: 'Optional. JPEG, PNG or WebP, 2 MB at most.',
+  },
+  picture: {
+    choose: 'Choose a picture',
+    empty: 'No picture chosen',
   },
   placeholders: {
     email: 'ada@example.com',
@@ -26,7 +31,8 @@ export const authEn = {
     tooLong: '{{field}} must be at most {{max}} characters long',
     mismatch: 'Passwords do not match',
     containsAt: '{{field}} cannot contain @',
-    invalidUrl: 'Enter an https:// address',
+    notAnImage: 'Choose a JPEG, PNG or WebP image',
+    fileTooLarge: 'The picture must be at most {{max}} MB',
   },
   register: {
     title: 'Create your account',

@@ -10,6 +10,9 @@ export const USERNAME_MAX_LENGTH = 30;
 export const NAME_MAX_LENGTH = 100;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 100;
+// Mirrors of the backend's picture rules (ProfilePictureStore).
+export const PICTURE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const PICTURE_MAX_MB = 2;
 
 export type RegisterField =
   | 'email'
@@ -34,7 +37,8 @@ export type ValidationError =
   | { code: 'tooLong'; max: number }
   | { code: 'mismatch' }
   | { code: 'containsAt' }
-  | { code: 'invalidUrl' };
+  | { code: 'notAnImage' }
+  | { code: 'fileTooLarge'; maxMb: number };
 export type FieldErrors<F extends AccountField> = Partial<
   Record<F, ValidationError>
 >;
@@ -114,6 +118,19 @@ export function validateConfirmPassword(
   return undefined;
 }
 
+/**
+ * A picked picture's type and size. The type is the browser's guess from the
+ * file name; the backend reads the file's bytes and has the final say.
+ */
+export function validatePicture(file: File): ValidationError | undefined {
+  if (!PICTURE_TYPES.includes(file.type)) {
+    return { code: 'notAnImage' };
+  }
+  return file.size > PICTURE_MAX_MB * 1024 * 1024
+    ? { code: 'fileTooLarge', maxMb: PICTURE_MAX_MB }
+    : undefined;
+}
+
 /** Keeps the failed checks of a form, keyed by field. */
 export function collectErrors<F extends AccountField>(
   checks: Array<[F, ValidationError | undefined]>,
@@ -171,7 +188,9 @@ export function describeValidationError(
       return t('validation.containsAt', { field: fieldLabel });
     case 'mismatch':
       return t('validation.mismatch');
-    case 'invalidUrl':
-      return t('validation.invalidUrl');
+    case 'notAnImage':
+      return t('validation.notAnImage');
+    case 'fileTooLarge':
+      return t('validation.fileTooLarge', { max: error.maxMb });
   }
 }

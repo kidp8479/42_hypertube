@@ -1,5 +1,6 @@
 // Spec for RegisterPage: client-side validation, submit in the visitor
-// language, 409 conflict and generic errors, and the redirect to /login.
+// language, the optional picture, 409 conflict and generic errors, and the
+// redirect to /login.
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -78,7 +79,42 @@ describe('RegisterPage', () => {
     await act(() => i18n.changeLanguage('fr'));
     await user.click(screen.getByRole('button', { name: 'S’inscrire' }));
 
-    expect(registerRequest).toHaveBeenCalledWith(expect.anything(), 'fr');
+    expect(registerRequest).toHaveBeenCalledWith(expect.anything(), 'fr', null);
+  });
+
+  it('sends the picked picture with the account', async () => {
+    vi.mocked(registerRequest).mockResolvedValue(undefined);
+    const { user } = renderRegisterPage();
+    const picture = new File(['png'], 'me.png', { type: 'image/png' });
+    await fillValidForm(user);
+
+    await user.upload(screen.getByLabelText('Profile picture'), picture);
+    await user.click(screen.getByRole('button', { name: 'Register' }));
+
+    expect(registerRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      'en',
+      picture,
+    );
+  });
+
+  it('refuses to send with a picture that is not an image', async () => {
+    const { user } = renderRegisterPage({ status: 'anonymous', user: null });
+    await fillValidForm(user);
+
+    // applyAccept off: a browser lets "All files" through the accept filter.
+    await userEvent
+      .setup({ applyAccept: false })
+      .upload(
+        screen.getByLabelText('Profile picture'),
+        new File(['%PDF'], 'cv.pdf', { type: 'application/pdf' }),
+      );
+    await user.click(screen.getByRole('button', { name: 'Register' }));
+
+    expect(
+      screen.getByText('Choose a JPEG, PNG or WebP image'),
+    ).toBeInTheDocument();
+    expect(registerRequest).not.toHaveBeenCalled();
   });
 
   it('registers and redirects to /login with the "account created" notice', async () => {
@@ -98,6 +134,7 @@ describe('RegisterPage', () => {
         confirmPassword: 'correct horse',
       },
       'en',
+      null,
     );
     expect(
       await screen.findByText('login page - registered'),

@@ -2,7 +2,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../auth/auth-context';
 import type { User } from '../auth/auth-types';
-import { updateProfile, type ProfileChanges } from './users-actions';
+import {
+  removePicture,
+  updateProfile,
+  uploadPicture,
+  type ProfileChanges,
+} from './users-actions';
 
 /**
  * Saves changes to `user`'s profile and hands the saved profile to the auth
@@ -17,4 +22,25 @@ export function useUpdateProfile(user: User) {
     onSuccess: (saved) => updateUser(saved),
   });
   return mutateAsync;
+}
+
+/**
+ * The picture writes, `upload(file)` and `remove()`, each handing the saved
+ * profile to the auth context like {@link useUpdateProfile}.
+ */
+export function usePictureWrites(user: User) {
+  const { updateUser } = useAuth();
+  const upload = useMutation({
+    mutationFn: (file: File) => uploadPicture(user.id, file),
+    onSuccess: (saved) => updateUser(saved),
+  });
+  const remove = useMutation({
+    mutationFn: () => removePicture(user.id),
+    onSuccess: (saved) => updateUser(saved),
+  });
+  return {
+    upload: upload.mutateAsync,
+    remove: remove.mutateAsync,
+    isPending: upload.isPending || remove.isPending,
+  };
 }

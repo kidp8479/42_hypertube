@@ -91,24 +91,35 @@ export function logoutLocal(): void {
  * `language` is the UI language at submit time. Without it the account is
  * created as English, and the first login would flip a French visitor back
  * to English (the account language wins over the browser's).
+ *
+ * With a `picture`, the same fields go as a multipart form carrying the
+ * file; without one, as JSON.
  */
 export async function registerRequest(
   values: RegisterValues,
   language: SupportedLanguage,
+  picture: File | null = null,
 ): Promise<void> {
   // Send exactly what validateRegister checked - untrimmed values here would
   // let e.g. a 100-char name plus a stray space pass the client check
   // (which trims) and then fail the backend's @Length(1, 100) (which
   // doesn't), surfacing as a misleading generic error.
-  await apiFetch('/users', {
-    method: 'POST',
-    body: JSON.stringify({
-      email: values.email.trim(),
-      password: values.password,
-      username: values.username.trim(),
-      lastName: values.lastName.trim(),
-      firstName: values.firstName.trim(),
-      preferredLanguage: language,
-    }),
-  });
+  const fields = {
+    email: values.email.trim(),
+    password: values.password,
+    username: values.username.trim(),
+    lastName: values.lastName.trim(),
+    firstName: values.firstName.trim(),
+    preferredLanguage: language,
+  };
+  if (!picture) {
+    await apiFetch('/users', { method: 'POST', body: JSON.stringify(fields) });
+    return;
+  }
+  const form = new FormData();
+  for (const [name, value] of Object.entries(fields)) {
+    form.append(name, value);
+  }
+  form.append('picture', picture);
+  await apiFetch('/users', { method: 'POST', body: form });
 }

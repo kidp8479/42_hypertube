@@ -4,6 +4,7 @@ import { useAuth } from '../auth/auth-context';
 import { UserAvatar } from './users-avatar';
 import { CredentialsForm } from './users-credentials-form';
 import { InfoForm } from './users-info-form';
+import { PictureForm } from './users-picture-form';
 
 /**
  * The "my profile" page (subject III.1): every registration field is
@@ -33,6 +34,7 @@ export function ProfilePage() {
         </div>
       </div>
       <InfoForm user={user} />
+      <PictureForm user={user} />
       <CredentialsForm user={user} />
       <p className="m-0 text-muted">{t('profile.language')}</p>
     </div>

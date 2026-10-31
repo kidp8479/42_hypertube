@@ -10,14 +10,10 @@ export function infoValues(user: User): InfoValues {
     username: user.username,
     firstName: user.firstName,
     lastName: user.lastName,
-    profilePicture: user.profilePicture ?? '',
   };
 }
 
-/**
- * Only what differs from the saved profile, trimmed; an emptied picture is
- * sent as null, which removes it.
- */
+/** Only what differs from the saved profile, trimmed. */
 export function infoChanges(user: User, values: InfoValues): ProfileChanges {
   const changes: ProfileChanges = {};
   const saved = infoValues(user);
@@ -25,10 +21,6 @@ export function infoChanges(user: User, values: InfoValues): ProfileChanges {
     if (values[field].trim() !== saved[field]) {
       changes[field] = values[field].trim();
     }
-  }
-  const picture = values.profilePicture.trim();
-  if (picture !== saved.profilePicture) {
-    changes.profilePicture = picture === '' ? null : picture;
   }
   return changes;
 }

@@ -7,11 +7,21 @@ export const usersEn = {
   },
   info: {
     title: 'Information',
-    pictureHint: 'An https:// image address. Leave empty to show your initial.',
     submit: 'Save',
     submitting: 'Saving...',
     saved: 'Profile saved.',
     usernameTaken: 'This username is already taken.',
+  },
+  picture: {
+    title: 'Picture',
+    hint: 'JPEG, PNG or WebP, 2 MB at most. Without one, your initial is shown.',
+    upload: 'Upload',
+    uploading: 'Uploading...',
+    remove: 'Remove picture',
+    saved: 'Picture updated.',
+    removed: 'Picture removed.',
+    refused: 'This file is not a JPEG, PNG or WebP image.',
+    tooLarge: 'The picture is over 2 MB.',
   },
   credentials: {
     title: 'Email and password',
