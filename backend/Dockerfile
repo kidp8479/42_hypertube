@@ -13,6 +13,9 @@ RUN chown node:node /app
 # in the image (as it does here) lets Docker copy the right ownership into a
 # freshly-created named volume on first mount.
 RUN mkdir -p /app/dist && chown node:node /app/dist
+# Same reason for the uploaded profile pictures' volume (ADR-0016).
+RUN mkdir -p /var/lib/hypertube/pictures \
+  && chown -R node:node /var/lib/hypertube
 USER node
 COPY --chown=node:node package*.json ./
 # The stamp dev-start.sh compares against: a fresh node_modules volume is
@@ -36,6 +39,10 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
+
+# The pictures volume's mount point, owned by the user that writes into it.
+RUN mkdir -p /var/lib/hypertube/pictures \
+  && chown -R node:node /var/lib/hypertube
 
 # node:24-alpine already ships a non-root "node" user - use it instead of root
 USER node

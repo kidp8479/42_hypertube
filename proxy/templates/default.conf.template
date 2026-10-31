@@ -58,6 +58,9 @@ server {
     # location prefix itself, so the rewrite strips it (the query string is
     # kept).
     location /api/ {
+        # Room for a profile picture (the backend caps it at 2 MB, ADR-0016)
+        # plus the form fields; nginx's 1 MB default would refuse it first.
+        client_max_body_size 3m;
         rewrite ^/api/(.*)$ /$1 break;
         proxy_pass $backend;
         include /etc/nginx/snippets/proxy-headers.conf;
