@@ -21,7 +21,7 @@ library) that lets a video start playing while it's still downloading.
 - **Task runner**: [GNU Make](https://www.gnu.org/software/make/) wrapping the npm scripts
 - **Git hooks**: a versioned pre-commit hook (`.githooks/`, see `CONTRIBUTING.md`) blocks commits that aren't formatted/linted
 - **CI**: [GitHub Actions](https://github.com/features/actions) - lint/format/type-check/test/build on every push and PR, plus [Gitleaks](https://github.com/gitleaks/gitleaks) secret scanning and [Dependabot](https://docs.github.com/en/code-security/dependabot) for dependency updates
-- **Containers**: [Docker](https://www.docker.com) / [Podman](https://podman.io)-compatible `docker-compose.yml` (Postgres, backend, frontend). Currently `dev`-targeted only - a production target is tracked in `HYP-17`.
+- **Containers**: [Docker](https://www.docker.com) / [Podman](https://podman.io)-compatible compose files (Postgres, backend, frontend, edge proxy): a shared `docker-compose.yml`, the dev stack in `docker-compose.dev.yml` (`make up`), the prod build in `docker-compose.prod.yml` (`make up-prod`), see ADR-0013.
 - **Project management**: [Linear](https://linear.app) (issues), [Slack](https://slack.com) (communication), GitHub (code/PRs) - see `CONTRIBUTING.md`
 
 ## Prerequisites
@@ -39,7 +39,9 @@ Hypertube/
 ├── api/bruno/          # Bruno request collection (assertion-checked API calls, run in CI)
 ├── db/init/            # optional Postgres init scripts
 ├── docs/               # ADRs, defense packet, diagrams, design mockup, dependency-upgrade log
-├── docker-compose.yml  # db + backend + frontend (dev target)
+├── docker-compose.yml           # what dev and prod share (db, backend, frontend, proxy)
+├── docker-compose.dev.yml  # dev: dev targets, mounted source (make up)
+├── docker-compose.prod.yml      # prod: built backend, static SPA (make up-prod)
 └── .env.example        # required environment variables, copy to .env
 ```
 
@@ -74,7 +76,8 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make install` | Install root tooling (TypeScript LSP, Bruno CLI), backend + frontend dependencies, set up git hooks |
 | `make dev-backend` | Run the NestJS API in watch mode (no containers) |
 | `make dev-frontend` | Run the Vite dev server (no containers) |
-| `make up` | Compose up (db + backend + frontend), Docker or Podman |
+| `make up` | Compose up (db + backend + frontend), dev stack, Docker or Podman |
+| `make up-prod` | The prod stack: built backend, SPA as static files, no mounted source (ADR-0013) |
 | `make down` | Compose down |
 | `make ps` | Compose ps |
 | `make logs` | Compose logs -f |

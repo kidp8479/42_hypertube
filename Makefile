@@ -4,12 +4,20 @@
 
 # Auto-detect the compose CLI: prefer the Docker Compose v2 plugin, fall
 # back to podman-compose on machines that only have that (e.g. the school
-# Podman setup). Override explicitly if needed, e.g. `make COMPOSE=podman-compose up`.
-COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "podman-compose")
+# Podman setup). Override explicitly if needed, e.g. `make COMPOSE_CLI=podman-compose up`.
+COMPOSE_CLI := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "podman-compose")
+
+# The dev stack is the shared file plus the dev one, the prod stack the
+# shared file plus the prod one (HYP-17, ADR-0013). A personal, git-ignored
+# docker-compose.override.yml (a published port for a DB client...) is added
+# on top of either when present.
+OVERRIDE := $(if $(wildcard docker-compose.override.yml),-f docker-compose.override.yml)
+COMPOSE := $(COMPOSE_CLI) -f docker-compose.yml -f docker-compose.dev.yml $(OVERRIDE)
+COMPOSE_PROD := $(COMPOSE_CLI) -f docker-compose.yml -f docker-compose.prod.yml $(OVERRIDE)
 
 # The plain container CLI (for label-scoped cleanup that compose can't do
 # portably): `docker` when the Compose v2 plugin is present, `podman` otherwise.
-CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE))),docker,podman)
+CONTAINER := $(if $(filter docker,$(firstword $(COMPOSE_CLI))),docker,podman)
 
 # Host port of the edge proxy (HYP-71): the one way into the stack. Read from
 # .env like compose does, 8443 when unset.
@@ -22,7 +30,7 @@ PROJECT := $(notdir $(CURDIR))
 .PHONY: help \
         install install-tooling install-backend install-frontend hooks-install \
         dev-backend dev-frontend \
-        up down ps re \
+        up up-prod down ps re \
         logs logs-backend logs-frontend logs-db \
         sh-backend sh-frontend psql be fe \
         migration-generate migration-run migration-revert migration-show \
@@ -46,8 +54,9 @@ help:
 	@echo "  dev-frontend    - frontend dev server (no DB needed)"
 	@echo ""
 	@echo "Container stack"
-	@echo "  up              - compose up -d (db + backend + frontend)"
-	@echo "  down            - compose down"
+	@echo "  up              - compose up -d (db + backend + frontend), dev stack"
+	@echo "  up-prod         - the prod stack: built backend and SPA, no mounted source"
+	@echo "  down            - compose down (either stack)"
 	@echo "  ps              - compose ps"
 	@echo "  re              - fclean then up (full reset)"
 	@echo "  logs[-backend|-frontend|-db]  - follow logs (all services, or one)"
@@ -120,6 +129,11 @@ up:
 	$(COMPOSE) up -d
 	@echo "App: https://localhost:$(HTTPS_PORT) (self-signed certificate)"
 
+# Same project, so it replaces the dev containers; `make up` switches back.
+up-prod:
+	$(COMPOSE_PROD) up -d --build
+	@echo "App (prod build): https://localhost:$(HTTPS_PORT) (self-signed certificate)"
+
 down:
 	$(COMPOSE) down
 
@@ -182,6 +196,10 @@ clean:
 # so the next `up` doesn't re-download them.
 fclean:
 	$(COMPOSE) down --volumes --remove-orphans --rmi local
+	@# The backend and frontend images carry a name per target (ADR-0013),
+	@# which `--rmi local` skips: removed by name, the missing ones ignored.
+	-@$(CONTAINER) rmi hypertube-backend:dev hypertube-frontend:dev \
+	  hypertube-backend:prod hypertube-frontend:prod >/dev/null 2>&1
 
 # Reset just the database. `down` (no --volumes) removes every container but
 # keeps all named volumes, so we then drop only db_data by name (portable:

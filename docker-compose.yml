@@ -1,7 +1,8 @@
-# NOTE: this compose file targets `dev` (hot-reload, bind-mounted source)
-# for all services. A prod-targeted variant (or override file, see
-# Transcendence's ops/compose/dev.yml pattern) is still needed before
-# submission/defense - see HYP-17.
+# What the dev and prod stacks share (HYP-17, ADR-0013). Never used alone:
+#   dev  = this file + docker-compose.dev.yml   (`make up`)
+#   prod = this file + docker-compose.prod.yml  (`make up-prod`)
+# The dev file adds the dev build targets, the bind-mounted source and the
+# node_modules volumes; the prod file builds the prod stages instead.
 services:
   db:
     image: docker.io/library/postgres:16-alpine
@@ -23,7 +24,6 @@ services:
   backend:
     build:
       context: ./backend
-      target: dev
     environment:
       DATABASE_HOST: db
       DATABASE_PORT: 5432
@@ -41,19 +41,6 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
       GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
       THROTTLE_LIMIT_MULTIPLIER: ${THROTTLE_LIMIT_MULTIPLIER:-1}
-    volumes:
-      - ./backend:/app
-      # Everything the container writes lives in named volumes, never on the
-      # bind-mounted source. Compose runtimes disagree on bind-mount
-      # ownership: Docker maps the container "node" user (UID 1000) to the
-      # host user, but rootless Podman (school) maps the host user to
-      # container root, leaving "node" unable to write into /app. Named
-      # volumes are chowned to the image user by both, so tsc/nest can
-      # always write dist/ and its .tsbuildinfo. (nest-cli.json keeps
-      # deleteOutDir:false because /app/dist is a mount point here and
-      # can't be rmdir'd - the prod build stage has a plain dir.)
-      - backend_node_modules:/app/node_modules
-      - backend_dist:/app/dist
     depends_on:
       db:
         condition: service_healthy
@@ -62,14 +49,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: dev
-    environment:
-      # The Vite dev proxy runs inside this container, where the backend is
-      # the `backend` service, not localhost (that default is for host dev).
-      VITE_API_PROXY_TARGET: http://backend:3000
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
     depends_on:
       - backend
     restart: unless-stopped
@@ -88,6 +67,9 @@ services:
       # 0 = no HSTS. Set it only for a real deployment: HSTS is per host name,
       # so on localhost it would force HTTPS onto every other local port.
       PROXY_HSTS_MAX_AGE: ${PROXY_HSTS_MAX_AGE:-0}
+      # Where the SPA is served from: nginx with the built files (prod), which
+      # the dev file switches to the Vite dev server.
+      PROXY_FRONTEND_UPSTREAM: frontend:80
     ports:
       - "127.0.0.1:${HYPERTUBE_HTTP_PORT:-8080}:8080"
       - "127.0.0.1:${HYPERTUBE_HTTPS_PORT:-8443}:8443"
@@ -103,6 +85,3 @@ services:
 volumes:
   db_data:
   proxy_certs:
-  backend_node_modules:
-  backend_dist:
-  frontend_node_modules:
