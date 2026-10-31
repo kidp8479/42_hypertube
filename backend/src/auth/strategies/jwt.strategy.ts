@@ -3,10 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { AuthUser } from '../../common/decorators/current-user.decorator';
 
-/** Shape of our signed token payload (see {@link AuthService.login}). */
-interface JwtPayload {
+/**
+ * Shape of our signed token payload (see {@link AuthService.login}). `cid`
+ * is the API client a token was issued to, absent on a login token.
+ */
+export interface JwtPayload {
   sub: number;
+  cid?: number;
 }
 
 /**
@@ -25,7 +30,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): { id: number } {
-    return { id: payload.sub };
+  validate(payload: JwtPayload): AuthUser {
+    return payload.cid === undefined
+      ? { id: payload.sub }
+      : { id: payload.sub, apiClientId: payload.cid };
   }
 }

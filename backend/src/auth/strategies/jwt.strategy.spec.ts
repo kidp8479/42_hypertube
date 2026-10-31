@@ -10,4 +10,11 @@ describe('JwtStrategy', () => {
   it('maps a verified payload to a minimal req.user', () => {
     expect(strategy.validate({ sub: 7 })).toEqual({ id: 7 });
   });
+
+  it('keeps the API client a token was issued to', () => {
+    expect(strategy.validate({ sub: 7, cid: 3 })).toEqual({
+      id: 7,
+      apiClientId: 3,
+    });
+  });
 });

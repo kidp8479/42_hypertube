@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
+import { ApiClientsModule } from './api-clients/api-clients.module';
 import { AuthModule } from './auth/auth.module';
 import { envValidationSchema } from './config/env.validation';
 import { DEFAULT_THROTTLE } from './config/throttle.config';
@@ -45,6 +46,7 @@ import { databaseOptions } from './database/database.config';
     // backend instance - not needed for a single-instance deploy.
     ThrottlerModule.forRoot([{ name: 'default', ...DEFAULT_THROTTLE }]),
     UsersModule,
+    ApiClientsModule,
     AuthModule,
   ],
   controllers: [AppController],
