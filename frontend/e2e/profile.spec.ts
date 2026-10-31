@@ -35,3 +35,30 @@ test("another user's profile shows the username, never the email", async ({
   await expect(page.getByText(other.email)).toHaveCount(0);
   expect(issues).toEqual([]);
 });
+
+test('an API key made on the profile buys a token, then is revoked', async ({
+  page,
+}) => {
+  const issues = trackConsoleIssues(page);
+  await signUpAndSignIn(page);
+  await page.getByRole('link', { name: 'My profile' }).click();
+
+  await page.getByLabel('Key name').fill('e2e script');
+  await page.getByRole('button', { name: 'Create a key' }).click();
+  const secretBox = page.getByRole('region', { name: 'Copy the secret now' });
+  await expect(secretBox).toBeVisible();
+  const [client, secret] = await secretBox.locator('dd').allInnerTexts();
+
+  // What the box says to do with it: the subject's POST /oauth/token.
+  const token = await page.request.post('/api/oauth/token', {
+    data: { client, secret },
+  });
+  expect(token.status()).toBe(200);
+
+  await page.getByRole('button', { name: 'Done, I copied it' }).click();
+  await expect(page.getByText(secret)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Revoke the key e2e script' }).click();
+  await expect(page.getByText('Key revoked.')).toBeVisible();
+  await expect(page.getByText('No API key yet.')).toBeVisible();
+  expect(issues).toEqual([]);
+});

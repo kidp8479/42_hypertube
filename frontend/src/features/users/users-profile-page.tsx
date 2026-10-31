@@ -1,5 +1,6 @@
 // Protected /profile route: the signed-in user edits their own account.
 import { useTranslation } from 'react-i18next';
+import { ApiKeysSection } from '../api-keys/api-keys-section';
 import { useAuth } from '../auth/auth-context';
 import { UserAvatar } from './users-avatar';
 import { CredentialsForm } from './users-credentials-form';
@@ -36,6 +37,7 @@ export function ProfilePage() {
       <InfoForm user={user} />
       <PictureForm user={user} />
       <CredentialsForm user={user} />
+      <ApiKeysSection />
       <p className="m-0 text-muted">{t('profile.language')}</p>
     </div>
   );

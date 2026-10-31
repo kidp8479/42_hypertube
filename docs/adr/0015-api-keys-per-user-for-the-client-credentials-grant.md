@@ -55,6 +55,7 @@ table, `backend/src/api-clients/`):
   password change ends the browser sessions only (HYP-84).
 - **No refresh token for a client.** It asks again with its secret.
   `POST /oauth/token` has its own rate limit (`OAUTH_TOKEN_THROTTLE`).
-- **There is no UI yet to create a key.** An evaluator logs in through
-  Swagger (`/api-docs`), calls `POST /api-clients`, then `POST /oauth/token`.
+- **Keys are managed on `/profile`** (HYP-123): create one, see its secret
+  once, revoke it. Swagger (`/api-docs`) does the same through
+  `POST /api-clients`, then `POST /oauth/token`.
   The Bruno collection (requests 46 to 56) follows the same path.
