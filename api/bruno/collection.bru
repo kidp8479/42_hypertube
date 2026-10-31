@@ -11,9 +11,10 @@ docs {
   tolerance for a rotated token: a run takes about 20 s. Requests 35 to 44
   change that user's password and email (HYP-84), 46 to 56 give them an API
   key and buy a token with it (POST /oauth/token, ADR-0015), 57 to 62 upload,
-  serve and remove profile pictures (fixtures/, ADR-0016).
+  serve and remove profile pictures (fixtures/, ADR-0016), 63 and 64 refuse
+  weak passwords (ADR-0017).
 
-  Rate limits: POST /users is capped at 10 per hour per IP and a run uses 7.
+  Rate limits: POST /users is capped at 10 per hour per IP and a run uses 8.
   The dev stack multiplies every limit by THROTTLE_LIMIT_MULTIPLIER (set in
   .env, see .env.example) so repeated runs don't hit 429. With the default of
   1, wait or restart the backend after 2 runs.
