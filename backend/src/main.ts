@@ -7,6 +7,7 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 import { QueryFailedFilter } from './common/filters/query-failed.filter';
 import { globalValidationPipe } from './common/pipes/global-validation.pipe';
 import { noStoreResponses } from './config/no-store.config';
+import { securityHeaders } from './config/security-headers.config';
 import { trustEdgeProxy } from './config/trust-proxy.config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -21,6 +22,9 @@ async function bootstrap() {
 
   // Behind the edge proxy: real client IP for the rate limiter, req.secure.
   trustEdgeProxy(app);
+
+  // helmet: CSP and the other browser hardening headers (ADR-0014).
+  securityHeaders(app);
 
   // Per-user data: the browser must refetch it, never replay a stored copy.
   noStoreResponses(app);
