@@ -1,5 +1,6 @@
 // Wires the login flow together: JwtStrategy (bearer tokens), the 42 and
-// GitHub OAuth strategies, AuthService, OAuthExchangeService, AuthController.
+// GitHub OAuth strategies, AuthService, OAuthExchangeService, AuthController,
+// and the client-credentials grant (OAuthTokenService, OAuthTokenController).
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
@@ -9,6 +10,9 @@ import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { ApiClientsModule } from '../api-clients/api-clients.module';
+import { OAuthTokenService } from './oauth-token.service';
+import { OAuthTokenController } from './oauth-token.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
@@ -28,10 +32,15 @@ import { GithubStrategy } from './strategies/github.strategy';
  * Passport strategy ({@link FortyTwoStrategy}, {@link GithubStrategy})
  * plus a pair of routes on {@link AuthController}, sharing this module's
  * `OAuthAccount` repository via {@link AuthService.resolveOAuthUser}.
+ *
+ * And the OAuth2 client-credentials grant, `POST /oauth/token`
+ * ({@link OAuthTokenController}): an API key from {@link ApiClientsModule}
+ * for a token (ADR-0015).
  */
 @Module({
   imports: [
     UsersModule,
+    ApiClientsModule,
     RefreshTokenModule,
     TypeOrmModule.forFeature([OAuthAccount]),
     PassportModule,
@@ -48,10 +57,11 @@ import { GithubStrategy } from './strategies/github.strategy';
   providers: [
     AuthService,
     OAuthExchangeService,
+    OAuthTokenService,
     JwtStrategy,
     FortyTwoStrategy,
     GithubStrategy,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, OAuthTokenController],
 })
 export class AuthModule {}
