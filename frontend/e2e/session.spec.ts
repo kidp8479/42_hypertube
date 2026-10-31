@@ -4,7 +4,7 @@
 // signed-out visit stays silent in the console.
 // Each test registers its own account through the API, like auth.spec.ts.
 import { test, expect } from '@playwright/test';
-import { trackConsoleIssues } from './console-issues';
+import { fontsLoaded, trackConsoleIssues } from './console-issues';
 import { signUpAndSignIn } from './sign-up';
 
 test.describe('session lifetime', () => {
@@ -34,6 +34,7 @@ test.describe('session lifetime', () => {
     const consoleIssues = trackConsoleIssues(page);
     const username = await signUpAndSignIn(page);
 
+    await fontsLoaded(page);
     await page.reload();
 
     await expect(page).toHaveURL(/\/$/);
@@ -64,6 +65,7 @@ test.describe('session lifetime', () => {
       }
     });
 
+    await fontsLoaded(page);
     await page.reload();
 
     await expect(page.getByRole('main').getByText(username)).toBeVisible();
@@ -81,6 +83,7 @@ test.describe('session lifetime', () => {
     await expect(page).toHaveURL(/\/login$/);
     expect((await loggedOut).status()).toBe(204);
 
+    await fontsLoaded(page);
     await page.goto('/');
 
     await expect(page).toHaveURL(/\/login$/);
