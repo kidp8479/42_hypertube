@@ -7,7 +7,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { IsNull } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RefreshTokenService } from './refresh-token.service';
-import { hashRefreshSecret } from './refresh-secret.util';
+import { hashSecret } from '../common/utils/random-secret.util';
 
 type RepoMock = {
   findOneBy: jest.Mock;
@@ -26,7 +26,7 @@ const buildRow = (overrides: Partial<RefreshToken> = {}): RefreshToken =>
     id: 1,
     userId: 7,
     familyId: 'family-1',
-    tokenHash: hashRefreshSecret('the-secret'),
+    tokenHash: hashSecret('the-secret'),
     expiresAt: new Date(NOW.getTime() + 7 * DAY),
     familyStartedAt: new Date(NOW.getTime() - DAY),
     rotatedAt: null,
@@ -70,7 +70,7 @@ describe('RefreshTokenService', () => {
       const issued = await service.issue(7);
 
       const saved = firstSaved(repo);
-      expect(saved.tokenHash).toBe(hashRefreshSecret(issued.secret));
+      expect(saved.tokenHash).toBe(hashSecret(issued.secret));
       expect(JSON.stringify(saved)).not.toContain(issued.secret);
       expect(saved.userId).toBe(7);
       expect(saved.familyStartedAt).toEqual(NOW);
@@ -91,7 +91,7 @@ describe('RefreshTokenService', () => {
       const saved = firstSaved(repo);
       expect(saved.familyId).toBe('family-1');
       expect(saved.familyStartedAt).toEqual(buildRow().familyStartedAt);
-      expect(saved.tokenHash).toBe(hashRefreshSecret(next.secret));
+      expect(saved.tokenHash).toBe(hashSecret(next.secret));
       expect(next.userId).toBe(7);
       expect(next.secret).not.toBe('the-secret');
     });
@@ -235,7 +235,7 @@ describe('RefreshTokenService', () => {
       expect(repo.update.mock.invocationCallOrder[0]).toBeLessThan(
         repo.save.mock.invocationCallOrder[0],
       );
-      expect(firstSaved(repo).tokenHash).toBe(hashRefreshSecret(issued.secret));
+      expect(firstSaved(repo).tokenHash).toBe(hashSecret(issued.secret));
       expect(firstSaved(repo).revokedAt ?? null).toBeNull();
     });
   });
