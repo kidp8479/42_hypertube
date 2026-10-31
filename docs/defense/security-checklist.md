@@ -54,10 +54,9 @@ future query loads it anyway.
 | Typed DTOs with `class-validator` constraints | `users/dto/create-user.dto.ts`, `users/dto/update-user.dto.ts`, `auth/dto/login.dto.ts` | DTO specs |
 | Email normalised + validated; length-capped | `@NormalizeEmail()` + `@IsEmail()` + `@MaxLength(255)` | `common/decorators/normalize-email.decorator.spec.ts` |
 | Strings trimmed at the edge | `@Trim()` on `username` | `common/decorators/trim.decorator.spec.ts` |
-| Registration password length 8-100; login password only size-capped (no policy hint to an attacker, accepts any legacy value) | `create-user.dto.ts` vs `login.dto.ts` | DTO specs |
+| Registration password length 8-100 and a strength check (zxcvbn-ts score >= 3, French lexicon, the account's own data; 422 with a generic message); login password only size-capped (no policy hint to an attacker, accepts any legacy value) | `create-user.dto.ts`, `password-strength.service.ts` (ADR-0017) vs `login.dto.ts` | DTO specs, `password-strength.service.spec.ts`, Bruno 63-64 |
 | `PATCH /users/:id` changes the email or the password only with `currentPassword` (400 missing, 403 wrong), never on an account without a password (400, reset flow); a new password is hashed with argon2id; a new email is unverified; `profilePicture` is refused there (a file, sent to its own route) | `users.service.ts` `update()`, `dto/update-user.dto.ts` | `users.service.spec.ts`, `users.controller.update.spec.ts`, Bruno 37-39, 43 |
 | File-upload validation: type from the first bytes (JPEG, PNG, WebP; no SVG), 2 MB cap in memory before any write, random stored name, served only by a name matching that pattern; client-side type and size check first | `users/profile-picture.store.ts`, `PICTURE_UPLOAD_LIMITS`, `auth-picture-field.tsx` (ADR-0016) | `profile-picture.store.spec.ts`, `profile-picture.controller.spec.ts`, Bruno 57-62, `e2e/auth.spec.ts` |
-| Password strength meter (zxcvbn or blocklist) | not built | **gap - HYP-37** |
 
 Never trust a client-supplied id or role for an authorization decision:
 the id checked for ownership comes from the verified token
@@ -167,7 +166,7 @@ store is only needed once more than one backend instance runs (noted in
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | An email change is not verified | HYP-39 | low - it takes `currentPassword`, and the new email stays unverified, so the provider owner of that address claims the account |
 | An uploaded picture keeps its EXIF metadata (not re-encoded) | ADR-0016, `known-limitations.md` | low - the owner's own photo, readable by those who see it |
-| Password strength check not built | HYP-37 | low |
+| Passwords set before the strength check (HYP-37) are not re-checked until they change | ADR-0017 | low |
 
 ## Notes
 

@@ -19,7 +19,7 @@ The backend legs are also drawn as one poster in
 
 ```mermaid
 flowchart TD
-    reg["SPA - register page"] --> postUsers["API - POST /users<br/>argon2id hash, optional picture"]
+    reg["SPA - register page"] --> postUsers["API - POST /users<br/>strength check, argon2id hash,<br/>optional picture"]
     postUsers -- "201, then log in" --> login["SPA - login page"]
     login --> postLogin["API - POST /auth/login"]
 
@@ -96,6 +96,7 @@ flowchart TD
     B -- yes --> D["POST /users<br/>JSON, or multipart with the picture"]
     D --> E{Response}
     E -- "409 duplicate" --> F["Generic conflict message<br/>no field named"]
+    E -- "422 weak password" --> W["'Too easy to guess' message<br/>(HYP-37, ADR-0017)"]
     E -- "201 created" --> G["Redirect to /login<br/>('account created' notice)"]
     G --> H["User logs in"]
     H --> I["POST /auth/login"]
@@ -340,7 +341,9 @@ flowchart TD
     P -- yes --> Q{"currentPassword?"}
     Q -- missing --> X400["400"]
     Q -- wrong --> X403b["403"]
-    Q -- right --> H["hash a new password,<br/>mark a new email unverified"]
+    Q -- right --> K{"new password<br/>strong enough?"}
+    K -- no --> X422["422, nothing saved"]
+    K -- "yes, or no new password" --> H["hash a new password,<br/>mark a new email unverified"]
     H --> S2{"save: email taken?"}
     S2 -- yes --> X409["409, nothing revoked"]
     S2 -- no --> V["revoke every refresh-token family,<br/>issue a new one for the caller"]
