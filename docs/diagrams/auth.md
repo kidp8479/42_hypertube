@@ -432,3 +432,20 @@ sequenceDiagram
 
 A revoked key buys no new token (401); one already bought lives out its 15
 minutes.
+
+### The "API keys" section of `/profile` (HYP-123)
+
+The page side of the same routes. The secret lives in the creation
+mutation's answer only, never in the list's cache, and leaves the page when
+its box closes.
+
+```mermaid
+flowchart TD
+    L["GET /api-clients<br/>list: name, clientId, date"] --> F["create form<br/>name, 1 to 50 chars"]
+    F -- "POST /api-clients" --> R{"answer"}
+    R -- "201" --> B["secret box: client + secret,<br/>copy button, shown once"]
+    R -- "409" --> M["5 keys already: revoke one first"]
+    B -- "Done, I copied it" --> F
+    R -- "201" --> I["list refetched"]
+    L -- "Revoke" --> D["DELETE /api-clients/:id"] --> I
+```
