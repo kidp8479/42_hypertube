@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
-import { authCookiePath, isSecureRequest, readCookie } from './cookie.util';
+import {
+  authCookiePath,
+  isSecureRequest,
+  readCookie,
+} from '../common/utils/cookie.util';
 import type { IssuedRefreshToken } from './refresh-token.service';
 
 /** Name of the cookie that carries the refresh token. */

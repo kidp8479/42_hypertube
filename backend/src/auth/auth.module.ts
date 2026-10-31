@@ -3,7 +3,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
-import { RefreshTokenModule } from './refresh-token.module';
+import { RefreshTokenModule } from '../sessions/refresh-token.module';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';

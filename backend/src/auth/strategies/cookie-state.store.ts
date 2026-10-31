@@ -1,7 +1,11 @@
 // Cookie-bound OAuth `state` store, against login CSRF on 42 and GitHub.
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Request, Response } from 'express';
-import { authCookiePath, isSecureRequest, readCookie } from '../cookie.util';
+import {
+  authCookiePath,
+  isSecureRequest,
+  readCookie,
+} from '../../common/utils/cookie.util';
 
 /** Name of the nonce cookie, exported so the specs set the same one. */
 export const OAUTH_STATE_COOKIE = 'oauth_state';

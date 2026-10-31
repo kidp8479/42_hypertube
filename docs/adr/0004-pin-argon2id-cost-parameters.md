@@ -4,7 +4,7 @@
 
 ADR-0001 left the argon2id cost to the `argon2` library defaults, with a
 note to record concrete values if we ever tuned them. We now set them
-explicitly in one place (`backend/src/auth/argon2.config.ts`,
+explicitly in one place (`backend/src/config/argon2.config.ts`,
 `ARGON2_OPTIONS`), applied to every `argon2.hash` call.
 
 ```

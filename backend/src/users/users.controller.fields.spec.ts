@@ -14,7 +14,7 @@ import { PreferredLanguage, User } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { PublicUserDto } from './dto/public-user.dto';
-import { RefreshTokenService } from '../auth/refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 // Every request in this suite comes from user 7.
 const stubAuthGuard = {

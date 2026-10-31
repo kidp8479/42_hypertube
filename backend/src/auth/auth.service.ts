@@ -11,14 +11,14 @@ import * as argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entities/user.entity';
-import { ARGON2_OPTIONS } from './argon2.config';
+import { ARGON2_OPTIONS } from '../config/argon2.config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { isUniqueViolation } from '../common/utils/unique-violation.util';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 /**
  * Credential verification and token issuance for the login flow, plus the

@@ -10,7 +10,7 @@ from the docs.
 
 | Point | Status | Evidence |
 |---|---|---|
-| Passwords hashed with argon2id | OK | `auth/argon2.config.ts`; the hash never leaves the server (`@Exclude` on `User.password`, global `ClassSerializerInterceptor`) |
+| Passwords hashed with argon2id | OK | `config/argon2.config.ts`; the hash never leaves the server (`@Exclude` on `User.password`, global `ClassSerializerInterceptor`) |
 | Sensitive tokens: CSPRNG, single use, short life, hashed at rest | OK | Refresh: 256 random bits, SHA-256 hash stored, rotated on every use, family revoked on reuse after 10 s, 30-day absolute cap (`refresh-token.service.ts`). Exchange code: 256 bits, single use, 60 s, in memory (`oauth-exchange.service.ts`). OAuth state: random nonce in a cookie, compared in constant time, cleared after use (`cookie-state.store.ts`) |
 | No secret or token in the logs | OK | One `Logger`, in `oauth-callback.filter.ts` (message or error, no token); nginx logs no query string (HYP-73) |
 | Authentication and ownership on every mutating route | OK | `JwtAuthGuard` global (`APP_GUARD`), `@Public()` opt-out only; `PATCH` / `DELETE /users/:id` answer 403 unless `:id` is the caller |

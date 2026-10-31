@@ -14,7 +14,7 @@ import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { User } from './entities/user.entity';
 import { UsernameAllocator } from './username-allocator.service';
 import * as argon2 from 'argon2';
-import { ARGON2_OPTIONS } from '../auth/argon2.config';
+import { ARGON2_OPTIONS } from '../config/argon2.config';
 
 /** What a profile update did: the saved row, and whether the email or the password changed. */
 interface ProfileUpdate {

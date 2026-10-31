@@ -12,7 +12,7 @@ import { App } from 'supertest/types';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';

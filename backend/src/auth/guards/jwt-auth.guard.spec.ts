@@ -9,7 +9,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtStrategy } from '../strategies/jwt.strategy';
-import { Public } from '../decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 describe('JwtAuthGuard', () => {
   describe('wired globally over HTTP', () => {

@@ -5,7 +5,7 @@ import { UsersService } from './users.service';
 import { UsernameAllocator } from './username-allocator.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
-import { RefreshTokenModule } from '../auth/refresh-token.module';
+import { RefreshTokenModule } from '../sessions/refresh-token.module';
 
 /**
  * The users resource: `/users` routes and account data access. Exports

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
-import { Public } from '../auth/decorators/public.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 import {
   PROFILE_EDIT_THROTTLE,
@@ -21,13 +21,13 @@ import {
 import {
   CurrentUser,
   type AuthUser,
-} from '../auth/decorators/current-user.decorator';
+} from '../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserSummaryDto } from './dto/user-summary.dto';
-import { RefreshTokenService } from '../auth/refresh-token.service';
-import { setRefreshCookie } from '../auth/refresh-cookie.util';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
+import { setRefreshCookie } from '../sessions/refresh-cookie.util';
 
 /**
  * Account CRUD (`/users`). Registration is public; every mutating route on

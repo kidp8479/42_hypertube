@@ -10,7 +10,7 @@ import { trustEdgeProxy } from '../config/trust-proxy.config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
-import { RefreshTokenService } from './refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 // The @Throttle limit on POST /auth/login only takes effect over HTTP
 // through ThrottlerGuard, so this drives a real request pipeline with a

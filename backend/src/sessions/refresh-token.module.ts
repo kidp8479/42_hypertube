@@ -1,5 +1,6 @@
-// The refresh-token store on its own, so the users module can end sessions
-// without importing AuthModule (which imports UsersModule).
+// The session store (refresh tokens) in its own folder, below both users and
+// auth: users ends sessions after a credential change without depending on
+// auth, which itself depends on users.
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';

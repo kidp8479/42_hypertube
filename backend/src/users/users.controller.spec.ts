@@ -3,10 +3,10 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Request } from 'express';
-import { AuthUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../common/decorators/current-user.decorator';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { RefreshTokenService } from '../auth/refresh-token.service';
+import { RefreshTokenService } from '../sessions/refresh-token.service';
 
 // Mirrors the methods stubbed in the test module below, so a new test can
 // reach for any of them with types intact.
