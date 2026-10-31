@@ -29,6 +29,7 @@ tests {
     expect(res.body.security).to.deep.equal([{ bearer: [] }]);
     expect(res.body.paths["/users/me"].get.security).to.equal(undefined);
     expect(res.body.paths["/auth/login"].post.security).to.deep.equal([{}]);
+    expect(res.body.paths["/oauth/token"].post.security).to.deep.equal([{}]);
   });
 
   test("the error codes are listed", function () {

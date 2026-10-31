@@ -1,0 +1,25 @@
+meta {
+  name: 54 OAuth: the token cannot create an API key (403)
+  type: http
+  seq: 54
+}
+
+post {
+  url: {{baseUrl}}/api-clients
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{clientToken}}
+}
+
+body:json {
+  {
+    "name": "minted"
+  }
+}
+
+assert {
+  res.status: eq 403
+}

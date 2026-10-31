@@ -1,0 +1,29 @@
+meta {
+  name: 49 OAuth: client + secret buy a token
+  type: http
+  seq: 49
+}
+
+post {
+  url: {{baseUrl}}/oauth/token
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "client": "{{apiClient}}",
+    "secret": "{{apiSecret}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("clientToken", res.body.access_token);
+}
+
+assert {
+  res.status: eq 200
+  res.body.access_token: isString
+  res.body.token_type: eq Bearer
+  res.body.expires_in: isNumber
+}

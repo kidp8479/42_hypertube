@@ -1,0 +1,25 @@
+meta {
+  name: 53 OAuth: the token cannot edit another user (403)
+  type: http
+  seq: 53
+}
+
+patch {
+  url: {{baseUrl}}/users/{{otherId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{clientToken}}
+}
+
+body:json {
+  {
+    "firstName": "Mallory"
+  }
+}
+
+assert {
+  res.status: eq 403
+}

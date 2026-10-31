@@ -1,0 +1,39 @@
+meta {
+  name: 47 API keys: create one (secret shown once)
+  type: http
+  seq: 47
+}
+
+post {
+  url: {{baseUrl}}/api-clients
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{keyToken}}
+}
+
+body:json {
+  {
+    "name": "bruno"
+  }
+}
+
+script:post-response {
+  bru.setVar("apiKeyId", res.body.id);
+  bru.setVar("apiClient", res.body.clientId);
+  bru.setVar("apiSecret", res.body.secret);
+}
+
+assert {
+  res.status: eq 201
+  res.body.secret: isString
+  res.body.clientId: isString
+}
+
+tests {
+  test("never sends the hash", function () {
+    expect(res.body).to.not.have.property("secretHash");
+  });
+}
