@@ -12,7 +12,7 @@ services:
       # THROTTLE_LIMIT_MULTIPLIER other than 1, so the real limits are pinned
       # here whatever a dev .env raised them to.
       NODE_ENV: production
-      THROTTLE_LIMIT_MULTIPLIER: 1
+      THROTTLE_LIMIT_MULTIPLIER: '1'
 
   frontend:
     image: hypertube-frontend:prod
