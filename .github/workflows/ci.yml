@@ -151,6 +151,20 @@ jobs:
       # them so a Dockerfile change that breaks only prod fails here.
       - name: Build the prod images
         run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend frontend
+      # The SPA's CSP is sent by the prod frontend only (ADR-0014), which the
+      # suites above never load: check the built image sends it, on a file and
+      # on a client route served by the index.html fallback.
+      - name: Check the prod SPA sends its Content-Security-Policy
+        run: |
+          docker run -d --rm --name spa-csp -p 127.0.0.1:8099:80 hypertube-frontend:prod
+          trap 'docker stop spa-csp >/dev/null' EXIT
+          for i in $(seq 1 15); do curl -sf -o /dev/null http://127.0.0.1:8099/ && break; sleep 1; done
+          for path in / /movies/42; do
+            csp=$(curl -sfI "http://127.0.0.1:8099$path" | grep -i '^content-security-policy:' || true)
+            echo "$path -> $csp"
+            echo "$csp" | grep -q "script-src 'self';" || exit 1
+            echo "$csp" | grep -q "frame-ancestors 'none'" || exit 1
+          done
       - name: Tear down the stack
         if: always()
         run: docker compose down -v

@@ -43,8 +43,8 @@ future query loads it anyway.
 |---|---|---|
 | Backend returns JSON only, no server-rendered HTML | all controllers | done |
 | React escapes interpolated values by default; no `dangerouslySetInnerHTML` in the tree | `frontend/src/` | done |
-| Content-Security-Policy response header | not set yet | **gap - HYP-49** |
-| Helmet (security response headers) | not wired | **gap - HYP-49** |
+| Content-Security-Policy response header | SPA: `frontend/nginx.conf` (prod build); API and `/api-docs`: helmet. ADR-0014 | done (the dev stack's SPA has none) |
+| Helmet (security response headers) | `config/security-headers.config.ts` (`security-headers.config.spec.ts`) | done |
 
 ## 4. Input validation
 
@@ -144,7 +144,7 @@ store is only needed once more than one backend instance runs (noted in
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
 | gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
-| TLS terminated at the edge proxy (self-signed in dev, a mounted certificate elsewhere); HTTP redirects to HTTPS; `nosniff` and frame options at the edge; HSTS only when `PROXY_HSTS_MAX_AGE` is set. CSP and helmet remain open (HYP-49) | `proxy/`, ADR-0009 |
+| TLS terminated at the edge proxy (self-signed in dev, a mounted certificate elsewhere); HTTP redirects to HTTPS; `nosniff` and frame options at the edge; HSTS only when `PROXY_HSTS_MAX_AGE` is set. helmet and the CSP on the backend and the SPA server, one owner per header | `proxy/`, ADR-0009, ADR-0014 |
 | Edge proxy hardening from the web-security-review of HYP-71 (HYP-73): the HTTP redirect goes to a configured name, not the Host header; the access log keeps no query string or Referer (OAuth codes); `X-Forwarded-For` is set in every location | `proxy/templates/default.conf.template`, `proxy/snippets/`, ADR-0009 |
 | CORS locked to a single configured origin (no `*`, no credentialed requests: the JWT is a bearer header) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
 | Every backend response is `Cache-Control: no-store`: per-user data is never replayed from the browser cache (a stale profile after a reload) nor left on disk after logout | `config/no-store.config.ts` (`no-store.config.spec.ts`, Bruno 09) |
@@ -161,7 +161,6 @@ store is only needed once more than one backend instance runs (noted in
 |---|---|---|
 | Register leaks account existence via `409` vs `201` status code | HYP-50 | medium - throttled, but real |
 | Login is throttled per IP only, while usernames (the login key since HYP-91) are listed to every signed-in user | HYP-94 | medium - password spraying from many IPs |
-| No CSP / Helmet response headers | HYP-49 (HYP-28 is an older duplicate) | medium |
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | An email change is not verified | HYP-39 | low - it takes `currentPassword`, and the new email stays unverified, so the provider owner of that address claims the account |
 | Upload validation not built | HYP-38 | n/a until uploads exist |

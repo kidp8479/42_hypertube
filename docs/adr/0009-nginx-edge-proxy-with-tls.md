@@ -18,8 +18,8 @@ the Vite dev proxy) and `/api-docs` to the backend.
   an origin in every environment (no CORS in practice), which is what the Vite
   proxy already imitated in dev.
 - **A place for edge concerns.** TLS, HSTS and frame options belong at the
-  edge, not in each service. The Content-Security-Policy and helmet stay in
-  HYP-49 and can build on it.
+  edge, not in each service. The Content-Security-Policy and helmet came
+  with HYP-49; which server owns which header is ADR-0014.
 - **nginx over Caddy and Traefik.** Caddy gets certificates automatically,
   but nginx is already the frontend's production server, is the one to
   explain at the defense, and Traefik's label-based discovery is more than

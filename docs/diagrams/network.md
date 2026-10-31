@@ -17,8 +17,8 @@ flowchart LR
 
     subgraph net["Compose network"]
         proxy["proxy - nginx<br/>TLS, edge headers"]
-        frontend["frontend<br/>dev: Vite :5173<br/>prod: nginx, built files :80"]
-        backend["backend - NestJS :3000"]
+        frontend["frontend<br/>dev: Vite :5173<br/>prod: nginx, built files :80, SPA CSP"]
+        backend["backend - NestJS :3000<br/>helmet"]
         db[("db - Postgres :5432")]
     end
 
@@ -74,11 +74,11 @@ sequenceDiagram
     P-->>B: 301 https://localhost:8443/login
     B->>P: GET https://localhost:8443/login (TLS, self-signed)
     P->>F: forwards /login (a SPA route, not an API route)
-    F-->>P: index.html
+    F-->>P: index.html (+ Content-Security-Policy on the prod build)
     P-->>B: 200 + X-Content-Type-Options, X-Frame-Options
     B->>P: POST /api/auth/login
     P->>A: POST /auth/login (X-Forwarded-For, -Proto, -Prefix: /api)
-    A-->>P: 200 { access_token } + Set-Cookie refresh_token, Path=/api/auth, Secure (or 401)
+    A-->>P: 200 { access_token } + Set-Cookie refresh_token, Path=/api/auth, Secure (or 401), helmet headers
     P-->>B: same answer, edge headers added
 ```
 
@@ -103,3 +103,27 @@ sequenceDiagram
 The backend trusts one proxy hop (`trust proxy`), so the rate limiter keys on
 the client address nginx appended and `req.secure` follows
 `X-Forwarded-Proto`.
+
+## 3. Who sets which security header (HYP-49)
+
+One owner per header, so none reaches the browser twice
+([ADR-0014](../adr/0014-security-headers-split-between-edge-backend-and-spa.md)).
+
+```mermaid
+flowchart LR
+    subgraph edge["proxy (every response)"]
+        e1["Strict-Transport-Security<br/>X-Content-Type-Options<br/>X-Frame-Options"]
+    end
+    subgraph api["backend: /api/*, /api-docs"]
+        a1["helmet: CSP (frame-ancestors 'none'),<br/>Referrer-Policy, COOP, CORP"]
+    end
+    subgraph spa["frontend nginx: the built SPA (prod only)"]
+        s1["CSP: default-src 'self', no inline script,<br/>img-src 'self' https: data:"]
+    end
+    api --> edge
+    spa --> edge
+    edge --> browser["Browser"]
+```
+
+The dev SPA (Vite) has no CSP: its inline react-refresh script and injected
+`<style>` tags would need `unsafe-inline`.
