@@ -15,4 +15,9 @@ if [ "$current" != "$(cat "$STAMP" 2>/dev/null)" ]; then
   echo "$current" > "$STAMP"
 fi
 
+# tsc's incremental state (kept in the dist volume) does not notice a
+# compiler plugin added to nest-cli.json, and replays old emit errors: start
+# each container from a full compile.
+rm -f dist/tsconfig.build.tsbuildinfo
+
 exec "$@"
