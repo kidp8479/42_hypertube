@@ -139,7 +139,7 @@ flowchart LR
     ui["Swagger UI<br/>https://localhost:8443/api-docs"]
     proxy["proxy (nginx)"]
     backend["backend<br/>serveApiDocs()"]
-    ui -- "GET /api-docs-json" --> proxy
+    ui -- "the document, /api-docs-json" --> proxy
     proxy -- "X-Forwarded-Prefix: /api" --> backend
     backend -- "servers: [/api]<br/>security: bearer unless @Public()" --> ui
     ui -- "Try it out: /api/users/me<br/>+ Authorization: Bearer" --> proxy
