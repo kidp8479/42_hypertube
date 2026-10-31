@@ -19,7 +19,7 @@ The backend legs are also drawn as one poster in
 
 ```mermaid
 flowchart TD
-    reg["SPA - register page"] --> postUsers["API - POST /users<br/>argon2id hash"]
+    reg["SPA - register page"] --> postUsers["API - POST /users<br/>argon2id hash, optional picture"]
     postUsers -- "201, then log in" --> login["SPA - login page"]
     login --> postLogin["API - POST /auth/login"]
 
@@ -89,9 +89,11 @@ always goes through the real login once.
 
 ```mermaid
 flowchart TD
-    A["User submits the register form"] --> B{"validateRegister()<br/>passes?"}
+    A["User submits the register form"] --> P{"picked picture<br/>refused?"}
+    P -- yes --> C
+    P -- no --> B{"validateRegister()<br/>passes?"}
     B -- no --> C["Field errors shown<br/>nothing sent to the backend"]
-    B -- yes --> D["POST /users"]
+    B -- yes --> D["POST /users<br/>JSON, or multipart with the picture"]
     D --> E{Response}
     E -- "409 duplicate" --> F["Generic conflict message<br/>no field named"]
     E -- "201 created" --> G["Redirect to /login<br/>('account created' notice)"]
@@ -322,8 +324,9 @@ sequenceDiagram
 
 ## 9. Changing the email or the password (HYP-84)
 
-`PATCH /users/:id` takes the subject's username, email, password and profile
-picture URL, on one's own profile only (403 otherwise). An email or password
+`PATCH /users/:id` takes the subject's username, email and password, on
+one's own profile only (403 otherwise); the picture has its own route
+([`profile-pictures.md`](profile-pictures.md)). An email or password
 change re-authenticates and ends every other session.
 
 ```mermaid
@@ -358,11 +361,12 @@ flowchart TD
 ### The profile page, frontend side (HYP-87)
 
 `/profile` splits the edit in two forms, so only the email and the password
-ask for the current password. Each sends only what changed.
+ask for the current password. Each sends only what changed. A third form
+uploads or removes the picture ([`profile-pictures.md`](profile-pictures.md)).
 
 ```mermaid
 flowchart LR
-    I["Information form<br/>username, names, picture"] --> PATCH["PATCH /users/:id<br/>(a mutation: a 401 reaches<br/>the session-expired net)"]
+    I["Information form<br/>username, names"] --> PATCH["PATCH /users/:id<br/>(a mutation: a 401 reaches<br/>the session-expired net)"]
     C["Email and password form<br/>+ currentPassword"] --> PATCH
     PATCH -- "200" --> U["updateUser: the header follows"]
     PATCH -- "409" --> T["username or email taken"]
@@ -370,7 +374,6 @@ flowchart LR
     PATCH -- "400 (credentials form)" --> N["no password yet,<br/>or an email @IsEmail refuses"]
 ```
 
-- An emptied picture is sent as `null`, which removes it.
 - `user-updated` only applies while signed in: a save that answers after a
   logout does not sign the user back in.
 - `/users/:id` shows another user's username and picture. One's own id goes

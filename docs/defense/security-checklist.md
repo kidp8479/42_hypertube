@@ -55,8 +55,8 @@ future query loads it anyway.
 | Email normalised + validated; length-capped | `@NormalizeEmail()` + `@IsEmail()` + `@MaxLength(255)` | `common/decorators/normalize-email.decorator.spec.ts` |
 | Strings trimmed at the edge | `@Trim()` on `username` | `common/decorators/trim.decorator.spec.ts` |
 | Registration password length 8-100; login password only size-capped (no policy hint to an attacker, accepts any legacy value) | `create-user.dto.ts` vs `login.dto.ts` | DTO specs |
-| `PATCH /users/:id` changes the email or the password only with `currentPassword` (400 missing, 403 wrong), never on an account without a password (400, reset flow); a new password is hashed with argon2id; a new email is unverified; `profilePicture` must be an https URL | `users.service.ts` `update()`, `dto/update-user.dto.ts` | `users.service.spec.ts`, `users.controller.update.spec.ts`, Bruno 37-39, 43 |
-| File-upload validation | avatar upload not built | **gap - HYP-38** |
+| `PATCH /users/:id` changes the email or the password only with `currentPassword` (400 missing, 403 wrong), never on an account without a password (400, reset flow); a new password is hashed with argon2id; a new email is unverified; `profilePicture` is refused there (a file, sent to its own route) | `users.service.ts` `update()`, `dto/update-user.dto.ts` | `users.service.spec.ts`, `users.controller.update.spec.ts`, Bruno 37-39, 43 |
+| File-upload validation: type from the first bytes (JPEG, PNG, WebP; no SVG), 2 MB cap in memory before any write, random stored name, served only by a name matching that pattern; client-side type and size check first | `users/profile-picture.store.ts`, `PICTURE_UPLOAD_LIMITS`, `auth-picture-field.tsx` (ADR-0016) | `profile-picture.store.spec.ts`, `profile-picture.controller.spec.ts`, Bruno 57-62, `e2e/auth.spec.ts` |
 | Password strength meter (zxcvbn or blocklist) | not built | **gap - HYP-37** |
 
 Never trust a client-supplied id or role for an authorization decision:
@@ -166,7 +166,7 @@ store is only needed once more than one backend instance runs (noted in
 | Login is throttled per IP only, while usernames (the login key since HYP-91) are listed to every signed-in user | HYP-94 | medium - password spraying from many IPs |
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | An email change is not verified | HYP-39 | low - it takes `currentPassword`, and the new email stays unverified, so the provider owner of that address claims the account |
-| Upload validation not built | HYP-38 | n/a until uploads exist |
+| An uploaded picture keeps its EXIF metadata (not re-encoded) | ADR-0016, `known-limitations.md` | low - the owner's own photo, readable by those who see it |
 | Password strength check not built | HYP-37 | low |
 
 ## Notes
