@@ -76,6 +76,7 @@ the id checked for ownership comes from the verified token
 | An email or password change revokes every refresh-token family of the user and issues a new one to the caller only; a taken email (409) revokes nothing | `refresh-token.service.ts` `restartSessions()`, called from `users.controller.ts` `update()` | `refresh-token.service.spec.ts` (the revoke covers the user and runs first), `users.controller.update.spec.ts`, Bruno 39-42; ADR-0011 |
 | Auto-linking a provider to an unverified account claims it first: password removed, every session revoked, other provider links deleted, email marked verified | `auth.service.ts` `resolveOAuthUser()` | `auth.service.spec.ts`; ADR-0007 |
 | Refresh tokens: 256 random bits in an `HttpOnly`, `SameSite=Strict`, `Secure` cookie scoped to the auth routes, only their SHA-256 stored, rotated on every use; a consumed token used again (after a 10 s tolerance) revokes its whole session; 7 days sliding, 30 days at most from the login | `sessions/refresh-token.service.ts`, `sessions/refresh-cookie.util.ts`, `sessions/entities/refresh-token.entity.ts` | `refresh-token.service.spec.ts`, `refresh-cookie.util.spec.ts`, `auth.session.spec.ts`, Bruno 26-34; ADR-0011 |
+| API keys for `POST /oauth/token`: the secret is 256 random bits, shown once, only its SHA-256 stored, compared in constant time; an unknown client and a wrong secret are the same 401; the token acts as the key's owner and carries `cid`, refused on key management and account deletion (403) | `api-clients/`, `auth/oauth-token.service.ts`, `common/guards/session-token.guard.ts` | `api-clients.*.spec.ts`, `oauth-token.*.spec.ts`, Bruno 46-56; ADR-0015 |
 | Access token revocation before its expiry | stateless on purpose, nothing can renew it after a logout | **accepted limit** - 15 minutes, ADR-0011, `docs/defense/known-limitations.md` |
 | Access token in memory only, never in `localStorage`: a reload restores it from the refresh cookie, a 401 refreshes once (single flight) and retries | `frontend/src/lib/token.ts`, `frontend/src/lib/api.ts` | `lib/api.test.ts`, `auth-provider.test.tsx`, `frontend/e2e/session.spec.ts` |
 | Token TTL | `JWT_EXPIRES_IN` default `15m`, `REFRESH_EXPIRES_IN` default `7d` | `env.validation.ts` |
@@ -110,6 +111,7 @@ the id checked for ownership comes from the verified token
 | `POST /users` (register) | 10 / 3600 s | `REGISTER_THROTTLE`, `@Throttle` on `users.controller.ts` |
 | `POST /auth/refresh` | 20 / 60 s | `REFRESH_THROTTLE`, `@Throttle` on `auth.controller.ts` |
 | `POST /auth/oauth/exchange` | 10 / 60 s | `OAUTH_EXCHANGE_THROTTLE`, `@Throttle` on `auth.controller.ts` |
+| `POST /oauth/token` | 20 / 60 s | `OAUTH_TOKEN_THROTTLE`, `@Throttle` on `oauth-token.controller.ts` |
 | Dev multiplier | `THROTTLE_LIMIT_MULTIPLIER` scales every limit above; the env schema rejects a value above 1 when `NODE_ENV=production` | `config/throttle.config.ts` (every policy is named there), `config/env.validation.ts` |
 | Proof | | `auth/auth.throttle.spec.ts`, `config/throttle.config.spec.ts`, `auth/guards/login-identifier-throttler.guard.spec.ts` |
 
@@ -124,6 +126,7 @@ store is only needed once more than one backend instance runs (noted in
 | Control | Where | Proof |
 |---|---|---|
 | `PATCH /users/:id` and `DELETE /users/:id` return `403` unless `req.user.id === :id` | `users.controller.ts` `update()` / `remove()` | `users.controller.spec.ts` |
+| `DELETE /api-clients/:id` returns `403` on another user's key, `404` on an unknown one; every `/api-clients` route acts on the caller's own keys | `api-clients.service.ts` `remove()` | `api-clients.service.spec.ts`, Bruno 55 |
 | Any profile can be read, but the email stays private (subject III.1, III.4): `GET /users` gives `id` and `username` only, `GET /users/:id` gives `id`, `username` and `profilePicture` to anyone but the owner, who gets the full profile | `users.controller.ts` `findAll()`, `users.service.ts` `findOneForViewer()`, `dto/user-summary.dto.ts`, `dto/public-user.dto.ts` | `users.service.spec.ts` (owner or not), `users.controller.fields.spec.ts` (what is serialized), Bruno 08 and 10 |
 
 ## 9. Error handling / information leakage

@@ -9,7 +9,8 @@ Decisions behind it: [ADR-0001](../adr/0001-hash-passwords-with-argon2id.md)
 [ADR-0002](../adr/0002-jwt-bearer-tokens-for-authentication.md) (JWT bearer),
 [ADR-0006](../adr/0006-frontend-architecture.md) (frontend state),
 [ADR-0007](../adr/0007-oauth-identity-linking-and-second-provider.md) (OAuth),
-[ADR-0011](../adr/0011-rotating-refresh-tokens-in-an-httponly-cookie.md) (refresh tokens, logout).
+[ADR-0011](../adr/0011-rotating-refresh-tokens-in-an-httponly-cookie.md) (refresh tokens, logout),
+[ADR-0015](../adr/0015-api-keys-per-user-for-the-client-credentials-grant.md) (API keys, `POST /oauth/token`).
 The backend legs are also drawn as one poster in
 [`auth-flow.png`](auth-flow.png), and the logout alone in
 [`auth-logout.png`](auth-logout.png) (Excalidraw sources next to them).
@@ -60,22 +61,26 @@ folder below it instead of inside `auth`.
 flowchart RL
     auth["auth/<br/>login, OAuth, JWT guard"] --> users["users/<br/>accounts, PATCH /users/:id"]
     auth --> sessions["sessions/<br/>refresh tokens, cookie"]
+    auth --> apiclients["api-clients/<br/>API keys"]
     users --> sessions
+    apiclients --> common
     auth --> common["common/ + config/<br/>@Public, @CurrentUser, cookie helpers,<br/>argon2 options"]
     users --> common
     sessions --> common
     sessions -. "entity relation only<br/>(FK + cascade)" .-> users
+    apiclients -. "entity relation only" .-> users
 ```
 
-The dotted arrow is the one exception: `RefreshToken` names `User` for its
-foreign key and the cascade on delete. It is a link in the data model, not a
+The dotted arrows are the one exception: `RefreshToken` and `ApiClient` name
+`User` for their foreign key and the cascade on delete. It is a link in the data model, not a
 call; the Nest modules still form a one-way chain.
 
 What the overview hides, each covered below or in the ADRs: rate limits
 (section 10 and `security-checklist.md` section 7), the uniform 401 on login, the 403 on
 another user's row, the SPA's session states and `RequireAuth` (section 2),
 how the SPA keeps the session across a reload and a 401 (section 8), changing
-the email or the password (section 9).
+the email or the password (section 9), API keys and `POST /oauth/token`
+(section 11).
 
 ## 1. Register, frontend side (HYP-46)
 
@@ -396,3 +401,31 @@ other, so a 429 does not tell whether the account exists, and the
 Trade-off: someone who keeps sending 5 bad attempts a minute on a known
 username keeps its password login at 429 for as long as they keep going
 (OAuth login still works). There is no lockout that outlasts the attempts.
+
+## 11. API keys and `POST /oauth/token` (HYP-122)
+
+The subject's OAuth2 endpoint, as the client-credentials grant: a user
+creates an API key, and a script trades it for a token that acts as that
+user ([ADR-0015](../adr/0015-api-keys-per-user-for-the-client-credentials-grant.md)).
+
+```mermaid
+sequenceDiagram
+    participant S as Script / Swagger
+    participant A as backend
+    participant D as api_client table
+    S->>A: POST /auth/login (a person, once)
+    A-->>S: 200 { access_token } (login token)
+    S->>A: POST /api-clients { name } + login token
+    A->>D: insert clientId, SHA-256(secret)
+    A-->>S: 201 { clientId, secret } (the only time the secret is sent)
+    S->>A: POST /oauth/token { client, secret }
+    A->>D: find by clientId, compare hashes in constant time
+    A-->>S: 200 { access_token (sub = owner, cid = key), token_type, expires_in }
+    S->>A: PATCH /users/:id with that token
+    A-->>S: 200 on the owner's id, 403 on anyone else's
+    S->>A: POST /api-clients or DELETE /users/:id with that token
+    A-->>S: 403 (SessionTokenGuard: no API key token here)
+```
+
+A revoked key buys no new token (401); one already bought lives out its 15
+minutes.

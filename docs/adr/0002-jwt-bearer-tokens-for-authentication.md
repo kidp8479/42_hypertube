@@ -33,6 +33,14 @@ the API, not a browser user logging in. It is related to, but not the same
 as, `POST /auth/login`. Both will mint JWTs verified by the same strategy;
 they differ in who authenticates and how.
 
+## Amendment (2026-10-31): the client is a user's API key
+
+The client of `POST /oauth/token` is an API key a user creates for
+themselves, so the token it returns acts on that user's behalf, like a login
+token, plus a `cid` claim naming the key
+([ADR-0015](0015-api-keys-per-user-for-the-client-credentials-grant.md)). The
+grant is still client credentials, verified by the same strategy.
+
 ## Consequences
 
 - **A JWT cannot be revoked before it expires.** Mitigations:

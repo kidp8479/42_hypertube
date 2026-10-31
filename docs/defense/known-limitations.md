@@ -117,7 +117,9 @@ SPA (`OAuthExchangeService`, ADR-0007) are kept in an in-memory `Map`.
 Logout and a detected token theft end the **session**: the refresh token is
 revoked, so nothing can renew the access token (ADR-0011). An access token that
 was already copied still works until it expires, 15 minutes by default
-(`JWT_EXPIRES_IN`).
+(`JWT_EXPIRES_IN`). The same goes for a token bought with an API key that is
+then revoked: no new token, but the last one lives out its 15 minutes
+(ADR-0015).
 
 - **Why:** access tokens are stateless on purpose, so an ordinary request needs
   no database lookup (ADR-0002). Checking a blocklist on every request would

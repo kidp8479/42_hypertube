@@ -32,6 +32,7 @@ might ask us to justify.
 | [0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md) | Tailwind CSS v4 on top of the design tokens | accepted |
 | [0013](0013-compose-base-with-dev-and-prod-files.md) | Compose: one shared file, a dev file and a prod file | accepted |
 | [0014](0014-security-headers-split-between-edge-backend-and-spa.md) | Security headers: the edge, the backend and the SPA server each own a set | accepted |
+| [0015](0015-api-keys-per-user-for-the-client-credentials-grant.md) | API keys per user for the client-credentials grant | accepted |
 
 ## Planned
 
