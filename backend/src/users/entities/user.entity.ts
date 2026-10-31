@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 
 /** UI language a user picked; defaults to English per the subject. */
 export enum PreferredLanguage {
@@ -77,12 +77,20 @@ export class User {
   password!: string | null;
 
   /**
-   * Avatar URL, https only, set through `PATCH /users/:id`; `null` until
-   * the user sets one.
+   * File name of the uploaded picture (`ProfilePictureStore`), served at
+   * `GET /pictures/:name`. `null` means the default avatar, which the
+   * client draws itself.
    */
   // Explicit `type` because the `string | null` union erases the
   // reflected column type (TypeORM would otherwise see "Object").
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    example: '3f2b8c1e-6d4a-4b7e-9a51-0c2d7e8f9a10.webp',
+    description:
+      'Served at GET /pictures/{name}; null = no picture, show a default avatar',
+  })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   profilePicture!: string | null;
 
   @Column({
