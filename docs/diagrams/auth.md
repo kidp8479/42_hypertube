@@ -309,6 +309,11 @@ sequenceDiagram
   and a logout must revoke the cookie the refresh rotates in.
 - **The auth routes are never retried**: their 401 is the answer (bad
   credentials, a dead cookie).
+- **A credential check's 401 stays with its form.** Login, register, the OAuth
+  code exchange and logout are mutations like every write (HYP-116). Login and
+  the exchange carry `meta: CREDENTIAL_CHECK`, so the mutation cache's 401 net
+  leaves their 401 alone: "wrong password" or "link expired" is shown by the
+  page, never turned into "session expired".
 
 ## 9. Changing the email or the password (HYP-84)
 

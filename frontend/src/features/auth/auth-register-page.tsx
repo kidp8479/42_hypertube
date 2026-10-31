@@ -7,7 +7,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
-import { registerRequest } from './auth-actions';
+import { useRegister } from './auth-queries';
 import {
   describeValidationError,
   validateRegister,
@@ -75,14 +75,17 @@ export function RegisterPage() {
   const { state } = useAuth();
   const navigate = useNavigate();
 
+  const register = useRegister();
   const form = useAccountForm({
     initialValues: EMPTY_VALUES,
     validate: validateRegister,
     send: async (values: RegisterValues) => {
-      await registerRequest(
+      await register({
         values,
-        isSupportedLanguage(i18n.language) ? i18n.language : DEFAULT_LANGUAGE,
-      );
+        language: isSupportedLanguage(i18n.language)
+          ? i18n.language
+          : DEFAULT_LANGUAGE,
+      });
       navigate('/login', { replace: true, state: { justRegistered: true } });
     },
     refusals: { 409: 'register.conflict' },

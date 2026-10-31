@@ -9,6 +9,7 @@ import {
   useReducer,
   type ReactNode,
 } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { apiFetch } from '../../lib/api';
 import { setUnauthorizedHandler } from '../../lib/query-client';
 import { getAuthToken, removeAuthToken } from '../../lib/token';
@@ -94,13 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'login-success', user: await fetchSignedInUser() });
   }, []);
 
+  // Best effort: the sign-out below must work offline, so a failure of the
+  // backend call is deliberately dropped (`mutate` reports it to nobody).
+  const { mutate: tellBackendLogout } = useMutation({
+    mutationFn: logoutRequest,
+  });
   const logout = useCallback(() => {
-    // Best effort: the sign-out below must work offline, so a failure of the
-    // backend call is deliberately dropped.
-    logoutRequest().catch(() => undefined);
+    tellBackendLogout();
     logoutLocal();
     dispatch({ type: 'logout' });
-  }, []);
+  }, [tellBackendLogout]);
 
   const updateUser = useCallback((user: User) => {
     dispatch({ type: 'user-updated', user });

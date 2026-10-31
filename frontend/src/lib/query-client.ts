@@ -3,6 +3,22 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { ApiError, UNAUTHORIZED } from './api';
 
+declare module '@tanstack/react-query' {
+  interface Register {
+    mutationMeta: {
+      /**
+       * The mutation checks credentials (login, the OAuth code exchange): its
+       * 401 answers what was typed or handed over, it does not mean a session
+       * died, so the 401 net below leaves it to the form.
+       */
+      credentialCheck?: boolean;
+    };
+  }
+}
+
+/** Marks a mutation as a credential check (see `credentialCheck`). */
+export const CREDENTIAL_CHECK = { credentialCheck: true } as const;
+
 // Registrable indirection so this module never has to import AuthProvider
 // (which itself imports `queryClient`) - avoids a circular dependency.
 let onUnauthorized: (() => void) | null = null;
@@ -30,5 +46,11 @@ export const queryClient = new QueryClient({
     queries: { retry: false },
   },
   queryCache: new QueryCache({ onError: routeUnauthorized }),
-  mutationCache: new MutationCache({ onError: routeUnauthorized }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (!mutation.meta?.credentialCheck) {
+        routeUnauthorized(error);
+      }
+    },
+  }),
 });

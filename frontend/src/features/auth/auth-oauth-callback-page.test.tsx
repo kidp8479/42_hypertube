@@ -10,6 +10,7 @@ import { OAuthCodeRejectedError } from './auth-actions';
 import type { AuthState } from './auth-reducer';
 import { fakeUser, fakeAuth } from '../../test/fixtures';
 import { OAuthCallbackPage } from './auth-oauth-callback-page';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Renders the URL the page is on, so "the code left the URL" is observable.
 function CurrentUrl() {
@@ -33,25 +34,29 @@ function renderCallbackPage(
 ) {
   const loginWithOAuthCode =
     vi.fn<AuthContextValue['loginWithOAuthCode']>(exchange);
+  // One client for every rerender, as the app has one.
+  const queryClient = new QueryClient();
   const tree = (current: AuthState) => {
     const value = fakeAuth(current, { loginWithOAuthCode });
     const app = (
-      <AuthContext.Provider value={value}>
-        <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>
-          <Routes>
-            <Route
-              path="/oauth/callback"
-              element={
-                <>
-                  <OAuthCallbackPage />
-                  <CurrentUrl />
-                </>
-              }
-            />
-            <Route path="/" element={<p>home page</p>} />
-          </Routes>
-        </MemoryRouter>
-      </AuthContext.Provider>
+      <QueryClientProvider client={queryClient}>
+        <AuthContext.Provider value={value}>
+          <MemoryRouter initialEntries={[`/oauth/callback${search}`]}>
+            <Routes>
+              <Route
+                path="/oauth/callback"
+                element={
+                  <>
+                    <OAuthCallbackPage />
+                    <CurrentUrl />
+                  </>
+                }
+              />
+              <Route path="/" element={<p>home page</p>} />
+            </Routes>
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </QueryClientProvider>
     );
     return strict ? <StrictMode>{app}</StrictMode> : app;
   };

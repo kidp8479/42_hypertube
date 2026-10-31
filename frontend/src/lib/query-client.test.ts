@@ -3,7 +3,11 @@
 import { MutationObserver } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from './api';
-import { queryClient, setUnauthorizedHandler } from './query-client';
+import {
+  CREDENTIAL_CHECK,
+  queryClient,
+  setUnauthorizedHandler,
+} from './query-client';
 
 // A fresh key per call, so no failure is served from the cache.
 let queryCount = 0;
@@ -16,9 +20,10 @@ const failingQuery = (error: unknown) =>
     })
     .catch(() => undefined);
 
-const failingMutation = (error: unknown) =>
+const failingMutation = (error: unknown, meta?: typeof CREDENTIAL_CHECK) =>
   new MutationObserver(queryClient, {
     mutationFn: () => Promise.reject(error),
+    meta,
   })
     .mutate()
     .catch(() => undefined);
@@ -46,6 +51,15 @@ describe('queryClient 401 net', () => {
 
     await failingQuery(new ApiError(403));
     await failingMutation(new TypeError('Failed to fetch'));
+
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("leaves a credential check's 401 to its form (a wrong password, a used code)", async () => {
+    const handler = vi.fn();
+    setUnauthorizedHandler(handler);
+
+    await failingMutation(new ApiError(401), CREDENTIAL_CHECK);
 
     expect(handler).not.toHaveBeenCalled();
   });
