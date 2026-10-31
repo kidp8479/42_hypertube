@@ -60,7 +60,7 @@ control, its code path, its proof, and the accepted gaps) lives in
 | `GET /movies`, `GET /movies/:id` need a token (a user's, or a client-credentials token from `POST /oauth/token`): "any user" of III.4 is any API client holding a token, while the library stays for connected users | HYP-15 | default-deny `JwtAuthGuard`, no `@Public()` on movie data | n/a | todo |
 | `PATCH` / `DELETE /comments/:id` are the author's only (403 otherwise); `PATCH` takes the documented `comment` and `username`; author and date of a new comment are set by the server | HYP-15 | n/a | n/a | todo |
 | Extra route beyond the subject's list: `DELETE /users/:id` (own account only, 403 otherwise) | HYP-10 | `UsersController` | HTTP-level guard tests | done - listed in `rest-proof.md` (todo) |
-| RESTful proof for the defense | HYP-40 | Swagger at `/api-docs` | n/a | partial - `rest-proof.md` todo |
+| RESTful proof for the defense | HYP-40 | Swagger at `/api-docs`: request and response models with their validation rules (`@nestjs/swagger` plugin), bearer token required unless `@Public()`, error codes per route, "Try it out" through the proxy (`config/swagger.config.ts`) | Bruno 45 | partial - `rest-proof.md` todo (HYP-59) |
 
 ## Layout and compatibility
 

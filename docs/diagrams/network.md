@@ -27,7 +27,7 @@ flowchart LR
 
     proxy -- "/ (and the HMR websocket in dev)" --> frontend
     proxy -- "/api/* (prefix stripped)" --> backend
-    proxy -- "/api-docs" --> backend
+    proxy -- "/api-docs (X-Forwarded-Prefix: /api)" --> backend
     backend --> db
 
     classDef edge fill:#fef3c7,stroke:#d97706,color:#78350f
