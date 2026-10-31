@@ -47,7 +47,8 @@ with HSTS, frame options and nosniff turned off.
 - **The dev stack has no SPA CSP.** The e2e suite in CI runs the dev stack,
   so a change that breaks the policy (an inline script, a CDN font) shows up
   only on the prod build: run `make up-prod` and click through before a
-  merge that adds a new kind of resource (`known-limitations.md`).
+  merge that adds a new kind of resource (`known-limitations.md`). CI checks
+  only that the prod image sends the header.
 - **The video page (HYP-14) will need `media-src`** (probably `'self'
   blob:`), and movie posters from a metadata provider fit the current
   `img-src`.
