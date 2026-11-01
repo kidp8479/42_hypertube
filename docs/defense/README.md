@@ -9,7 +9,7 @@ land.
 
 | Document | Purpose | State |
 |----------|---------|-------|
-| `run-guide.md` | clone -> `.env` -> `make up` -> working app, on a fresh machine | todo |
+| Run guide | clone -> `.env` -> `make up` -> working app, on a fresh machine | done in [`onboarding.md`](../onboarding.md) > Getting it running; a one-page evaluator version with HYP-59 |
 | [`traceability.md`](traceability.md) | every subject requirement -> Linear issue -> code -> test; also where the eliminatory constraints live once `CLAUDE.md` is removed for the defense | ongoing |
 | [`security-checklist.md`](security-checklist.md) | mechanism-level inventory of every security control + the accepted gaps | ongoing |
 | [`security-review-2026-10-24.md`](security-review-2026-10-24.md) | `web-security-review` run over the auth surface, point by point, with its evidence | done - run again before HYP-16 |
