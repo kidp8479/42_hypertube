@@ -22,7 +22,9 @@
 
 - Decided: backend **NestJS** + **TypeORM** (PostgreSQL); frontend
   **React**.
-- Not settled: torrent handling, transcoding. Auth: JWT bearer (ADR-0002),
+- Core: sources archive.org + PeerTube (ADR-0018), metadata TMDb + OMDb
+  (ADR-0019), BitTorrent client by hand, no library (ADR-0020), ffmpeg to
+  fragmented MP4 (ADR-0021). Auth: JWT bearer (ADR-0002),
   argon2id (ADR-0001), OAuth 42 + GitHub (ADR-0007), rotating refresh
   token in an HttpOnly cookie (ADR-0011), `POST /oauth/token` with API keys
   per user (ADR-0015).
@@ -135,12 +137,12 @@ and additions specific to this project:
 
 ## Not yet decided / to settle at the start of the work session
 
-- Detail of the BitTorrent client implementation (from scratch vs allowed
-  low-level libs such as `bittorrent-protocol` / `bencode` /
-  `parse-torrent` - to check case by case)
-- Legal video search sources to use (2 minimum)
-- OMDb vs TMDb as the metadata provider
-- Transcoding strategy (on-the-fly ffmpeg, format cache)
+- Subtitle source (OpenSubtitles, archive.org `.srt` files)
+- Piece selection and the stream-start threshold; file retention job
+
+Settled on 2026-11-01: sources archive.org + PeerTube (ADR-0018), TMDb +
+OMDb (ADR-0019), BitTorrent client by hand with no library, bencode
+included (ADR-0020), ffmpeg to fragmented MP4 (ADR-0021).
 
 ## Don't forget
 

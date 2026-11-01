@@ -167,10 +167,9 @@ A security review runs over each auth or user-data change before merge.
   polish) and the "Session Handoff" document, which says what is in flight
   and what to pick up next.
 - **Slack** `#hypertube-daily-log`: one recap per work session.
-- **Open decisions** (each becomes an ADR when taken): the two legal
-  sources, OMDb or TMDb, which low-level BitTorrent libraries are allowed,
-  the transcoding strategy. Listed in [`adr/README.md`](adr/README.md),
-  "Planned".
+- **Open decisions** (each becomes an ADR when taken): listed in
+  [`adr/README.md`](adr/README.md), "Planned". The core's sources,
+  metadata, BitTorrent client and transcoding are ADR-0018 to 0021.
 
 ## 9. Operations
 

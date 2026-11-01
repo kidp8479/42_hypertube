@@ -27,8 +27,8 @@ control, its code path, its proof, and the accepted gaps) lives in
 | All forms and uploads validated | HYP-10 / HYP-38 | global `ValidationPipe` (`whitelist` + `forbidNonWhitelisted` + `transform`); class-validator DTOs; pictures: type from the first bytes, 2 MB cap, random stored name (`ProfilePictureStore`, ADR-0016) | DTO specs; `forbidNonWhitelisted` returns 400 on unknown fields; `profile-picture.store.spec.ts`, Bruno 57-62 | done |
 | `.env` excluded from git, no secret committed | HYP-9 | `.gitignore`; `.env.example` with placeholders; `JWT_SECRET` placeholder rejected at boot | gitleaks secret scan in CI (`scan`, a required check on `main`) | done |
 | No console error/warning (browser or server) during the defense | HYP-45 | clean-browser check on the auth flow; the only console line is the browser's own network log of a deliberate 401 | headless-Chromium walk in the HYP-45 PR; `docs/defense/known-limitations.md` | partial - re-check per feature |
-| Torrent downloaded "by hand" (no streaming-from-torrent library); the evaluator asks which libraries are used | HYP-12 | n/a | n/a | todo |
-| Legal, rights-free sources only; >= 2 external search sources | HYP-13 | n/a | n/a | todo |
+| Torrent downloaded "by hand" (no streaming-from-torrent library); the evaluator asks which libraries are used | HYP-12 | no BitTorrent library at all, bencode included (ADR-0020) | n/a | todo |
+| Legal, rights-free sources only; >= 2 external search sources | HYP-13 | archive.org and PeerTube (Creative Commons and public-domain licences only), ADR-0018 | n/a | todo |
 | No HTTP 5xx response during the defense (marking sheet: graded Crash, like a console error) | HYP-16 | expected failures answer a 4xx; a search source that is down degrades to partial results, never a 502 / 504 | n/a | todo - re-check per feature |
 | `AUTHORS` file at the repository root (marking sheet, preliminaries) | HYP-18 | `AUTHORS` | file present | done |
 

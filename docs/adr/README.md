@@ -40,6 +40,10 @@ might ask us to justify.
 | [0015](0015-api-keys-per-user-for-the-client-credentials-grant.md) | API keys per user for the client-credentials grant | accepted |
 | [0016](0016-profile-pictures-uploaded-and-stored-on-a-volume.md) | Profile pictures are uploaded and stored on a volume | accepted |
 | [0017](0017-password-strength-zxcvbn-and-a-french-lexicon.md) | Password strength: zxcvbn plus a full French lexicon, checked by the server | accepted |
+| [0018](0018-search-sources-archive-org-and-peertube.md) | Search sources: archive.org and PeerTube | accepted |
+| [0019](0019-metadata-tmdb-with-omdb-for-the-imdb-rating.md) | Metadata: TMDb, with OMDb for the IMDb rating | accepted |
+| [0020](0020-bittorrent-client-written-by-hand.md) | The BitTorrent client is written by hand, with no library | accepted |
+| [0021](0021-transcoding-ffmpeg-to-fragmented-mp4.md) | Transcoding: ffmpeg to a fragmented MP4, on the fly | accepted |
 
 ## Planned
 
@@ -49,11 +53,9 @@ becomes a numbered ADR when the decision is actually taken - not before.
 | Trigger | Decision to record |
 |---------|--------------------|
 | password reset (HYP-34) | reset-token shape: random, single-use, short TTL, hashed at rest (mirrors ADR-0001) |
-| BitTorrent client | from-scratch protocol vs allowed low-level libs (`bencode`, `parse-torrent`) - the eliminatory "no ready-made streaming" constraint, spelled out |
 | streaming | piece selection / download ordering and the threshold at which the stream starts |
-| transcoding | on-the-fly ffmpeg, which container/codecs, cache of converted files |
 | file retention | how "delete if unwatched for 1 month" is enforced (scheduled job) |
-| metadata provider | OMDb vs TMDb |
-| search sources | the two legal external sources retained |
+| subtitles | the subtitle source (OpenSubtitles, the `.srt` files of archive.org items) and the conversion to WebVTT |
+| stream token | how the player's `<video>` is authorised without the access JWT (HYP-14 design note) |
 | test database | isolated DB strategy for e2e tests + CI wiring (HYP-27) |
 | ORM | TypeORM over Prisma - deliberate, for the internship stack; worth stating explicitly |
