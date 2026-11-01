@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuthAccount } from './entities/oauth-account.entity';
 import { RefreshTokenModule } from '../sessions/refresh-token.module';
 import { AuthService } from './auth.service';
+import { AccountClaimService } from './account-claim.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -56,6 +57,7 @@ import { GithubStrategy } from './strategies/github.strategy';
   ],
   providers: [
     AuthService,
+    AccountClaimService,
     OAuthExchangeService,
     OAuthTokenService,
     JwtStrategy,

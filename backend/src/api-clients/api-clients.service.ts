@@ -76,6 +76,15 @@ export class ApiClientsService {
   }
 
   /**
+   * Deletes every key of `userId`: an OAuth login that claims the account
+   * (`AuthService.resolveOAuthUser`) must not leave a key to whoever held
+   * it before.
+   */
+  async revokeAllForUser(userId: number): Promise<void> {
+    await this.clients.delete({ userId });
+  }
+
+  /**
    * The key a `client` + `secret` pair names, or `undefined` when either is
    * wrong: the caller cannot tell an unknown client from a wrong secret.
    */

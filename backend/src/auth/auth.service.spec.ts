@@ -13,7 +13,7 @@ import { OAuthAccount, OAuthProvider } from './entities/oauth-account.entity';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { UNIQUE_VIOLATION } from '../common/utils/unique-violation.util';
 import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenService } from '../sessions/refresh-token.service';
+import { AccountClaimService } from './account-claim.service';
 
 // Only the methods a spec actually drives need a precise type; the rest of
 // the fake stays loose.
@@ -22,11 +22,10 @@ type UsersServiceMock = {
   findForLogin: jest.Mock;
   findOne: jest.Mock;
   createFromOAuth: jest.Mock;
-  claimEmail: jest.Mock;
 };
 
-type RefreshTokenServiceMock = {
-  revokeAllForUser: jest.Mock;
+type AccountClaimServiceMock = {
+  claim: jest.Mock;
 };
 
 type JwtServiceMock = {
@@ -71,7 +70,7 @@ describe('AuthService', () => {
   let users: UsersServiceMock;
   let jwt: JwtServiceMock;
   let oauthAccounts: OAuthAccountRepositoryMock;
-  let refreshTokens: RefreshTokenServiceMock;
+  let accountClaim: AccountClaimServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -84,7 +83,6 @@ describe('AuthService', () => {
             findForLogin: jest.fn(),
             findOne: jest.fn(),
             createFromOAuth: jest.fn(),
-            claimEmail: jest.fn(),
           },
         },
         {
@@ -101,8 +99,8 @@ describe('AuthService', () => {
           },
         },
         {
-          provide: RefreshTokenService,
-          useValue: { revokeAllForUser: jest.fn() },
+          provide: AccountClaimService,
+          useValue: { claim: jest.fn() },
         },
       ],
     }).compile();
@@ -115,7 +113,7 @@ describe('AuthService', () => {
     users = module.get(UsersService);
     jwt = module.get(JwtService);
     oauthAccounts = module.get(getRepositoryToken(OAuthAccount));
-    refreshTokens = module.get(RefreshTokenService);
+    accountClaim = module.get(AccountClaimService);
   });
 
   // --- tests ---
@@ -301,11 +299,11 @@ describe('AuthService', () => {
         const result = await service.resolveOAuthUser(profile);
 
         expect(result).toBe(registered);
-        expect(users.claimEmail).toHaveBeenCalledWith(22);
+        expect(accountClaim.claim).toHaveBeenCalledWith(22);
         expect(oauthAccounts.save).toHaveBeenCalledWith(
           expect.objectContaining({ userId: 22 }),
         );
-        expect(users.claimEmail.mock.invocationCallOrder[0]).toBeLessThan(
+        expect(accountClaim.claim.mock.invocationCallOrder[0]).toBeLessThan(
           oauthAccounts.save.mock.invocationCallOrder[0],
         );
       });
@@ -349,33 +347,31 @@ describe('AuthService', () => {
         oauthAccounts.findOneBy.mockResolvedValue(null);
       });
 
-      it('claims an unverified account: password, sessions and other links revoked, before the link', async () => {
+      // What a claim revokes: account-claim.service.spec.ts.
+      it('claims an unverified account before linking it', async () => {
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.claimEmail).toHaveBeenCalledWith(9);
-        expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(9);
-        expect(oauthAccounts.delete).toHaveBeenCalledWith({ userId: 9 });
-        expect(oauthAccounts.delete.mock.invocationCallOrder[0]).toBeLessThan(
+        expect(accountClaim.claim).toHaveBeenCalledWith(9);
+        expect(accountClaim.claim.mock.invocationCallOrder[0]).toBeLessThan(
           oauthAccounts.save.mock.invocationCallOrder[0],
         );
       });
 
       it('claims a password-less account whose email was changed (no password, still unverified)', async () => {
         // An attacker's GitHub-only account, its email changed to the
-        // victim's: no password to revoke, but its sessions and its GitHub
-        // link would otherwise survive.
+        // victim's: no password to revoke, but its sessions, its API keys
+        // and its GitHub link would otherwise survive.
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: null, emailVerified: false }),
         );
 
         await service.resolveOAuthUser(profile);
 
-        expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith(9);
-        expect(oauthAccounts.delete).toHaveBeenCalledWith({ userId: 9 });
+        expect(accountClaim.claim).toHaveBeenCalledWith(9);
       });
 
       it('links a verified account as is, keeping its password and sessions', async () => {
@@ -385,8 +381,7 @@ describe('AuthService', () => {
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.claimEmail).not.toHaveBeenCalled();
-        expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+        expect(accountClaim.claim).not.toHaveBeenCalled();
         expect(oauthAccounts.save).toHaveBeenCalledWith(
           expect.objectContaining({ userId: 9 }),
         );
@@ -398,16 +393,14 @@ describe('AuthService', () => {
 
         await service.resolveOAuthUser(profile);
 
-        expect(users.claimEmail).not.toHaveBeenCalled();
+        expect(accountClaim.claim).not.toHaveBeenCalled();
       });
 
       it('does not link the identity when the claim fails', async () => {
         users.findByEmail.mockResolvedValue(
           buildUser({ id: 9, password: 'argon2-hash' }),
         );
-        refreshTokens.revokeAllForUser.mockRejectedValue(
-          new Error('connection lost'),
-        );
+        accountClaim.claim.mockRejectedValue(new Error('connection lost'));
 
         await expect(service.resolveOAuthUser(profile)).rejects.toThrow(
           'connection lost',

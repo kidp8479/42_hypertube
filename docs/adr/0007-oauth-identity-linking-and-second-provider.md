@@ -1,7 +1,7 @@
 # OAuth identity linking, GitHub as the second provider
 
-**Date:** 2026-09-20 · **Revised:** 2026-10-25 (HYP-53, HYP-57, HYP-71,
-HYP-55, HYP-84) · **Status:** accepted
+**Date:** 2026-09-20 · **Revised:** 2026-11-01 (HYP-53, HYP-57, HYP-71,
+HYP-55, HYP-84, HYP-143) · **Status:** accepted
 
 Hypertube supports login via 42 (mandatory) and GitHub (the subject's free
 second-provider choice), alongside email+password. Each OAuth identity is a
@@ -107,8 +107,9 @@ is auto-linked to it.
 - `User.emailVerified` is `true` for an account created or linked through a
   provider, `false` after a local registration or an email change.
 - Auto-linking to an **unverified** account claims it first: the password
-  is removed, every refresh-token family is revoked, the other provider
-  links are deleted, and the email is marked verified. The holder of the
+  is removed, every refresh-token family is revoked, every API key
+  (ADR-0015) and the other provider links are deleted, and the email is
+  marked verified. The holder of the
   verified email ends up the only way in. The claim runs before the link,
   so a failure between the two leaves the account claimed and unlinked (the
   next login links it), never linked with the old access intact.
