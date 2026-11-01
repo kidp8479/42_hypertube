@@ -31,7 +31,7 @@ flowchart TD
 
     postLogin -- "access_token" --> token[("SPA - token in memory")]
     exch -- "access_token" --> token
-    token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>+ ownership check on writes"]
+    token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>signature, expiry, not older than a claim<br/>+ ownership check on writes"]
     jwt --> routes["every other route"]
     token -. "page load, expiry near, or a 401" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
     refresh -- "access_token" --> token
@@ -175,7 +175,7 @@ flowchart TD
     C -- no --> E{"local user with<br/>this email?"}
     E -- yes --> V{"its email<br/>verified?"}
     V -- yes --> G["link identity to that user"]
-    V -- no --> K["claim it first: drop the password,<br/>revoke every session, API key and other link,<br/>mark the email verified"]
+    V -- no --> K["claim it first: drop the password,<br/>revoke every session, API key and other link,<br/>mark the email verified,<br/>end every access token issued before"]
     K --> G
     E -- no --> F["create a new user"]
     F --> H["link identity to the new user"]
@@ -189,6 +189,24 @@ An account's email is verified when a provider vouched for it: created or
 linked through OAuth. A local registration or an email change leaves it
 unverified, and the next provider sign-in with that email claims the account
 for its verified owner (ADR-0007, "Linking to an existing account").
+
+### An access token issued before the claim dies with it (HYP-149)
+
+The claim stamps `user.credentialsChangedAt`. `JwtStrategy` reads that one
+column on every request, so a token the previous holder still had cannot
+mint a new API key in its last minutes. The token of a deleted account fails
+the same way.
+
+```mermaid
+flowchart TD
+    R["request with Authorization: Bearer"] --> S{"signature and exp valid?"}
+    S -- no --> X["401"]
+    S -- yes --> U{"account still exists?<br/>(one read by primary key)"}
+    U -- no --> X
+    U -- yes --> T{"token iat earlier than the second<br/>of credentialsChangedAt?"}
+    T -- yes --> X
+    T -- "no, or never changed" --> OK["req.user = { id, apiClientId? }"]
+```
 
 ## 5. OAuth callback page, frontend side (HYP-57)
 

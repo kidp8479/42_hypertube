@@ -1,6 +1,6 @@
 # JWT bearer tokens for authentication (not server-side sessions)
 
-**Date:** 2026-08-29 · **Revised:** 2026-10-31 (HYP-122) · **Status:** accepted
+**Date:** 2026-08-29 · **Revised:** 2026-11-01 (HYP-122, HYP-149) · **Status:** accepted
 
 Hypertube authenticates users with a **signed JWT** sent as
 `Authorization: Bearer <token>`, issued by `POST /auth/login` and verified
@@ -18,9 +18,12 @@ server-side sessions (cookie + session store).
 - **SPA + REST API shape.** The React front consumes a REST API and can
   attach a bearer header naturally. Cookie sessions would pull in CSRF
   protection and stricter CORS-credentials handling for no gain here.
-- **Stateless verification.** No Redis/DB round-trip to check a session on
-  every request; the signature and `exp` claim are enough. Simpler to run
-  in containers.
+- **No session store.** The signature and `exp` claim prove a token; no
+  per-token state is kept anywhere. One read remains on every request: the
+  user's `credentialsChangedAt` by primary key, so that every token of an
+  account dies when the account changes hands (an OAuth claim, ADR-0007).
+  It also refuses the token of a deleted account. Simpler to run in
+  containers than a session layer.
 - **Matches the target internship stack** (`@nestjs/passport`,
   `passport-jwt`, `@nestjs/jwt`), a deliberate learning goal of this project.
 
@@ -35,10 +38,11 @@ strategy; they differ in who authenticates and how.
 
 ## Consequences
 
-- **A JWT cannot be revoked before it expires.** Mitigations:
+- **One JWT cannot be revoked before it expires**, only all of an account's
+  at once (`credentialsChangedAt`, set by a claim). Mitigations:
   - short access-token TTL, 15 minutes by default (`JWT_EXPIRES_IN`), and
     a rotating refresh token keeps the session alive and makes logout real
-    (ADR-0011); the access token itself stays stateless.
+    (ADR-0011); the access token itself carries no server-side state.
   - **One-click logout** (subject requirement): `POST /auth/logout` revokes
     the session's refresh token on the server and clears the cookie
     ([ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)). An access

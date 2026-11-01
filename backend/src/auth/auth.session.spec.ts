@@ -16,6 +16,7 @@ import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { UsersService } from '../users/users.service';
 
 const EXPIRES = new Date('2026-10-30T12:00:00.000Z');
 const COOKIE = 'refresh_token';
@@ -50,6 +51,13 @@ describe('session routes', () => {
         { provide: AuthService, useValue: auth },
         { provide: OAuthExchangeService, useValue: exchange },
         { provide: RefreshTokenService, useValue: refresh },
+        {
+          provide: UsersService,
+          useValue: {
+            findCredentialsChangedAt: () =>
+              Promise.resolve({ credentialsChangedAt: null }),
+          },
+        },
       ],
     })
       // Throttling is covered over HTTP in auth.throttle.spec.ts.

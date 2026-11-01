@@ -93,6 +93,18 @@ export class User {
   @Column({ type: 'varchar', length: 64, nullable: true })
   profilePicture!: string | null;
 
+  /**
+   * When the account last changed hands (an OAuth claim, ADR-0007).
+   * `JwtStrategy` refuses an access token issued before it, so a token the
+   * previous holder still had dies with the claim instead of living out
+   * its 15 minutes. `null`: never changed. Internal, so kept out of reads
+   * and responses like `password`.
+   */
+  @Column({ type: 'timestamptz', select: false, nullable: true })
+  @Exclude()
+  @ApiHideProperty()
+  credentialsChangedAt!: Date | null;
+
   @Column({
     type: 'enum',
     enum: PreferredLanguage,

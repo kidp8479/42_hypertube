@@ -1,6 +1,6 @@
 # Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session
 
-**Date:** 2026-10-23 · **Revised:** 2026-11-01 (HYP-78, HYP-84, HYP-144) ·
+**Date:** 2026-10-23 · **Revised:** 2026-11-01 (HYP-78, HYP-84, HYP-144, HYP-149) ·
 **Status:** accepted · Supersedes
 [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md) on revocation ·
 Amends [ADR-0002](0002-jwt-bearer-tokens-for-authentication.md) and
@@ -65,7 +65,9 @@ session on the server.
 A longer access token (one setting, but logout still cannot end a session);
 renewing the JWT with itself (a stolen token would renew for ever); the refresh
 token in `localStorage` or the body (readable by any script); a blocklist of
-access-token ids (a lookup per request for a 15 minute window).
+access-token ids (a table written at every logout and read at every request,
+for a 15 minute window; the per-request user read of ADR-0002 ends every token
+of an account at once, which a claim needs, not one session's).
 
 ## Consequences
 

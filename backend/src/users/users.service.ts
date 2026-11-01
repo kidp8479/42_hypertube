@@ -165,14 +165,30 @@ export class UsersService {
   }
 
   /**
-   * The user half of claiming an unverified account (`AuthService.
-   * resolveOAuthUser`). A targeted `update` rather than `save`: `password`
-   * is excluded from default selects, so a loaded entity would not carry it.
+   * The user half of claiming an unverified account
+   * (`AccountClaimService`). Stamps `credentialsChangedAt`, which ends every
+   * access token issued before. A targeted `update` rather than `save`:
+   * `password` is excluded from default selects, so a loaded entity would
+   * not carry it.
    */
   async claimEmail(id: number): Promise<void> {
     await this.usersRepository.update(id, {
       password: null,
       emailVerified: true,
+      credentialsChangedAt: new Date(),
+    });
+  }
+
+  /**
+   * The one field `JwtStrategy` checks on every request, or `null` when the
+   * account no longer exists.
+   */
+  findCredentialsChangedAt(
+    id: number,
+  ): Promise<Pick<User, 'credentialsChangedAt'> | null> {
+    return this.usersRepository.findOne({
+      where: { id },
+      select: { id: true, credentialsChangedAt: true },
     });
   }
 
