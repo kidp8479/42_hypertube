@@ -2,6 +2,7 @@
 // proves the round trip works: it reads the bootstrapped user off the context.
 // The video library (HYP-13) takes its place.
 import { Trans, useTranslation } from 'react-i18next';
+import { APP_NAME, useDocumentTitle } from '../../app/document-title';
 import { useAuth } from './auth-context';
 
 /**
@@ -11,6 +12,7 @@ import { useAuth } from './auth-context';
 export function HomePage() {
   const { t } = useTranslation('auth');
   const { state } = useAuth();
+  useDocumentTitle();
 
   // RequireAuth only renders this component in the `authenticated` state, so
   // `state.user` is always set here - the `?.` is a type-level guard, not a
@@ -19,7 +21,7 @@ export function HomePage() {
 
   return (
     <div className="mx-auto my-12 flex max-w-lg flex-col items-start gap-4">
-      <h1>Hypertube</h1>
+      <h1>{APP_NAME}</h1>
       {/* An email has no space to break at: let it wrap anywhere on a phone. */}
       <p className="wrap-anywhere">
         <Trans

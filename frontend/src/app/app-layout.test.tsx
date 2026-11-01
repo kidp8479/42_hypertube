@@ -1,5 +1,6 @@
 // Spec for AppLayout: the header, main and footer landmarks on every page, and
-// the account controls only once signed in.
+// the account controls only once signed in, and a crashed page kept inside
+// the frame.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -11,15 +12,20 @@ import type { AuthState } from '../features/auth/auth-reducer';
 import { fakeUser, fakeAuth } from '../test/fixtures';
 import { AppLayout } from './app-layout';
 
-function renderLayout(state: AuthState) {
+function Broken(): never {
+  throw new Error('render failed');
+}
+
+function renderLayout(state: AuthState, path = '/') {
   const logout = vi.fn();
   render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider value={fakeAuth(state, { logout })}>
-        <MemoryRouter initialEntries={['/']}>
+        <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<p>page content</p>} />
+              <Route path="/broken" element={<Broken />} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -68,5 +74,20 @@ describe('AppLayout', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Log out' }));
     expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the header when a page crashes, and recovers on the next page', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { user } = renderLayout(
+      { status: 'anonymous', user: null },
+      '/broken',
+    );
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Hypertube' }));
+
+    expect(screen.getByText('page content')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

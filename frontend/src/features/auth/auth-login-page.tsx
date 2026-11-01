@@ -4,6 +4,7 @@
 // was wrong, so neither do we.
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useDocumentTitle } from '../../app/document-title';
 import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
 import { useLogin } from './auth-queries';
@@ -21,6 +22,7 @@ interface LoginLocationState {
 /** The `/login` page: the username-or-email + password form and the OAuth buttons. */
 export function LoginPage() {
   const { t } = useTranslation('auth');
+  useDocumentTitle(t('login.title'));
   const { state } = useAuth();
   const signIn = useLogin();
   const navigate = useNavigate();

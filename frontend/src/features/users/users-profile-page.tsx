@@ -1,5 +1,6 @@
 // Protected /profile route: the signed-in user edits their own account.
 import { useTranslation } from 'react-i18next';
+import { useDocumentTitle } from '../../app/document-title';
 import { ApiKeysSection } from '../api-keys/api-keys-section';
 import { useAuth } from '../auth/auth-context';
 import { UserAvatar } from './users-avatar';
@@ -15,6 +16,7 @@ import { PictureForm } from './users-picture-form';
 export function ProfilePage() {
   const { t } = useTranslation('users');
   const { state } = useAuth();
+  useDocumentTitle(t('profile.title'));
   // RequireAuth only renders this page once signed in.
   const user = state.user;
   if (!user) {

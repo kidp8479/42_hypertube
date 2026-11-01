@@ -16,6 +16,7 @@ export const commonFr: typeof commonEn = {
   errors: {
     generic: 'Une erreur est survenue. Veuillez réessayer.',
     retry: 'Réessayer',
+    reload: 'Recharger la page',
   },
   notFound: {
     title: 'Page introuvable',

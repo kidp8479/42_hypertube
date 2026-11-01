@@ -14,6 +14,7 @@ export const commonEn = {
   errors: {
     generic: 'Something went wrong. Please try again.',
     retry: 'Try again',
+    reload: 'Reload the page',
   },
   notFound: {
     title: 'Page not found',

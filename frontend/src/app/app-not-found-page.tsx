@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { buttonClasses } from '../ui/ui-button-classes';
+import { useDocumentTitle } from './document-title';
 
 /**
  * The 404 page, for signed-in and signed-out visitors alike. The link goes to
@@ -9,6 +10,7 @@ import { buttonClasses } from '../ui/ui-button-classes';
  */
 export function NotFoundPage() {
   const { t } = useTranslation('common');
+  useDocumentTitle(t('notFound.title'));
 
   return (
     <div className="mx-auto my-12 flex max-w-80 flex-col items-start gap-4">

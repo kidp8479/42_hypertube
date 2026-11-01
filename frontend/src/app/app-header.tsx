@@ -7,6 +7,7 @@ import type { User } from '../features/auth/auth-types';
 import { Button } from '../ui/ui-button';
 import { UserAvatar } from '../features/users/users-avatar';
 import { LanguageSwitcher } from './language-switcher';
+import { APP_NAME } from './document-title';
 
 const ROW = 'flex items-center gap-2 border-b border-line py-2 sm:gap-3';
 
@@ -51,7 +52,7 @@ export function AppHeader() {
           to="/"
           className="mr-auto font-mono font-medium tracking-label text-mint uppercase no-underline"
         >
-          Hypertube
+          {APP_NAME}
         </Link>
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
