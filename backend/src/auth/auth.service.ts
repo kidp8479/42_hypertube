@@ -135,7 +135,7 @@ export class AuthService implements OnModuleInit {
    * A unique violation (a concurrent first login, registration or
    * sign-up won the race to insert) runs the whole resolution once more,
    * so the winner's rows go through the normal path instead of a 409. A
-   * second violation is rethrown (ADR-0007, 2026-10-25 amendment).
+   * second violation is rethrown (ADR-0007, Consequences).
    */
   async resolveOAuthUser(profile: OAuthProfile): Promise<User> {
     try {

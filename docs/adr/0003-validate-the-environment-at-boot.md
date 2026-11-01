@@ -19,8 +19,8 @@ malformed, the process refuses to boot.
   logging were gated on `NODE_ENV !== 'production'`. A typo
   (`NODE_ENV=prod`) would have left `synchronize: true` live in production,
   where TypeORM can drop or alter columns to match the entities. The schema
-  only accepts `development | production | test`. (`synchronize` is now off
-  in every environment, ADR-0010; `NODE_ENV` still gates SQL logging.)
+  only accepts `development | production | test`. (`synchronize` is off in
+  every environment since ADR-0010; `NODE_ENV` gates SQL logging.)
 - **Type coercion in one place.** `process.env` values are always strings;
   the schema coerces `PORT` / `DATABASE_PORT` to numbers, so the rest of
   the code stops sprinkling `Number(...)` and `?? default`.

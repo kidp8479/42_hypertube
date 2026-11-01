@@ -1,47 +1,25 @@
 # Logout is client-side: discard the token, keep the TTL short
 
-**Date:** 2026-10-16 · **Status:** accepted, revocation superseded by [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)
+**Date:** 2026-10-16 · **Status:** superseded by
+[ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)
 
-The subject requires a one-click logout. Hypertube implements it as
-`POST /auth/logout` (an authenticated no-op that answers `204`) plus the
-frontend discarding its access token. The server keeps no revocation
-state: the token simply stops being used, and expires on its own after
-`JWT_EXPIRES_IN` (15 minutes by default).
+The decision: `POST /auth/logout` as an authenticated no-op (`204`), the
+frontend discarding its access token, and no revocation state on the
+server. A token leaked after logout stayed usable until it expired
+(`JWT_EXPIRES_IN`, 15 minutes).
 
-## Why
+## Why it was taken
 
-- **It follows from ADR-0002.** We chose stateless JWTs so that no request
-  needs a DB or cache round-trip. A logout that revokes tokens on the
-  server would reintroduce exactly the state ADR-0002 avoided, for a
-  project with a single backend instance and no real end users.
-- **The exposure window is bounded by the TTL.** A token that leaks after
-  logout is usable for at most its remaining lifetime, 15 minutes by
-  default. `JWT_EXPIRES_IN` is a validated `ms` duration (ADR-0003) but is
-  not capped, so raising it widens this window one for one: keep it short.
-- **The endpoint still exists on purpose.** The subject's RESTful API
-  evidence and the defense benefit from a real route, and it gives a
-  single place to add server-side revocation later without changing the
-  frontend contract. It is protected by the global `JwtAuthGuard` (no
-  `@Public()`), so an anonymous call gets `401`.
+It followed from the stateless JWTs of
+[ADR-0002](0002-jwt-bearer-tokens-for-authentication.md): a single backend
+instance, no real end users, and the exposure bounded by the short TTL. The
+rejected alternatives were a blocklist of token ids (a lookup per request
+and a cleanup job) and refresh-token rotation (a feature of its own, named
+as the upgrade path).
 
-## Alternatives rejected
+## Why it was superseded
 
-- **Token blocklist (DB/Redis, keyed by `jti`).** True server-side
-  invalidation, but it adds a table or a service, one lookup per
-  authenticated request, and a cleanup job for expired entries. Cost
-  is out of proportion with the threat for a graded school project.
-- **Short access token + refresh-token rotation.** The most complete
-  answer (logout revokes the refresh token, reuse is detectable), but it
-  needs refresh-token storage, a rotation endpoint, reuse detection and a
-  silent-refresh flow on the frontend. That is a feature of its own, not a
-  logout ticket. It stays the upgrade path if the project ever needs
-  real revocation.
-
-## Consequences
-
-- **A stolen token stays valid until it expires**, even after the user
-  logged out. Recorded in `docs/defense/known-limitations.md`.
-- `POST /auth/logout` does nothing server-side today. A Jest spec pins the
-  contract (`204` with a valid token, `401` without) so a future
-  revocation change is a conscious one.
-- Lowering `JWT_EXPIRES_IN` is the only knob that shrinks the window.
+A 15 minute session cannot hold a film, and a logout that cannot end a
+session is weak evidence for the subject's one-click logout. ADR-0011 took
+the upgrade path: rotating refresh tokens in an `HttpOnly` cookie, and a
+logout that revokes the session on the server.

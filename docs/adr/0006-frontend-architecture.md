@@ -1,6 +1,6 @@
 # Frontend architecture: declarative routing, feature folders, split state
 
-**Date:** 2026-09-08 · **Status:** accepted
+**Date:** 2026-09-08 · **Revised:** 2026-10-25 (HYP-78) · **Status:** accepted
 
 The React SPA (`frontend/`) is built on four deliberate choices, settled in a
 design and grilling session before any auth screen existed:
@@ -24,8 +24,10 @@ design and grilling session before any auth screen existed:
   (`loading` / `authenticated` / `anonymous`) is a pure reducer; `AuthProvider`
   wires it to the network. The access token lives in a module variable
   (`lib/token.ts`), is read by the fetch wrapper at call time, and is never
-  held in React state; a reload restores it from the refresh cookie
-  (ADR-0011).
+  held in React state. A load bootstraps with `POST /auth/refresh` then
+  `GET /users/me` (the refresh cookie, ADR-0011), and `apiFetch` refreshes
+  once on a 401 before the 401 net sees it (`docs/diagrams/auth.md`
+  section 8).
 
 Access control is expressed in the route tree, not the filesystem: protected
 routes are nested under a pathless `<Route element={<RequireAuth />}>`, and
@@ -35,8 +37,8 @@ it is public.
 
 ## Why
 
-- **The student starts a React/NestJS/TypeORM internship in ~10 days and is
-  using this project to widen skills.** The guiding rule for the whole
+- **The project doubles as practice for a React/NestJS/TypeORM
+  internship.** The guiding rule for the whole
   frontend: build the fundamentals by hand (a `fetch` wrapper, Context,
   routing) and adopt only the modern tools that are themselves internship
   skills (TanStack Query, Vitest, and Tailwind since ADR-0012). A file-based
@@ -60,7 +62,7 @@ it is public.
   state machine (three states, five events). Redux/Zustand would be a dependency
   and a pattern to learn for no gain here. `useReducer` is a React fundamental
   and keeps the transition logic pure and unit-testable without React.
-- **Token in memory, read only by the wrapper** (ADR-0011, HYP-78). Keeping it
+- **Token in memory, read only by the wrapper** (ADR-0011). Keeping it
   out of React state means there is exactly one source of truth and no
   re-render storm on login/logout. Out of `localStorage`, an injected script
   has no token to read; only the `HttpOnly` refresh cookie survives a reload.
@@ -95,11 +97,3 @@ it is public.
   [ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)), and the
   styling system (Tailwind CSS v4, decided in
   [ADR-0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md)).
-
-## Amendment 2026-10-25: the access token moves to memory (HYP-78)
-
-The token left `localStorage` for a module variable, as ADR-0011 planned: an
-XSS could read `localStorage`, and with the `HttpOnly` refresh cookie a reload
-no longer needs the token to survive. The bootstrap is now `POST /auth/refresh`
-then `GET /users/me`, and `apiFetch` refreshes once on a 401 before the 401 net
-sees it. The details are in `docs/diagrams/auth.md` section 8.
