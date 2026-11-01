@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { checkDashes } from './doc-checks/dashes.mjs';
+import { checkDocsIndex } from './doc-checks/docs-index.mjs';
 import { checkEnv } from './doc-checks/env.mjs';
 import { checkIndexes } from './doc-checks/indexes.mjs';
 import { checkLinks } from './doc-checks/links.mjs';
@@ -16,6 +17,7 @@ const CHECKS = [
   ['dashes', checkDashes],
   ['env variables', checkEnv],
   ['doc indexes and renders', checkIndexes],
+  ['every page reachable from docs/README.md', checkDocsIndex],
   ['routes: controller and Bruno request', checkRoutes],
 ];
 

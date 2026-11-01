@@ -1,54 +1,29 @@
 # Contributing
 
-Working notes for how this project is built day to day. Written for a
-future me as much as anyone else.
+How work is done on this repo, as a reference. New here: start with
+[`docs/onboarding.md`](docs/onboarding.md) (setup, day-one traps, the
+overview of this page).
 
 ## Workflow: one issue, one branch, one PR
 
-Work is tracked in Linear. Each unit of work is an issue; each issue gets
-its own branch (Linear suggests a branch name per issue) and its own pull
-request. A GitHub↔Linear integration moves the issue's status
-automatically: opening a branch/PR moves it to *In Progress*, merging moves
-it to *Done*.
-
-Drop a short comment on the Linear issue when there's meaningful progress
-to log (not just at the end) - it keeps the issue's history useful instead
-of a single "done" at the finish line.
+Each unit of work is a Linear issue, with its own branch (Linear's suggested
+name) and its own PR. The GitHub-Linear integration moves the issue to *In
+Progress* when a branch or PR opens and to *Done* when it merges, **even when
+the PR only does part of the issue**: write "Part of HYP-N" in the PR, split
+the rest into a child issue, or move the issue back after the merge. Log
+meaningful progress as a comment on the issue, not only at the end.
 
 ### Keeping branches up to date
 
-If `main` has moved forward while a feature branch is in progress, rebase
-the feature branch onto `main` before opening (or before merging) the PR -
-don't merge `main` into the feature branch. Merge commits are reserved for
-the single moment a PR actually merges into `main`; everything before that
-stays a clean, rebased line of commits.
+Rebase the feature branch onto `main`, never merge `main` into it. Merge
+commits exist only for the PR merge itself.
 
-**Rebase right before merging, every time** - a PR branched off an older
-`main` and merged with `--merge` produces a merge commit whose parents
-have diverged, which shows as crossing lines in the graph instead of a
-clean ladder. When several PRs are queued, merge one, then rebase the
-next onto the updated `main` (`@dependabot rebase` for Dependabot PRs)
-before merging it.
-
-**This is enforced, not just a convention to remember.** Branch
-protection on `main` requires every status check (`backend`, `frontend`,
-`e2e`, `scan`, `docs`) to be re-run against the *current* `main` before the merge
-button is even clickable (`required_status_checks.strict`) - a stale PR
-cannot be merged, full stop. This is what actually stops divergent merges
-from recurring - not the rule by itself.
-
-**Dependabot PRs merged in a batch are the main place this bites.**
-Dependabot rebases its own PR automatically when `main` moves
-(`rebase-strategy: auto`, the default - not set explicitly in
-`dependabot.yml`), but that rebase is webhook-triggered and not
-instant: merging several Dependabot PRs back to back, before Dependabot
-has caught up on the ones still open, is exactly how `main` ended up
-with 29 merge commits with diverged parents (HYP-54, fixed with a full
-history rewrite). The branch-protection check above now blocks that merge
-outright until the
-PR shows up to date; if it's stuck, comment `@dependabot rebase` on it
-rather than waiting, or merge Dependabot PRs one at a time with a pause
-between each.
+Branch protection on `main` enforces it: every required check (`backend`,
+`frontend`, `e2e`, `scan`, `docs`) must pass against the *current* `main`
+(`required_status_checks.strict`), so a stale PR cannot merge. With several
+PRs queued, merge one, rebase the next, let CI pass, merge it. Dependabot
+rebases its own PRs when `main` moves, but not instantly: merge them one at a
+time, and comment `@dependabot rebase` on one that is stuck.
 
 ### Diagrams
 
@@ -57,34 +32,27 @@ Mermaid diagram in its description **and** commits it to the domain's
 page in `docs/diagrams/` (one page per domain, overview first). Rule and
 index: [`docs/diagrams/README.md`](docs/diagrams/README.md).
 
+### Docs stay true
+
+A PR that changes behaviour updates, in the same PR, every page that
+describes it: the README, this file, an ADR, a diagram, the defense packet.
+Re-read the page for length while there: say what is true now, keep one place
+per fact and link to it. Every document is listed in
+[`docs/README.md`](docs/README.md); a new one is added there
+(`make check-docs` fails otherwise).
+
 ## Commits
 
-Commits are atomic: one logical change per commit, not a pile of unrelated
-edits squashed together. Commit messages loosely follow the
-`type: summary` convention used throughout this repo's history - `feat`,
-`fix`, `chore`, `docs` - with the body explaining *why* when it's not
-obvious from the diff alone.
+One logical change per commit. Messages are `type(HYP-N): summary` (`feat`,
+`fix`, `chore`, `docs`, `refactor`, `test`, `build`), with a body explaining
+*why* when the diff does not say it.
 
-Small, focused commits make `git log` and `git blame` actually useful
-later, especially on a project touching this many different areas
-(networking, streaming, auth, UI).
-
-Every commit tied to a Linear issue includes the issue key:
-`type(HYP-N): summary` (e.g. `feat(HYP-9): scaffold NestJS application`).
-This is on top of the branch-name-based link Linear already infers - it
-reinforces the link and helps the status auto-transition on merge.
-
-**Keep trailers tidy.** Commit messages and PR descriptions stay on the
-conventions above - no tool-appended `Co-authored-by:` bot identities,
-session backlinks, or "generated with" footers. The `.githooks/commit-msg`
-hook trims these from commit messages automatically (it never blocks a
-commit), but only where `core.hooksPath` is set: on a new machine run
-`make hooks-install` and check `git config core.hooksPath` prints
-`.githooks`. The `No assistant attribution` workflow is the server-side
-net: it fails a PR whose commit messages or description carry such a
-trailer or footer. It is not one of `main`'s required checks, so a red run
-does not grey out the merge button - treat it as blocking anyway. Human
-co-authors are kept.
+**Keep trailers tidy:** no tool-appended `Co-authored-by:` bot identities,
+session backlinks or "generated with" footers, in commits or PR
+descriptions. The `.githooks/commit-msg` hook trims them (`make install`
+sets `core.hooksPath` to `.githooks`; check it on a new machine). The `No
+assistant attribution` workflow fails a PR that carries one; it is not a
+required check, but treat it as blocking. Human co-authors are kept.
 
 ## Before committing
 
@@ -111,7 +79,8 @@ declaring a change ready - it mirrors what CI checks, minus the e2e job.
 `make check-docs` (`scripts/check-docs.mjs`, the `docs` CI job) is the doc
 drift check: relative links resolve, no em / en dash, every variable the
 backend requires is wired in compose, `.env.example` and the e2e job, the
-ADR and diagram indexes list everything, each `.excalidraw` has its `.png`,
+ADR and diagram indexes list everything, every page is reachable from
+`docs/README.md`, each `.excalidraw` has its `.png`,
 and every `METHOD /path` cited in the docs is declared by a controller **and**
 called by a request of `api/bruno/`. A route cited before it is built goes in
 the `PLANNED` list of `scripts/doc-checks/routes.mjs`. It names the file and
@@ -126,74 +95,6 @@ the function or file, never disable the rule inline. The count is
 monotone: it can only go down. When writing code with an agent, a local
 `anti-slop` skill (agent tooling, not part of the submitted tree) holds the
 same budget as an up-front checklist.
-
-## Onboarding: per-developer setup
-
-Every contributor needs their own `.env` **and** their own OAuth app
-registration for each provider - a `client_secret` is a personal
-credential (never committed, never shared), and each provider's callback
-URL is locked to one exact value with no wildcard, so nobody's app can
-be reused against another dev's `localhost`.
-
-1. Copy `.env.example` to `.env` and fill in `DATABASE_*` / `JWT_SECRET`
-   (see the comments in the file for what each expects).
-2. **42 OAuth app** - register one at
-   https://profile.intra.42.fr/oauth/applications/new:
-   - Redirect URI: `https://localhost:<HYPERTUBE_HTTPS_PORT>/api/auth/42/callback`
-     (`8443` unless you changed it in `.env`): the app is only reachable
-     through the edge proxy, which serves HTTPS and the API under `/api`
-     (ADR-0009). It must match `FORTYTWO_CALLBACK_URL` exactly: if you
-     change the port later, add the new URI here too, or 42 answers "The
-     redirect uri included is not valid".
-   - Copy the UID/secret into `FORTYTWO_CLIENT_ID` /
-     `FORTYTWO_CLIENT_SECRET`; `FORTYTWO_CALLBACK_URL` is the same
-     redirect URI above.
-3. **GitHub OAuth app** - register one at
-   https://github.com/settings/developers ("New OAuth App"):
-   - Homepage URL: `https://localhost:<HYPERTUBE_HTTPS_PORT>` (`8443`
-     by default)
-   - Redirect URI: `https://localhost:<HYPERTUBE_HTTPS_PORT>/api/auth/github/callback`
-     (GitHub keeps a single URI per app, so edit it when the port
-     changes; leave "Allow wildcard matching" off - one exact URI is enough and keeps
-     the smallest possible redirect surface)
-   - Leave "Enable Device Flow" off (that's for browser-less apps, e.g.
-     CLIs) and "Expire user access tokens" off (we exchange the code for
-     an access token once and never store or refresh it, so a
-     short-lived token + refresh flow buys nothing here)
-   - Copy the client ID/secret into `GITHUB_CLIENT_ID` /
-     `GITHUB_CLIENT_SECRET`; `GITHUB_CALLBACK_URL` is the redirect URI
-     above.
-4. `make up` to boot the stack, then see "Dev environment gotchas" below
-   for the traps that show up right after a fresh clone.
-
-## Dev environment gotchas
-
-Recurring local-setup traps, collected here so they are fixed once
-instead of rediscovered every few sessions.
-
-- **The backend container's `node_modules` is a separate named volume**
-  (`backend_node_modules:/app/node_modules` in `docker-compose.dev.yml`),
-  not the bind-mounted `./backend`. Installing a package on the host
-  (`cd backend && npm install ...`) updates `package.json` (bind-mounted,
-  shared) but **not** what the running container sees. Install inside
-  the container instead: `make be CMD="npm install <pkg>"` (add `-D` as
-  needed). Same reasoning applies to `frontend`/`make fe`. After a pull
-  that changes a lockfile, nothing to do: on start, `dev-start.sh` sees
-  the lockfile hash differ from the one stamped in the volume and runs
-  `npm ci` first (`docker compose restart backend` if it was running).
-- **VSCode may silently ignore `.vscode/settings.json`'s
-  `typescript.tsdk`.** The setting only takes effect once you explicitly
-  accept it: Command Palette -> "TypeScript: Select TypeScript Version..."
-  -> "Use Workspace Version" (once per workspace/clone). Symptom before
-  that: false-positive "Cannot find namespace 'jest'" / "Cannot find
-  name 'describe'" errors in the Problems panel, even though `npm run
-  typecheck` on the command line is green. The correct key is
-  `typescript.tsdk` - **never** `js/ts.tsdk.path`, which looks
-  plausible but is a no-op typo that has reappeared more than once.
-- **`backend_dist` (the other named volume, `/app/dist`) can come up
-  root-owned** on a fresh `docker compose up`, breaking `tsc --watch`
-  with `EACCES`. Fix: `docker compose exec -u root backend chown -R
-  node:node /app/dist`, then restart the `backend` service.
 
 ## Dependency updates (Dependabot)
 
@@ -233,7 +134,7 @@ endpoint. `make test-api` runs it headless against the running stack,
 through the edge proxy (`https://localhost:<HYPERTUBE_HTTPS_PORT>/api`, a
 self-signed certificate, so the CLI runs with `--insecure`); the port comes
 from `.env`. `POST /users` is capped at 10 per hour per
-IP and one run uses 5, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
+IP and one run registers 8 accounts, so set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) in
 `.env` for dev; it is forced to 1 when `NODE_ENV=production`. CI runs the
 same `make test-api` in the `e2e` job, after Playwright, on every PR.
 
@@ -437,41 +338,31 @@ not decoration.
 
 ## Tools in use
 
-- **Linear** - issue tracking, milestones, priorities. Labels group issues
-  by technical domain (auth, backend, frontend, torrent, security).
-- **GitHub** - source of truth for code, pull requests, code review.
-- **Slack** - day-to-day communication. A daily-log channel is used as a
-  running journal (what got done/blocked each day) to keep context between
-  work sessions. Native Slack integrations post GitHub activity and Linear
-  status changes into dedicated channels.
-- **Graphify** (`graphify-out/`, gitignored) - local, deterministic code
-  map of the repo (tree-sitter AST, no LLM, nothing leaves the machine).
-  `make graphify` builds it; `graphify explain "X"`, `graphify path "A" "B"`,
-  `graphify god-nodes` query it. Useful to trace impact before a change or
-  to orient a review without reading every file. Not a CI gate; the
-  graphify CLI is installed once with `uv tool install graphifyy`.
+- **Linear** for issues (labels by domain: auth, backend, frontend, torrent,
+  security), **GitHub** for code and review, **Slack** for a daily log of
+  each work session (`#hypertube-daily-log`), with GitHub and Linear activity
+  posted to their own channels.
+- **Graphify** (optional, `make graphify`, output git-ignored): a local code
+  map built from the syntax tree, to trace the impact of a change
+  (`graphify explain "X"`, `graphify path "A" "B"`). Install once with
+  `uv tool install graphifyy`.
 
 ## Security baseline (non-negotiable per the subject)
 
-- No plaintext passwords in the database.
-- No SQL injection surface - always use parameterized queries / the ORM,
-  never string-concatenated SQL.
-- No HTML/JS injection - sanitize/escape anything rendered from user input.
-- Validate every form and file upload, both client- and server-side.
-- `.env` is git-ignored; never commit a real secret. Use `.env.example`
-  for documenting required variables with placeholder values (placeholders
-  must satisfy the `env.validation` schema so a first boot fails loudly on
-  intent, not on a malformed example).
-- Auth endpoints (`login`, registration, the OAuth code exchange, and
-  later `reset-password`) are rate-limited with `@nestjs/throttler` - a
-  global ceiling plus a tight per-route `@Throttle`. Password hashing uses
-  the pinned `ARGON2_OPTIONS`
-  (ADR-0004), never the library defaults.
-- Authentication is deny-by-default: a global `JwtAuthGuard` protects
-  every route, and a route is opened only with an explicit `@Public()`.
-  Never protect routes one by one - a forgotten `@UseGuards` is a hole.
-- A route that mutates a user-owned resource re-checks ownership
-  (`req.user.id` via `@CurrentUser()`) and throws `ForbiddenException`
-  (403) on a mismatch - the token proving *who* you are is not proof you
-  own *this* row.
-- Zero console errors/warnings - browser or server - at defense time.
+The controls and their proofs are in
+[`docs/defense/security-checklist.md`](docs/defense/security-checklist.md).
+The rules a change must keep:
+
+- No plaintext password: argon2id with the pinned `ARGON2_OPTIONS`
+  (ADR-0004).
+- No SQL string built from input: the ORM or bound parameters only.
+- No HTML/JS injection: no `dangerouslySetInnerHTML`, JSON-only backend.
+- Every form and upload validated, client- and server-side.
+- Secrets only in `.env` (git-ignored); `.env.example` holds placeholders the
+  boot rejects, so a missing secret fails loudly.
+- Deny by default: the global `JwtAuthGuard` protects every route, and only
+  `@Public()` opens one. Never protect routes one by one.
+- A route that changes a user-owned row checks ownership from the token's user
+  (`@CurrentUser()`) and answers 403 on a mismatch.
+- Auth routes carry a named rate-limit policy (`config/throttle.config.ts`).
+- No console error or warning, browser or server, at the defense.

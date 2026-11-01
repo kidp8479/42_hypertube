@@ -10,10 +10,14 @@ the [root README](../README.md); conventions in
 src/
 ├── main.ts           # bootstrap: global ValidationPipe, serializer, exception filter, CORS, Swagger
 ├── app.module.ts     # composition root: config, TypeORM, throttler, global guards
-├── config/           # Joi env schema (ADR-0003), throttle scaling
-├── common/           # cross-module decorators (@NormalizeEmail, @Trim), QueryFailedFilter, utils
-├── auth/             # login, JWT, OAuth 42 + GitHub, exchange code, guards (ADR-0002, ADR-0007)
-└── users/            # User entity, /users endpoints
+├── config/           # Joi env schema (ADR-0003), named rate-limit policies, security headers, Swagger
+├── common/           # cross-module decorators (@Public, @CurrentUser, @NormalizeEmail, @Trim), filters, pipes, utils
+├── database/         # TypeORM data source (app and CLI)
+├── migrations/       # the schema, one migration per change (ADR-0010)
+├── auth/             # login, JWT, OAuth 42 + GitHub, exchange code, POST /oauth/token (ADR-0002, ADR-0007, ADR-0015)
+├── users/            # /users endpoints, profile pictures, password strength (ADR-0016, ADR-0017)
+├── sessions/         # refresh tokens and their cookie (ADR-0011)
+└── api-clients/      # API keys, /api-clients endpoints (ADR-0015)
 ```
 
 Files are named `<kebab-name>.<role>.ts`, specs co-located as

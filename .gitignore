@@ -72,15 +72,10 @@ backend/storage/
 # Subject reference material, not project source
 pdf/
 
-# Generated code documentation (Compodoc, in docs/backend/) - regenerate
-# with `make doc`. Ignore everything under docs/ except hand-written docs
-# that belong in the repo (ADRs, defense packet, diagrams, design mockup).
-docs/*
-!docs/adr/
-!docs/defense/
-!docs/deps/
-!docs/design/
-!docs/diagrams/
+# Generated code documentation (Compodoc): regenerate with `make doc`.
+docs/backend/
+# Local review notes, not part of the repo's docs.
+docs/reviews/
 
 # PR Lens writes its previews here. They are rebuilt on demand.
 .pr-lens/
