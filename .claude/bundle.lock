@@ -1,5 +1,5 @@
 # Written by agentic-lab scripts/sync-bundle.sh - do not edit by hand.
-lab_commit 951467024904525de6646f99cbfda29e6adfdaa8
+lab_commit 7f9542eb988f51d4b42e25209e3979b1011d48e4
 profile 42
 file .claude/agents/browser-e2e.md
 file .claude/agents/diff-auditor.md
