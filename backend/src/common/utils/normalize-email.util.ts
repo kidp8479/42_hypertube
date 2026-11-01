@@ -2,6 +2,7 @@
 // (a form DTO via `@NormalizeEmail`, or a raw OAuth provider profile that
 // never goes through the validation pipe) feeds the same value to lookups
 // and the `email` unique constraint.
+/** The one form of an address that lookups and the `email` index compare. */
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }

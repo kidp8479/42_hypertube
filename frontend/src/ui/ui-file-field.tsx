@@ -4,7 +4,6 @@ import { useId, useState, type ChangeEvent } from 'react';
 import { buttonClasses } from './ui-button-classes';
 import { FIELD_LABEL, FieldMessage } from './ui-field';
 
-/** Props of `FileField`. */
 export interface FileFieldProps {
   label: string;
   /** The text of the button that opens the file dialog. */

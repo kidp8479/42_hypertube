@@ -54,7 +54,6 @@ const INPUTS: Record<
   currentPassword: { type: 'password', autoComplete: 'current-password' },
 };
 
-/** Props of `CredentialsForm`. */
 export interface CredentialsFormProps {
   /** The signed-in user, as last saved. */
   user: User;

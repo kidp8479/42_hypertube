@@ -7,7 +7,6 @@ import type { CreatedApiKey } from './api-keys-actions';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
-/** Props of `ApiKeySecret`. */
 export interface ApiKeySecretProps {
   apiKey: CreatedApiKey;
   /** Hides the secret for good. */

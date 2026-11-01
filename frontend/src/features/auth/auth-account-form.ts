@@ -19,7 +19,6 @@ export interface SendResult<V, K extends string> {
   values?: V;
 }
 
-/** Options of {@link useAccountForm}. */
 export interface AccountFormOptions<
   F extends string,
   V extends Record<F, string>,
