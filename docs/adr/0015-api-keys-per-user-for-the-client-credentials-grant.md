@@ -1,6 +1,6 @@
 # API keys per user for the client-credentials grant
 
-**Date:** 2026-10-31 · **Status:** accepted
+**Date:** 2026-10-31 · **Revised:** 2026-11-01 (HYP-143) · **Status:** accepted
 
 The subject's API section documents `POST oauth/token`: "Expects client +
 secret, returns an auth token". The same API must let an authenticated user
@@ -53,6 +53,9 @@ table, `backend/src/api-clients/`):
 - **Keys survive a password change.** They are separate credentials, like a
   personal access token, and the owner revokes them one by one. The email or
   password change ends the browser sessions only (HYP-84).
+- **A claim deletes every key.** An OAuth login that claims an unverified
+  account (ADR-0007) deletes its keys with its sessions: a key minted by
+  whoever held the account before would otherwise keep buying tokens for it.
 - **No refresh token for a client.** It asks again with its secret.
   `POST /oauth/token` has its own rate limit (`OAUTH_TOKEN_THROTTLE`).
 - **Keys are managed on `/profile`** (HYP-123): create one, see its secret

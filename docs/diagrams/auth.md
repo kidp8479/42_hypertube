@@ -175,7 +175,7 @@ flowchart TD
     C -- no --> E{"local user with<br/>this email?"}
     E -- yes --> V{"its email<br/>verified?"}
     V -- yes --> G["link identity to that user"]
-    V -- no --> K["claim it first: drop the password,<br/>revoke every session and the other links,<br/>mark the email verified"]
+    V -- no --> K["claim it first: drop the password,<br/>revoke every session, API key and other link,<br/>mark the email verified"]
     K --> G
     E -- no --> F["create a new user"]
     F --> H["link identity to the new user"]

@@ -18,7 +18,7 @@ import { Repository } from 'typeorm';
 import { OAuthProfile } from './strategies/oauth-profile.interface';
 import { normalizeEmail } from '../common/utils/normalize-email.util';
 import { isUniqueViolation } from '../common/utils/unique-violation.util';
-import { RefreshTokenService } from '../sessions/refresh-token.service';
+import { AccountClaimService } from './account-claim.service';
 
 /**
  * Credential verification and token issuance for the login flow, plus the
@@ -40,7 +40,7 @@ export class AuthService implements OnModuleInit {
     private readonly jwtService: JwtService,
     @InjectRepository(OAuthAccount)
     private readonly oauthAccountRepository: Repository<OAuthAccount>,
-    private readonly refreshTokens: RefreshTokenService,
+    private readonly accountClaim: AccountClaimService,
   ) {}
 
   async onModuleInit() {
@@ -120,8 +120,9 @@ export class AuthService implements OnModuleInit {
    * email change checks the address, so an attacker could put a victim's
    * email on an account they hold, by a password, a session or a provider
    * of their own. When the real owner signs in through a provider, the
-   * account becomes theirs alone: its password, its sessions and its other
-   * provider links are revoked, and its email is marked verified. The
+   * account becomes theirs alone ({@link AccountClaimService}): its
+   * password, its sessions, its API keys and its other provider links are
+   * revoked, and its email is marked verified. The
    * owner sets a new password through the reset flow. A verified account
    * is linked as is: a provider already vouched for that email.
    *
@@ -166,9 +167,7 @@ export class AuthService implements OnModuleInit {
       // Claimed before the link exists, not after: if a step fails between
       // the two, the account may end up claimed and unlinked (the next
       // login links normally) but never linked with the old access intact.
-      await this.usersService.claimEmail(user.id);
-      await this.refreshTokens.revokeAllForUser(user.id);
-      await this.oauthAccountRepository.delete({ userId: user.id });
+      await this.accountClaim.claim(user.id);
     }
 
     await this.oauthAccountRepository.save(
