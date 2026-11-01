@@ -29,7 +29,7 @@ Mermaid.
 | Poster | Domain page |
 |---|---|
 | [`auth-flow.png`](auth-flow.png) | [`auth.md`](auth.md) |
-| [`auth-logout.png`](auth-logout.png) | [`auth.md`](auth.md) (section 6) |
+| [`auth-logout.png`](auth-logout.png) | [`auth.md`](auth.md) (section 7) |
 | [`i18n-language.png`](i18n-language.png) | [`i18n.md`](i18n.md) |
 
 ## Rule: a diagram in a PR lands here too
@@ -50,76 +50,24 @@ once; this folder is what a newcomer gets shown.
 
 ## Excalidraw posters
 
-Each poster has three files:
+Each poster has three files: the `.excalidraw` **source of truth** (open it
+at excalidraw.com or with the VS Code Excalidraw extension), the rendered
+`.png`, and an optional `.py` that rebuilds the `.excalidraw` with a
+generator library not shipped in the repo. Without that library, edit the
+`.excalidraw` directly.
 
-| File | Role |
-|---|---|
-| `*.excalidraw` | **source of truth**, editable by anyone at excalidraw.com or with the VS Code Excalidraw extension |
-| `*.png` | rendered view, embedded in docs / Linear / the defense deck |
-| `*.py` | regeneration script (optional, see below) |
+When a flow changes:
 
-### Editing
+1. Edit the `.excalidraw` (or the `.py`) and re-export the `.png` (VS Code:
+   "Export to PNG").
+2. **Look at the `.png`**: no overlapping boxes or arrows, text not
+   clipped, reading order obvious, colours consistent. Fix until clean.
+3. Commit on the branch that changed the flow.
+4. Refresh the copy in the Linear document **"Auth - architecture"**
+   (`auth-flow` only): upload the new `.png` to an Auth issue and update the
+   `![](...)` URL in the document.
 
-Open the `.excalidraw` file, change it, save, and re-export the PNG:
-
-```sh
-# with the VS Code Excalidraw extension: "Export to PNG" from the editor
-# or, headless, with the repo's local excalidraw-diagrams agent skill
-# (not part of the submitted tree):
-node .claude/skills/excalidraw-diagrams/scripts/export_playwright.js \
-  docs/diagrams/auth-flow.excalidraw docs/diagrams/auth-flow.png
-```
-
-First run only: `npm install` in `.claude/skills/excalidraw-diagrams/scripts/`,
-then `npx playwright install chromium-headless-shell` there if the export
-complains about a missing browser. Run from the repo root.
-
-### Regenerating from the script
-
-The `.py` scripts drive the repo's `excalidraw-diagrams` skill
-(`.claude/skills/excalidraw-diagrams`). They are committed so a diagram
-can be rebuilt deterministically after a code change, but they are not
-required: the `.excalidraw` file stands on its own. That skill is local
-agent tooling, absent from the submitted tree: without it, edit the
-`.excalidraw` in any Excalidraw editor and re-export the PNG.
-
-```sh
-python3 docs/diagrams/auth-flow.py
-node .claude/skills/excalidraw-diagrams/scripts/export_playwright.js \
-  docs/diagrams/auth-flow.excalidraw docs/diagrams/auth-flow.png
-```
-
-### The loop, when the code changes
-
-1. Edit the `.excalidraw` (or the `.py`).
-2. Re-render the `.png`.
-3. **Look at the `.png`** and check it: no overlapping boxes or arrows,
-   arrows on the right sides, text not clipped, reading order obvious,
-   colours consistent. Fix and re-render until clean.
-4. Commit on the branch for the feature that changed the flow.
-5. Refresh the mirrored Linear document's image (below).
-
-### Published copies
-
-`auth-flow` is mirrored in the Linear document **"Auth - architecture"**
-(Hypertube project), embedded as a PNG and linked from Auth-labelled
-issues. To refresh it after a change here: upload the new `.png` as an
-attachment on an Auth issue, then update the `![](...)` URL in the
-document. The natural cadence is "when the feature that changed the flow
-merges", not every edit.
-
-### Current posters
-
-- **`auth-flow`** - create an account (`POST /users`), get a token
-  (`POST /auth/login`), and the guard chain on every other route
-  (`JwtAuthGuard`, `@Public()`, ownership check), and sign-in with 42 or
-  GitHub (state cookie, callback, single-use exchange code, token, and the
-  `?error=` redirect on any callback failure).
-  Reflects HYP-10 + HYP-44 + HYP-46 + HYP-11 + HYP-53 + HYP-57 + HYP-77 (the refresh cookie set at login and exchange). Backend
-  legs only: the SPA side is in [`auth.md`](auth.md), adding it to the
-  poster is HYP-51. Logout has its own poster (`auth-logout`, below); add
-  reset-password when it is built.
-- **`auth-logout`** - the one-click logout (HYP-35, ADR-0011): the public,
-  cookie-driven `POST /auth/logout` that revokes the refresh-token session and
-  clears the cookie (204 even with nothing to revoke), the local sign-out, and
-  the limit that an access token already issued lives out its 15 minutes.
+| Poster | Shows | Gaps |
+|---|---|---|
+| `auth-flow` | register (`POST /users`), login, the guard chain (`JwtAuthGuard`, `@Public()`, ownership), sign-in with 42 / GitHub (state cookie, callback, exchange code, `?error=`), the refresh cookie set at login and exchange | backend legs only (the SPA side is HYP-51); reset password when it is built |
+| `auth-logout` | the public, cookie-driven `POST /auth/logout`: revokes the session, clears the cookie, 204 even with nothing to revoke; the local sign-out; an issued access token lives out its 15 minutes | |
