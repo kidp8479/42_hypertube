@@ -1,20 +1,15 @@
 // The profile page's picture form: upload a new picture, or remove it.
 import { useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api';
 import { Alert } from '../../ui/ui-alert';
 import { Button } from '../../ui/ui-button';
-import type { FormOutcome } from '../auth/auth-account-form';
+import { refusalOutcome, type FormOutcome } from '../auth/auth-account-form';
 import { PictureField, type PicturePick } from '../auth/auth-picture-field';
 import type { User } from '../auth/auth-types';
 import { usePictureWrites } from './users-queries';
 
 type Outcome =
-  | 'picture.saved'
-  | 'picture.removed'
-  | 'picture.refused'
-  | 'picture.tooLarge'
-  | 'errors.generic';
+  'picture.saved' | 'picture.removed' | 'picture.refused' | 'picture.tooLarge';
 
 // The backend reads the bytes: a file the browser took for an image can
 // still be refused (400), and the size cap is checked again (413).
@@ -22,12 +17,6 @@ const REFUSALS: Partial<Record<number, Outcome>> = {
   400: 'picture.refused',
   413: 'picture.tooLarge',
 };
-
-const refusal = (caught: unknown): FormOutcome<Outcome> => ({
-  key:
-    (caught instanceof ApiError && REFUSALS[caught.status]) || 'errors.generic',
-  tone: 'error',
-});
 
 export interface PictureFormProps {
   /** The signed-in user, as last saved. */
@@ -43,7 +32,9 @@ export function PictureForm({ user }: PictureFormProps) {
   const { t } = useTranslation('users');
   const writes = usePictureWrites(user);
   const [pick, setPick] = useState<PicturePick>({ file: null });
-  const [outcome, setOutcome] = useState<FormOutcome<Outcome> | null>(null);
+  const [outcome, setOutcome] = useState<FormOutcome<
+    Outcome | 'errors.generic'
+  > | null>(null);
   const [resetKey, setResetKey] = useState(0);
 
   async function run(write: () => Promise<unknown>, done: Outcome) {
@@ -54,8 +45,15 @@ export function PictureForm({ user }: PictureFormProps) {
       setPick({ file: null });
       setResetKey((key) => key + 1);
     } catch (caught) {
-      setOutcome(refusal(caught));
+      setOutcome(refusalOutcome(caught, REFUSALS));
     }
+  }
+
+  // A new pick starts over: the last answer was about the previous file,
+  // and the field shows its own check on the new one.
+  function choose(next: PicturePick) {
+    setPick(next);
+    setOutcome(null);
   }
 
   function upload(event: SyntheticEvent) {
@@ -71,7 +69,7 @@ export function PictureForm({ user }: PictureFormProps) {
       <h2 className="text-lg">{t('picture.title')}</h2>
       <PictureField
         hint={t('picture.hint')}
-        onPick={setPick}
+        onPick={choose}
         resetKey={resetKey}
       />
       {outcome && <Alert tone={outcome.tone}>{t(outcome.key)}</Alert>}

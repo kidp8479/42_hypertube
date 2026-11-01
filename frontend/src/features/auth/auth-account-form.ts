@@ -36,10 +36,18 @@ export interface AccountFormOptions<
   refusals?: Partial<Record<number, K>>;
 }
 
-const GENERIC_ERROR: FormOutcome<'errors.generic'> = {
-  key: 'errors.generic',
-  tone: 'error',
-};
+/**
+ * The message for a failed send: the one `refusals` gives the HTTP status,
+ * or the generic error for any other status and anything that is not an
+ * HTTP refusal (a network failure).
+ */
+export function refusalOutcome<K extends string>(
+  caught: unknown,
+  refusals: Partial<Record<number, K>>,
+): FormOutcome<K | 'errors.generic'> {
+  const key = caught instanceof ApiError ? refusals[caught.status] : undefined;
+  return { key: key ?? 'errors.generic', tone: 'error' };
+}
 
 /**
  * Owns an account form's state and its submit: clear the last message,
@@ -84,9 +92,7 @@ export function useAccountForm<
         setOutcome(result.outcome);
       }
     } catch (caught) {
-      const key =
-        caught instanceof ApiError ? refusals[caught.status] : undefined;
-      setOutcome(key ? { key, tone: 'error' } : GENERIC_ERROR);
+      setOutcome(refusalOutcome(caught, refusals));
     } finally {
       setIsSubmitting(false);
     }

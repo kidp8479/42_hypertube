@@ -8,6 +8,7 @@ export const API_BASE = '/api';
 
 export const UNAUTHORIZED = 401;
 const NO_CONTENT = 204;
+const BAD_GATEWAY = 502;
 
 /** A non-ok `fetch` response, surfaced with its status so callers can branch on it (401 -> logout, 403 -> ownership, ...). */
 export class ApiError extends Error {
@@ -167,5 +168,12 @@ export async function apiFetch<T>(
     return undefined;
   }
 
-  return JSON.parse(rawBody) as T;
+  // A 2xx that is not JSON did not come from the backend (an HTML page from
+  // a proxy in between): a bad gateway, so callers get an ApiError and show
+  // their generic message instead of a raw SyntaxError.
+  try {
+    return JSON.parse(rawBody) as T;
+  } catch {
+    throw new ApiError(BAD_GATEWAY, 'Response is not JSON');
+  }
 }
