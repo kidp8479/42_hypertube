@@ -265,9 +265,9 @@ export class UsersService {
    * @throws {NotFoundException} 404 when the id matches no row.
    */
   async setPicture(id: number, bytes: Buffer): Promise<User> {
-    const user = await this.findOne(id);
+    await this.findOne(id);
     return this.pictures.storeFor(bytes, (name) =>
-      this.pointPictureAt(user, name),
+      this.pointPictureAt(id, name),
     );
   }
 
@@ -277,14 +277,32 @@ export class UsersService {
    * @throws {NotFoundException} 404 when the id matches no row.
    */
   async clearPicture(id: number): Promise<User> {
-    return this.pointPictureAt(await this.findOne(id), null);
+    return this.pointPictureAt(id, null);
   }
 
-  /** Saves `user` with a new picture name, then deletes the file it replaced. */
-  private async pointPictureAt(user: User, name: string | null) {
-    const previous = user.profilePicture;
-    user.profilePicture = name;
-    const saved = await this.usersRepository.save(user);
+  /**
+   * Saves the user's new picture name, then deletes the file it replaced.
+   * The name it replaces is read under a row lock (`SELECT ... FOR UPDATE`):
+   * two uploads at once would otherwise both read the same old name, and
+   * the first one's new file would be left on disk, pointed at by nothing.
+   *
+   * @throws {NotFoundException} 404 when the id matches no row.
+   */
+  private async pointPictureAt(id: number, name: string | null) {
+    const { saved, previous } = await this.usersRepository.manager.transaction(
+      async (manager) => {
+        const user = await manager.findOne(User, {
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!user) {
+          throw new NotFoundException(`User ${id} not found`);
+        }
+        const replaced = user.profilePicture;
+        user.profilePicture = name;
+        return { saved: await manager.save(user), previous: replaced };
+      },
+    );
     await this.pictures.delete(previous);
     return saved;
   }

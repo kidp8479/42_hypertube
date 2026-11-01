@@ -32,6 +32,10 @@ type RepositoryMock = {
   createQueryBuilder: jest.Mock;
 };
 
+// The transaction a picture change runs in: the row read under a lock, then
+// saved. `transaction` just hands the callback this manager.
+const lockedRow = { findOne: jest.fn(), save: jest.fn() };
+
 // A valid registration payload. Override just the fields a test cares about.
 const buildCreateUserDto = (
   overrides: Partial<CreateUserDto> = {},
@@ -85,6 +89,11 @@ describe('UsersService', () => {
             delete: jest.fn(),
             update: jest.fn(),
             createQueryBuilder: jest.fn(),
+            manager: {
+              transaction: (
+                work: (manager: typeof lockedRow) => Promise<unknown>,
+              ) => work(lockedRow),
+            },
           },
         },
       ],
@@ -453,11 +462,13 @@ describe('UsersService', () => {
       Object.assign(new User(), { id: 7, profilePicture });
 
     beforeEach(() => {
-      repository.save.mockImplementation((user: User) => Promise.resolve(user));
+      lockedRow.findOne.mockReset();
+      lockedRow.save.mockImplementation((user: User) => Promise.resolve(user));
     });
 
     it('setPicture points the row at the new file, then deletes the old one', async () => {
       repository.findOneBy.mockResolvedValue(withPicture('old.png'));
+      lockedRow.findOne.mockResolvedValue(withPicture('old.png'));
 
       const user = await service.setPicture(7, Buffer.from('png'));
 
@@ -465,13 +476,37 @@ describe('UsersService', () => {
       expect(pictures.delete).toHaveBeenCalledWith('old.png');
     });
 
-    it('clearPicture sets null and deletes the file', async () => {
+    it('reads the file it replaces under a row lock, not from the first read', async () => {
+      // A concurrent upload landed between the 404 check and the save: the
+      // file to delete is the one it stored, or it would be orphaned.
       repository.findOneBy.mockResolvedValue(withPicture('old.png'));
+      lockedRow.findOne.mockResolvedValue(withPicture('concurrent.png'));
+
+      await service.setPicture(7, Buffer.from('png'));
+
+      expect(lockedRow.findOne).toHaveBeenCalledWith(User, {
+        where: { id: 7 },
+        lock: { mode: 'pessimistic_write' },
+      });
+      expect(pictures.delete).toHaveBeenCalledWith('concurrent.png');
+    });
+
+    it('clearPicture sets null and deletes the file', async () => {
+      lockedRow.findOne.mockResolvedValue(withPicture('old.png'));
 
       const user = await service.clearPicture(7);
 
       expect(user.profilePicture).toBeNull();
       expect(pictures.delete).toHaveBeenCalledWith('old.png');
+    });
+
+    it('clearPicture throws 404 and deletes nothing for an unknown id', async () => {
+      lockedRow.findOne.mockResolvedValue(null);
+
+      await expect(service.clearPicture(999)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(pictures.delete).not.toHaveBeenCalled();
     });
 
     it('remove deletes the account, then its picture', async () => {
