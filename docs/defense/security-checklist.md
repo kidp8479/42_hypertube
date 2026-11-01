@@ -6,10 +6,10 @@ against, where it lives, and how to prove it. Companion to
 per subject requirement); this file is the mechanism-level view and is
 also where the accepted **gaps** are written down.
 
-Scope today: the auth surface (`/auth/login`, `/users`, the OAuth 42 /
-GitHub handshake and `/auth/oauth/exchange`) and the app-wide guards.
-Grows as `movies` / `comments` / `torrent` land. Tied to HYP-16 (final
-security audit).
+Scope today: accounts and sessions (`/users`, `/auth/*`, the OAuth 42 /
+GitHub handshake), API keys and `POST /oauth/token`, profile pictures, the
+security headers and the app-wide guards. Grows as `movies` / `comments` /
+`torrent` land. Tied to HYP-16 (final security audit).
 
 Proof is cited as a file path, not a test count. All spec files below are
 committed under `backend/src/`.
@@ -32,7 +32,7 @@ future query loads it anyway.
 
 | Control | Where |
 |---|---|
-| All data access goes through the TypeORM repository / query builder; no string concatenation with user input | `users.service.ts` is the only module that touches the repo (`UsersService` doc comment enforces this by convention) |
+| All data access goes through the TypeORM repository / query builder; no string concatenation with user input | each repository is injected only in its own module's services (`users/`, `sessions/`, `api-clients/`, and `auth.service.ts` for `oauth_account`) |
 | Parameterised `where` in the hand-written queries | `UsersService.findWithPassword(where, params)`, called with `'user.email = :email'` and `'LOWER(user.username) = LOWER(:identifier)'`: the value always travels as a parameter |
 | Numeric route params validated before any query is built | `users.controller.ts` `@Param('id', ParseIdPipe)` (`common/pipes/parse-id.pipe.ts`) - a non-numeric or out-of-range `:id` is 400 before the service runs, so no query is built from `NaN` | 
 | Proof | `users.controller.params.spec.ts`; code review - grep for template strings in `.where(` / `.query(` returns nothing |
@@ -84,11 +84,11 @@ the id checked for ownership comes from the verified token
 
 | Control | Where | Proof |
 |---|---|---|
-| Login CSRF: `state` must equal a one-shot nonce cookie set by `/auth/<provider>/login` (`HttpOnly`, `SameSite=Lax`, `Path=/auth`, ~10 min, `Secure` in production), compared in constant time and cleared on the callback | `auth/strategies/cookie-state.store.ts`, passed as `store` to both strategies | `cookie-state.store.spec.ts`; Bruno 17-18; `frontend/e2e/oauth.spec.ts` |
+| Login CSRF: `state` must equal a one-shot nonce cookie set by `/auth/<provider>/login` (`HttpOnly`, `SameSite=Lax`, `Path=/api/auth` behind the proxy, ~10 min, `Secure` over HTTPS), compared in constant time and cleared on the callback | `auth/strategies/cookie-state.store.ts`, passed as `store` to both strategies | `cookie-state.store.spec.ts`; Bruno 17-18; `frontend/e2e/oauth.spec.ts` |
 | No JWT in a URL: the callback redirects to the SPA with a single-use exchange code (32 random bytes, 60 s TTL, deleted on first use), traded for the token by `POST /auth/oauth/exchange` | `auth/oauth-exchange.service.ts`, `auth.controller.ts` | `oauth-exchange.service.spec.ts`; Bruno 19-20 |
 | Unknown, used and expired codes answer the same `401` | `AuthController.exchange` | `auth.controller.spec.ts` |
 | A provider identity auto-links to an existing account only through a verified email: a strategy returns only a provider-verified address or refuses the login (GitHub: primary + verified row of `/user/emails`, never the public profile email) | `auth.service.ts` `resolveOAuthUser`, `oauth-profile.interface.ts`, `github.strategy.ts` | `auth.service.spec.ts`, `github.strategy.spec.ts`; ADR-0007 |
-| One provider account maps to one local user: unique `(provider, providerUserId)`, the loser of a link race signs in through the winner's row | `auth/entities/oauth-account.entity.ts`, `AuthService.recoverFromLinkRace` | `auth.service.spec.ts` |
+| One provider account maps to one local user: unique `(provider, providerUserId)`, a lost insert race reruns the resolution once and signs in through the winner's rows | `auth/entities/oauth-account.entity.ts`, `AuthService.resolveOAuthUser` | `auth.service.spec.ts` |
 | A failed callback leaks nothing: it redirects to the SPA with one of three reasons (`cancelled`, `email_unverified`, `failed`), details stay in the server log; success and failure redirects send `Referrer-Policy: no-referrer` (the callback URL holds the provider's `code` and `state`) | `auth/filters/oauth-callback.filter.ts`, `auth/decorators/oauth-callback.decorator.ts` | `oauth-callback.filter.spec.ts`; Bruno 17-18; ADR-0007 |
 
 ## 6. Account-existence disclosure
@@ -116,9 +116,8 @@ the id checked for ownership comes from the verified token
 
 Guard order in `app.module.ts` is deliberate: `ThrottlerGuard` is
 registered before `JwtAuthGuard`, so an unauthenticated flooder is capped
-before the token check runs. The counter is in-process; a shared Redis
-store is only needed once more than one backend instance runs (noted in
-`app.module.ts`).
+before the token check runs. The counter is in-process
+([`known-limitations.md`](known-limitations.md)).
 
 ## 8. Authorization (ownership)
 
@@ -148,7 +147,7 @@ store is only needed once more than one backend instance runs (noted in
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
 | TLS terminated at the edge proxy (self-signed in dev, a mounted certificate elsewhere); HTTP redirects to HTTPS; `nosniff` and frame options at the edge; HSTS only when `PROXY_HSTS_MAX_AGE` is set. helmet and the CSP on the backend and the SPA server, one owner per header | `proxy/`, ADR-0009, ADR-0014 |
 | Edge proxy hardening from the web-security-review of HYP-71 (HYP-73): the HTTP redirect goes to a configured name, not the Host header; the access log keeps no query string or Referer (OAuth codes); `X-Forwarded-For` is set in every location | `proxy/templates/default.conf.template`, `proxy/snippets/`, ADR-0009 |
-| CORS locked to a single configured origin (no `*`, no credentialed requests: the JWT is a bearer header) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, falls back to the Vite dev server) |
+| CORS locked to a single configured origin (no `*`, no credentialed requests: the SPA is served from the same origin as the API behind the proxy, so the refresh cookie needs none) | `main.ts` `enableCors` (`FRONTEND_ORIGIN`, required at boot) |
 | Every backend response is `Cache-Control: no-store`: per-user data is never replayed from the browser cache (a stale profile after a reload) nor left on disk after logout | `config/no-store.config.ts` (`no-store.config.spec.ts`, Bruno 09) |
 
 ## 11. Schema / data integrity
@@ -162,7 +161,6 @@ store is only needed once more than one backend instance runs (noted in
 | Gap | Ticket | Severity |
 |---|---|---|
 | Register leaks account existence via `409` vs `201` status code | HYP-50 | medium - throttled, but real |
-| Login is throttled per IP only, while usernames (the login key since HYP-91) are listed to every signed-in user | HYP-94 | medium - password spraying from many IPs |
 | An access token cannot be revoked before it expires (the refresh token is revoked on logout) | ADR-0011 (accepted) | low (15 minutes) |
 | An email change is not verified | HYP-39 | low - it takes `currentPassword`, and the new email stays unverified, so the provider owner of that address claims the account |
 | An uploaded picture keeps its EXIF metadata (not re-encoded) | ADR-0016, `known-limitations.md` | low - the owner's own photo, readable by those who see it |

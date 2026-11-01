@@ -1,8 +1,8 @@
 # Auth domain
 
 How an account is created, how a browser gets a token (password or 42 /
-GitHub), and how that token guards every other route. Start with the
-overview, then open the detail that matches the code you are touching.
+GitHub), and how that token guards every other route. Sections 1, 2, 5, 8
+and the "frontend side" subsections are the SPA; the rest is the backend.
 
 Decisions behind it: [ADR-0001](../adr/0001-hash-passwords-with-argon2id.md)
 / [ADR-0004](../adr/0004-pin-argon2id-cost-parameters.md) (argon2id),
@@ -74,13 +74,6 @@ flowchart RL
 The dotted arrows are the one exception: `RefreshToken` and `ApiClient` name
 `User` for their foreign key and the cascade on delete. It is a link in the data model, not a
 call; the Nest modules still form a one-way chain.
-
-What the overview hides, each covered below or in the ADRs: rate limits
-(section 10 and `security-checklist.md` section 7), the uniform 401 on login, the 403 on
-another user's row, the SPA's session states and `RequireAuth` (section 2),
-how the SPA keeps the session across a reload and a 401 (section 8), changing
-the email or the password (section 9), API keys and `POST /oauth/token`
-(section 11).
 
 ## 1. Register, frontend side (HYP-46)
 
@@ -254,10 +247,7 @@ side is section 8.
 
 ## 7. Logout (HYP-35, HYP-77)
 
-`POST /auth/logout` is public and driven by the cookie, so it works with an
-expired access token: it revokes the whole session, clears the cookie and
-answers 204, even when there is nothing to revoke. The SPA calls it best effort
-and signs out locally whatever the answer.
+Public and driven by the cookie, so it works with an expired access token.
 
 ```mermaid
 sequenceDiagram
@@ -275,8 +265,7 @@ sequenceDiagram
 ```
 
 An access token copied before logout still works until it expires (15 minutes),
-but nothing can renew it. Listed in
-[`known-limitations.md`](../defense/known-limitations.md).
+but nothing can renew it ([`known-limitations.md`](../defense/known-limitations.md)).
 
 ## 8. The SPA keeps the session (HYP-78)
 
