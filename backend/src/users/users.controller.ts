@@ -7,7 +7,6 @@ import {
   Patch,
   Param,
   Delete,
-  ForbiddenException,
   Req,
   UploadedFile,
   UseGuards,
@@ -46,6 +45,7 @@ import { User } from './entities/user.entity';
 import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { PICTURE_UPLOAD_LIMITS } from './profile-picture.store';
 import { setRefreshCookie } from '../sessions/refresh-cookie.util';
+import { assertOwnAccount } from './own-account.util';
 
 /**
  * Account CRUD (`/users`). Registration is public; every mutating route on
@@ -187,9 +187,7 @@ export class UsersController {
     @CurrentUser() user: AuthUser,
     @Req() req: Request,
   ) {
-    if (user.id !== id) {
-      throw new ForbiddenException();
-    }
+    assertOwnAccount(user, id);
     const { user: updated, credentialsChanged } =
       await this.usersService.update(id, updateUserDto);
     if (credentialsChanged) {
@@ -215,9 +213,7 @@ export class UsersController {
   @UseGuards(SessionTokenGuard)
   @Delete(':id')
   remove(@Param('id', ParseIdPipe) id: number, @CurrentUser() user: AuthUser) {
-    if (user.id !== id) {
-      throw new ForbiddenException();
-    }
+    assertOwnAccount(user, id);
     return this.usersService.remove(id);
   }
 }
