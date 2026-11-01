@@ -1,5 +1,6 @@
 // The single fetch wrapper every API call in the app goes through, and the
-// access-token refresh it falls back on when a request answers 401.
+// access-token refresh it runs ahead of expiry, or falls back on when a
+// request answers 401.
 import { getAuthToken, removeAuthToken, setAuthToken } from './token';
 
 /** Where the backend is reached from the browser: the dev proxy (vite.config.ts) strips it. */
@@ -71,6 +72,40 @@ export async function refreshSettled(): Promise<void> {
   await pendingRefresh?.catch(() => undefined);
 }
 
+/** How long before its `exp` a token is renewed instead of sent. */
+const EXPIRY_MARGIN_MS = 30_000;
+
+/**
+ * Whether `token` expires within {@link EXPIRY_MARGIN_MS}, read from its
+ * payload. The signature is the backend's business: this only decides when
+ * to renew. A token that does not decode is left to the 401 path.
+ */
+function expiresSoon(token: string): boolean {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const { exp } = JSON.parse(atob(payload)) as { exp?: unknown };
+    return (
+      typeof exp === 'number' && exp * 1000 - Date.now() < EXPIRY_MARGIN_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The token to send on `path`: the current one, renewed first when it is
+ * about to expire. Sending an expired token would get a 401, which the
+ * browser prints in the console whatever the code does with it. A failed
+ * early refresh (network, 5xx) sends the current token anyway.
+ */
+async function tokenFor(path: string): Promise<string | null> {
+  const token = getAuthToken();
+  if (!token || path.startsWith('/auth/') || !expiresSoon(token)) {
+    return token;
+  }
+  return refreshAccessToken().catch(() => getAuthToken());
+}
+
 function send(
   path: string,
   init: RequestInit | undefined,
@@ -95,8 +130,9 @@ function send(
  * attaching the current bearer token and JSON headers automatically so call
  * sites only ever pass a backend-relative path.
  *
- * A 401 on a request that carried a token is retried once with a renewed
- * token. When the token changed since the request left (a refresh or a
+ * A token about to expire is renewed before the request leaves
+ * ({@link tokenFor}). A 401 on a request that carried a token is still
+ * retried once with a renewed token (a clock off, a token revoked). When the token changed since the request left (a refresh or a
  * login landed meanwhile), the 401 is about a token already replaced: it
  * retries with the current one rather than refreshing again. The auth
  * routes are never retried: their 401 is the answer itself (bad
@@ -106,7 +142,7 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T | undefined> {
-  const sentWith = getAuthToken();
+  const sentWith = await tokenFor(path);
   let response = await send(path, init, sentWith);
   if (
     response.status === UNAUTHORIZED &&
