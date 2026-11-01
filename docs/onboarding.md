@@ -102,8 +102,9 @@ browser checks log in with; create it the same way on a fresh database.
   install <pkg>"` (`make fe` for the frontend). After a pull that changes a
   lockfile, the container runs `npm ci` itself on start
   (`docker compose restart backend` if it was running). After a pull that
-  changes a Dockerfile or adds a volume, rebuild once:
-  `docker compose ... up -d --build` (`make up` does not rebuild).
+  changes a Dockerfile or adds a volume, rebuild once (`make up` does not):
+  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+  --build` (`podman-compose` takes the same arguments).
 - **`backend_dist` can come up root-owned** on a fresh `up`, and
   `tsc --watch` fails with `EACCES`: `docker compose exec -u root backend
   chown -R node:node /app/dist`, then restart `backend`.
