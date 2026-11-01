@@ -6,7 +6,6 @@ import { useId, type InputHTMLAttributes } from 'react';
 export const FIELD_LABEL =
   'font-mono text-xs leading-label font-medium tracking-caps text-muted uppercase';
 
-/** Props of `FieldMessage`. */
 export interface FieldMessageProps {
   /** What the control's `aria-describedby` points at. */
   id: string;

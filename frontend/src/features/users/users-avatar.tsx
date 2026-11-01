@@ -4,7 +4,6 @@ import { API_BASE } from '../../lib/api';
 
 const SIZES = { sm: 'size-6 text-xs', lg: 'size-20 text-lg' } as const;
 
-/** Props of `UserAvatar`. */
 export interface UserAvatarProps {
   username: string;
   /** The stored picture's name (`User.profilePicture`), or `null` for none. */

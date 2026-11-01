@@ -15,7 +15,6 @@ export interface PicturePick {
   error?: ValidationError;
 }
 
-/** Props of `PictureField`. */
 export interface PictureFieldProps {
   hint: string;
   onPick: (pick: PicturePick) => void;

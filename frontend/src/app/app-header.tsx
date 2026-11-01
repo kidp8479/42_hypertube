@@ -10,9 +10,7 @@ import { LanguageSwitcher } from './language-switcher';
 
 const ROW = 'flex items-center gap-2 border-b border-line py-2 sm:gap-3';
 
-/** Props of `AccountLink`. */
 export interface AccountLinkProps {
-  /** The signed-in user. */
   user: User;
 }
 

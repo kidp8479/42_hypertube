@@ -1,7 +1,6 @@
 // Shared boxed message for form-level errors and confirmations.
 import type { ReactNode } from 'react';
 
-/** Props of `Alert`. */
 export interface AlertProps {
   /** `error` is for a failure, `success` for a confirmation. */
   tone: 'error' | 'success';

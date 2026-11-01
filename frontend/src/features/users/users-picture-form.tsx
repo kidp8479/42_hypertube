@@ -29,7 +29,6 @@ const refusal = (caught: unknown): FormOutcome<Outcome> => ({
   tone: 'error',
 });
 
-/** Props of `PictureForm`. */
 export interface PictureFormProps {
   /** The signed-in user, as last saved. */
   user: User;

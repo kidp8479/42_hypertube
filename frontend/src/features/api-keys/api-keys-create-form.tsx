@@ -24,7 +24,6 @@ function validateName({
     : {};
 }
 
-/** Props of `ApiKeyCreateForm`. */
 export interface ApiKeyCreateFormProps {
   /** Sends `POST /api-clients`; resolves to the key, secret included. */
   create: (name: string) => Promise<CreatedApiKey>;

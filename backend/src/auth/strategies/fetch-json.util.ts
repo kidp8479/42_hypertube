@@ -9,6 +9,12 @@
  */
 export const OAUTH_PROVIDER_TIMEOUT_MS = 10_000;
 
+/**
+ * Calls a provider API and parses its JSON body as `T`.
+ *
+ * @throws Error on a non-2xx answer, or when the call outlives
+ * {@link OAUTH_PROVIDER_TIMEOUT_MS} and is aborted.
+ */
 export async function fetchJson<T>(url: string, init: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,

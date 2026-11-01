@@ -9,7 +9,6 @@ import { useApiKeys } from './api-keys-queries';
 
 type Outcome = 'list.revoked' | 'errors.generic';
 
-/** Props of `ApiKeyList`. */
 export interface ApiKeyListProps {
   /** Sends `DELETE /api-clients/:id`. */
   revoke: (id: number) => Promise<void>;

@@ -19,7 +19,6 @@ import {
 const changedFields = (changes: ProfileChanges) =>
   new Set(Object.keys(changes) as InfoField[]);
 
-/** Props of `InfoForm`. */
 export interface InfoFormProps {
   /** The signed-in user, as last saved. */
   user: User;
