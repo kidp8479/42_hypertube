@@ -83,7 +83,7 @@ help:
 	@echo "  test             - backend + frontend unit tests"
 	@echo "  test-api         - run the Bruno request collection (api/bruno) against a running backend"
 	@echo "  build            - production build, backend + frontend"
-	@echo "  check-docs       - doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno"
+	@echo "  check-docs       - doc drift check: links, dashes, env variables, indexes, every page in docs/README.md, cited routes vs controllers and Bruno"
 	@echo "  doc              - generate backend code docs (Compodoc) into docs/backend"
 	@echo "  graphify         - build a local code graph into graphify-out/ (needs the graphify CLI: uv tool install graphifyy)"
 	@echo ""

@@ -5,6 +5,10 @@ Video streaming platform built for the 42 school curriculum
 implemented from scratch (low-level protocol, no ready-made streaming
 library) that lets a video start playing while it's still downloading.
 
+New on the project: read this page, then
+[`docs/onboarding.md`](docs/onboarding.md). Every other document is listed
+in [`docs/README.md`](docs/README.md).
+
 ## Stack
 
 - **Backend**: [NestJS](https://nestjs.com) + [TypeORM](https://typeorm.io) (PostgreSQL)
@@ -22,7 +26,6 @@ library) that lets a video start playing while it's still downloading.
 - **Git hooks**: a versioned pre-commit hook (`.githooks/`, see `CONTRIBUTING.md`) blocks commits that aren't formatted/linted
 - **CI**: [GitHub Actions](https://github.com/features/actions) - lint/format/type-check/test/build on every push and PR, plus [Gitleaks](https://github.com/gitleaks/gitleaks) secret scanning and [Dependabot](https://docs.github.com/en/code-security/dependabot) for dependency updates
 - **Containers**: [Docker](https://www.docker.com) / [Podman](https://podman.io)-compatible compose files (Postgres, backend, frontend, edge proxy): a shared `docker-compose.yml`, the dev stack in `docker-compose.dev.yml` (`make up`), the prod build in `docker-compose.prod.yml` (`make up-prod`), see ADR-0013.
-- **Project management**: [Linear](https://linear.app) (issues), [Slack](https://slack.com) (communication), GitHub (code/PRs) - see `CONTRIBUTING.md`
 
 ## Prerequisites
 
@@ -45,8 +48,8 @@ Hypertube/
 └── .env.example        # required environment variables, copy to .env
 ```
 
-Two independent packages (`backend/`, `frontend/`) - no shared npm/pnpm
-workspace for now (see `CONTRIBUTING.md` for the reasoning).
+Two independent packages (`backend/`, `frontend/`), each with its own
+`package.json` and lockfile; no npm workspace.
 
 ## Running the project
 
@@ -57,7 +60,7 @@ cp .env.example .env   # first time only, fill in real values
 make up                 # db, backend and frontend on the internal network, the edge proxy in front
 ```
 
-The app is served only through the edge proxy at **https://localhost:8443** (self-signed certificate: accept the browser warning once; `http://localhost:8080` redirects there). The backend and the frontend publish no host port (`docs/adr/0009-nginx-edge-proxy-with-tls.md`). After pulling this change, update your `.env` (see `.env.example`): `FRONTEND_ORIGIN`, the two `*_CALLBACK_URL`, and the redirect URIs registered at 42 and GitHub.
+The app is served only through the edge proxy at **https://localhost:8443** (self-signed certificate: accept the browser warning once; `http://localhost:8080` redirects there). The backend and the frontend publish no host port (`docs/adr/0009-nginx-edge-proxy-with-tls.md`). Sign-in with 42 and GitHub needs your own OAuth apps: [`docs/onboarding.md`](docs/onboarding.md) > Getting it running.
 
 `make up` auto-detects `docker compose` vs `podman-compose` (see the Makefile) - same command works on Docker or Podman.
 
@@ -94,12 +97,12 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make build` | Production build for backend + frontend |
 | `make migration-generate NAME=...` | Write a TypeORM migration from the entity changes (`migration-run`, `-revert`, `-show`, `-check` too) |
 | `make doc` | Generate the Compodoc backend docs into `docs/backend/` |
-| `make check-docs` | Doc drift check: links, dashes, env variables, indexes, cited routes vs controllers and Bruno |
+| `make check-docs` | Doc drift check: links, dashes, env variables, indexes, every page listed in `docs/README.md`, cited routes vs controllers and Bruno |
 | `make verify` | Full local gate: format-check, lint-check, typecheck, test, build, check-docs |
 
 See `make help` for the up-to-date list.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the dev workflow (commits,
-branches, tooling used).
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (issues,
+branches, commits, tests, conventions).
