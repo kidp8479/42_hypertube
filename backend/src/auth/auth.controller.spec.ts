@@ -1,10 +1,9 @@
-// Unit spec for AuthController with mocked services: a rejected login, the two
-// OAuth callbacks and the code exchange. The session routes (login, refresh,
+// Unit spec for AuthController with mocked services: a rejected login and the
+// code exchange. The session routes (login, refresh,
 // logout) and the cookie on the wire are covered over HTTP by
 // auth.session.spec.ts.
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -12,21 +11,14 @@ import { OAuthExchangeService } from './oauth-exchange.service';
 import { RefreshTokenService } from '../sessions/refresh-token.service';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
 import { REFRESH_COOKIE } from '../sessions/refresh-cookie.util';
-import { OAuthProfile } from './strategies/oauth-profile.interface';
-import { OAuthProvider } from './entities/oauth-account.entity';
-import { User } from '../users/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 
 // Only the AuthService methods the controller calls need a type here.
 type AuthServiceMock = {
   validateUser: jest.Mock;
   login: jest.Mock;
-  resolveOAuthUser: jest.Mock;
   loginById: jest.Mock;
 };
-
-const buildUser = (overrides: Partial<User> = {}): User =>
-  ({ id: 1, email: 'ada@example.com', username: 'ada', ...overrides }) as User;
 
 const EXPIRES = new Date('2026-10-30T12:00:00.000Z');
 
@@ -47,7 +39,7 @@ const loginDto: LoginDto = {
 describe('AuthController', () => {
   let controller: AuthController;
   let auth: AuthServiceMock;
-  let exchange: { issue: jest.Mock; redeem: jest.Mock };
+  let exchange: { redeem: jest.Mock };
   let refresh: {
     issue: jest.Mock;
     rotate: jest.Mock;
@@ -63,13 +55,12 @@ describe('AuthController', () => {
           useValue: {
             validateUser: jest.fn(),
             login: jest.fn(),
-            resolveOAuthUser: jest.fn(),
             loginById: jest.fn(),
           },
         },
         {
           provide: OAuthExchangeService,
-          useValue: { issue: jest.fn(), redeem: jest.fn() },
+          useValue: { redeem: jest.fn() },
         },
         {
           provide: RefreshTokenService,
@@ -77,12 +68,6 @@ describe('AuthController', () => {
             issue: jest.fn(),
             rotate: jest.fn(),
             revokeFamilyOf: jest.fn(),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            getOrThrow: jest.fn().mockReturnValue('http://localhost:5173'),
           },
         },
       ],
@@ -111,36 +96,6 @@ describe('AuthController', () => {
       expect(cookie).not.toHaveBeenCalled();
     });
   });
-
-  describe.each(['fortyTwoCallback', 'githubCallback'] as const)(
-    '%s',
-    (callback) => {
-      const profile: OAuthProfile = {
-        provider: OAuthProvider.FORTYTWO,
-        providerUserId: '12345',
-        email: 'ada@example.com',
-        suggestedUsername: 'ada',
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-      };
-
-      it('redirects to the SPA with a single-use exchange code, never a token', async () => {
-        auth.resolveOAuthUser.mockResolvedValue(buildUser({ id: 7 }));
-        exchange.issue.mockReturnValue('the-code');
-
-        const result = await controller[callback]({
-          user: profile,
-        } as unknown as Request);
-
-        expect(auth.resolveOAuthUser).toHaveBeenCalledWith(profile);
-        expect(exchange.issue).toHaveBeenCalledWith(7);
-        expect(result).toEqual({
-          url: 'http://localhost:5173/oauth/callback?code=the-code',
-        });
-        expect(auth.login).not.toHaveBeenCalled();
-      });
-    },
-  );
 
   describe('exchange', () => {
     it('trades a valid code for an access token and a refresh cookie', async () => {
