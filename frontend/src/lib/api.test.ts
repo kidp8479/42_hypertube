@@ -1,5 +1,6 @@
 // Spec for apiFetch: body parsing, headers (token, Content-Type), ApiError
-// on a non-ok response, and the refresh-and-retry on a 401.
+// on a non-ok response, the refresh ahead of expiry, and the
+// refresh-and-retry on a 401.
 import { describe, it, expect, vi } from 'vitest';
 import { apiFetch, ApiError, refreshAccessToken } from './api';
 import { getAuthToken, setAuthToken } from './token';
@@ -47,6 +48,16 @@ function stubBackend(refresh: string | null, accepted: string) {
 function refreshCalls(fetchMock: ReturnType<typeof stubBackend>) {
   return fetchMock.mock.calls.filter(([url]) => url === '/api/auth/refresh')
     .length;
+}
+
+/** An access token whose payload expires `seconds` from now (signature not checked client-side). */
+function tokenExpiringIn(seconds: number) {
+  const exp = Math.floor(Date.now() / 1000) + seconds;
+  const payload = btoa(JSON.stringify({ sub: 1, exp }))
+    .replace(/=+$/, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+  return `header.${payload}.signature`;
 }
 
 /** The `Headers` instance apiFetch passed to `fetch` on its last call. */
@@ -125,6 +136,43 @@ describe('apiFetch', () => {
       await expect(apiFetch('/movies/1')).rejects.toMatchObject({ status });
     },
   );
+});
+
+describe('apiFetch ahead of expiry', () => {
+  it('refreshes a token about to expire before sending, so no 401 is ever answered', async () => {
+    setAuthToken(tokenExpiringIn(10));
+    const fetchMock = stubBackend('renewed', 'renewed');
+
+    const result = await apiFetch('/users/me');
+
+    expect(result).toEqual({ auth: 'Bearer renewed' });
+    expect(refreshCalls(fetchMock)).toBe(1);
+    // The refresh, then one request: nothing was sent with the old token.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends a token far from expiry as is', async () => {
+    const fresh = tokenExpiringIn(600);
+    setAuthToken(fresh);
+    const fetchMock = stubBackend('unused', fresh);
+
+    await apiFetch('/users/me');
+
+    expect(refreshCalls(fetchMock)).toBe(0);
+  });
+
+  it('sends the current token when the early refresh fails on a 5xx', async () => {
+    const soon = tokenExpiringIn(10);
+    setAuthToken(soon);
+    const fetchMock = stubBackend('unused', soon);
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({ ok: false, status: 503 } as never),
+    );
+
+    const result = await apiFetch('/users/me');
+
+    expect(result).toEqual({ auth: `Bearer ${soon}` });
+  });
 });
 
 describe('apiFetch on a 401', () => {

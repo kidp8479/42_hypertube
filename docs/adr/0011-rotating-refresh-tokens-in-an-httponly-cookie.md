@@ -1,6 +1,6 @@
 # Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session
 
-**Date:** 2026-10-23 · **Revised:** 2026-10-25 (HYP-78, HYP-84) ·
+**Date:** 2026-10-23 · **Revised:** 2026-11-01 (HYP-78, HYP-84, HYP-144) ·
 **Status:** accepted · Supersedes
 [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md) on revocation ·
 Amends [ADR-0002](0002-jwt-bearer-tokens-for-authentication.md) and
@@ -74,7 +74,8 @@ access-token ids (a lookup per request for a 15 minute window).
   `docs/defense/known-limitations.md`.
 - A stateful table now sits behind login, touched at login, refresh and logout,
   never on an ordinary request.
-- The SPA keeps the access token in memory and refreshes on load and on a 401
-  (`docs/diagrams/auth.md` section 8).
+- The SPA keeps the access token in memory and refreshes on load, ahead of
+  the token's expiry, and on a 401 as a fallback (`docs/diagrams/auth.md`
+  section 8).
 - A film must outlive the access token: the player will use its own short-lived
   signed stream token (HYP-14), not the JWT.

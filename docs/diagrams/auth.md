@@ -33,7 +33,7 @@ flowchart TD
     exch -- "access_token" --> token
     token -- "Authorization: Bearer" --> jwt["API - JwtAuthGuard (global)<br/>+ ownership check on writes"]
     jwt --> routes["every other route"]
-    token -. "page load, or a 401" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
+    token -. "page load, expiry near, or a 401" .-> refresh["API - POST /auth/refresh<br/>cookie in, new access token<br/>and next cookie out"]
     refresh -- "access_token" --> token
 
     out["SPA - logout button"] --> postLogout["API - POST /auth/logout<br/>revokes the session, 204"]
@@ -272,8 +272,11 @@ but nothing can renew it ([`known-limitations.md`](../defense/known-limitations.
 The access token lives in a module variable (`lib/token.ts`), never in
 `localStorage`, so a script cannot read it and a reload loses it. The refresh
 cookie brings it back: on load, `restoreSession` (`auth-queries.ts`) calls
-`POST /auth/refresh` then `GET /users/me`. Mid-session, `apiFetch` answers a
-401 by refreshing once and retrying the request.
+`POST /auth/refresh` then `GET /users/me`. Mid-session, `apiFetch` reads the
+token's `exp` before each request and refreshes first when it expires within
+30 seconds (HYP-144): an expired token would get a 401, and the browser prints
+every 401 in the console. A 401 that still happens (a clock off, a token
+revoked) is answered by refreshing once and retrying the request.
 
 ```mermaid
 sequenceDiagram
@@ -281,8 +284,13 @@ sequenceDiagram
     participant F as apiFetch
     participant A as Backend
     C->>F: GET /users/me
-    F->>A: Bearer (expired)
-    A-->>F: 401
+    opt token expires within 30 s
+        F->>A: POST /auth/refresh (shared single flight)
+        A-->>F: 200 new access token + next cookie
+    end
+    F->>A: Bearer (current)
+    Note over F,A: usually a 200 here; the rest is the 401 fallback
+    A-->>F: 401 (a clock off, a token revoked)
     alt token changed since the request left (a login, a refresh)
         F->>A: retry with the current token
     else same token
@@ -295,7 +303,7 @@ sequenceDiagram
     Note over F,C: refresh 401: the token is dropped, the 401 reaches the<br/>query cache net, AuthProvider dispatches session-expired
 ```
 
-- **One refresh at a time.** Parallel 401s, and the two bootstrap runs of
+- **One refresh at a time.** Parallel early refreshes and 401s, and the two bootstrap runs of
   StrictMode in dev, share the refresh in flight: each rotation consumes the
   cookie, so a second one would present a used token.
 - **A newer token wins.** A refresh that lands after a login or a logout does
