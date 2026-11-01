@@ -3,6 +3,11 @@
 // are no file of ours, so every account starts back on the default avatar.
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+/**
+ * Recreates `user.profilePicture` as a 64-character file name. Every
+ * existing value is dropped (see the header): `down` restores the column,
+ * not the old URLs.
+ */
 export class HostedProfilePictures1793449771882 implements MigrationInterface {
   name = 'HostedProfilePictures1793449771882';
 

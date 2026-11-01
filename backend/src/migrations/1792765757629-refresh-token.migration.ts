@@ -1,6 +1,12 @@
 // Migration: the refresh_token table for rotating refresh tokens (HYP-77, ADR-0011).
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+/**
+ * Creates `refresh_token`: one row per issued refresh token, only its
+ * SHA-256 stored, grouped by `familyId` (one login session) so a reused
+ * token can revoke its whole family. A new table, so no existing data is
+ * touched.
+ */
 export class RefreshToken1792765757629 implements MigrationInterface {
   name = 'RefreshToken1792765757629';
 

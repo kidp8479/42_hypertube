@@ -1,6 +1,12 @@
 // Migration: the baseline schema, as it stood when TypeORM migrations replaced synchronize (ADR-0010).
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+/**
+ * The schema `synchronize` had built by then (`user`, `oauth_account`),
+ * written out once so later changes are migrations on top of it. A
+ * database `synchronize` built has the tables but no record of this
+ * migration: it is rebuilt with `make wipe-db` (ADR-0010).
+ */
 export class Baseline1792763318233 implements MigrationInterface {
   name = 'Baseline1792763318233';
 
