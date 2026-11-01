@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useDocumentTitle } from '../../app/document-title';
 import { OAuthCodeRejectedError } from './auth-actions';
 import { Alert } from '../../ui/ui-alert';
 import { useAuth } from './auth-context';
@@ -44,6 +45,7 @@ function readCallbackParams(params: URLSearchParams) {
  */
 export function OAuthCallbackPage() {
   const { t } = useTranslation('auth');
+  useDocumentTitle(t('oauthCallback.title'));
   const { state } = useAuth();
   const exchange = useOAuthExchange();
   const navigate = useNavigate();

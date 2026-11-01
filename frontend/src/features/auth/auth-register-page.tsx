@@ -7,6 +7,7 @@
 import { useState, type SyntheticEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useDocumentTitle } from '../../app/document-title';
 import { useAccountForm } from './auth-account-form';
 import { useAuth } from './auth-context';
 import { useRegister } from './auth-queries';
@@ -75,6 +76,7 @@ function RegisterInput({
 /** The `/register` page: the sign-up form, validated client-side before submit. */
 export function RegisterPage() {
   const { t, i18n } = useTranslation('auth');
+  useDocumentTitle(t('register.title'));
   const { state } = useAuth();
   const navigate = useNavigate();
 
