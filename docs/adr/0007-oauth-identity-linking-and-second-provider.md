@@ -1,7 +1,7 @@
 # OAuth identity linking, GitHub as the second provider
 
 **Date:** 2026-09-20 · **Revised:** 2026-11-01 (HYP-53, HYP-57, HYP-71,
-HYP-55, HYP-84, HYP-143) · **Status:** accepted
+HYP-55, HYP-84, HYP-143, HYP-149) · **Status:** accepted
 
 Hypertube supports login via 42 (mandatory) and GitHub (the subject's free
 second-provider choice), alongside email+password. Each OAuth identity is a
@@ -108,18 +108,21 @@ is auto-linked to it.
   provider, `false` after a local registration or an email change.
 - Auto-linking to an **unverified** account claims it first: the password
   is removed, every refresh-token family is revoked, every API key
-  (ADR-0015) and the other provider links are deleted, and the email is
-  marked verified. The holder of the
+  (ADR-0015) and the other provider links are deleted, the email is marked
+  verified, and `credentialsChangedAt` is stamped: `JwtStrategy` refuses
+  every access token issued before it (ADR-0002). The holder of the
   verified email ends up the only way in. The claim runs before the link,
   so a failure between the two leaves the account claimed and unlinked (the
   next login links it), never linked with the old access intact.
 - Auto-linking to a **verified** account is a plain link: a provider already
   vouched for that email, so its password and sessions stay.
+- An access token the previous holder still had dies with the claim, not
+  15 minutes later: without that, it could mint a new API key and keep a
+  way in (HYP-149). The check compares the token's `iat`, in whole seconds,
+  with the claim's second, so a token issued in that same second still
+  passes: the new owner's token may be minted right after the claim.
 - A claimed account has no password, and an account without one cannot
-  change its email or password through `PATCH /users/:id` (400), so an access
-  token alive at the claim cannot set credentials on it. It can still edit
-  the profile or delete the account for up to 15 minutes, the access-token
-  limit ADR-0011 accepts.
+  change its email or password through `PATCH /users/:id` (400).
 - A completed password reset (HYP-34) proves ownership of the email the same
   way, and must claim the account too.
 

@@ -87,8 +87,10 @@ so nothing renews the access token (ADR-0011). A copy already made works until
 it expires, 15 minutes by default (`JWT_EXPIRES_IN`). Same for a token bought
 with an API key that is then revoked (ADR-0015).
 
-- **Why:** access tokens are stateless so that an ordinary request needs no
-  lookup (ADR-0002); a blocklist would undo that for a 15 minute window.
+- **Why:** no per-token state is kept (ADR-0002). A request reads one user
+  column, which ends every token of an account at once (an OAuth claim,
+  ADR-0007), but logout ends one session, not all of them: that would need a
+  per-token blocklist written at every logout, for a 15 minute window.
 - **Real-world:** the same trade-off, accepted by most production systems.
 - **Cost:** low to medium, a `jti` blocklist read by `JwtAuthGuard`; a
   shorter `JWT_EXPIRES_IN` shrinks the window.

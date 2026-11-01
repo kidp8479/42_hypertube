@@ -1,9 +1,10 @@
 // Passport strategy that verifies Bearer tokens; used by JwtAuthGuard.
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { AuthUser } from '../../common/decorators/current-user.decorator';
+import { UsersService } from '../../users/users.service';
 
 /**
  * Shape of our signed token payload (see {@link AuthService.login}). `cid`
@@ -14,15 +15,32 @@ export interface JwtPayload {
   cid?: number;
 }
 
+/** A payload as it comes back verified: the signer added `iat` (seconds). */
+export type VerifiedJwtPayload = JwtPayload & { iat: number };
+
 /**
  * Validates the Bearer token on incoming requests: checks the signature
- * against `JWT_SECRET` and that the token is not expired, then hands the
- * route a minimal `req.user`. Profile data is not read here - a handler
- * that needs it fetches it (ADR-0002).
+ * against `JWT_SECRET` and that the token is not expired, then that its
+ * account still exists and did not change hands after the token was issued
+ * (`User.credentialsChangedAt`, one primary-key read). Hands the route a
+ * minimal `req.user`; profile data is not read here - a handler that needs
+ * it fetches it (ADR-0002).
  */
+/**
+ * Whether a token issued at `iat` predates `changedAt`. `iat` has no
+ * milliseconds, so the change's own second still counts as "after": a token
+ * minted right after a claim must not lock its new owner out.
+ */
+function issuedBefore(iat: number, changedAt: Date | null): boolean {
+  return changedAt !== null && iat < Math.floor(changedAt.getTime() / 1000);
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly usersService: UsersService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -30,7 +48,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): AuthUser {
+  async validate(payload: VerifiedJwtPayload): Promise<AuthUser> {
+    const account = await this.usersService.findCredentialsChangedAt(
+      payload.sub,
+    );
+    if (!account || issuedBefore(payload.iat, account.credentialsChangedAt)) {
+      throw new UnauthorizedException();
+    }
     return payload.cid === undefined
       ? { id: payload.sub }
       : { id: payload.sub, apiClientId: payload.cid };

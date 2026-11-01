@@ -274,6 +274,7 @@ describe('UsersService', () => {
       expect(repository.update).toHaveBeenCalledWith(7, {
         password: null,
         emailVerified: true,
+        credentialsChangedAt: expect.any(Date) as Date,
       });
     });
   });
