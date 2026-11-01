@@ -84,7 +84,8 @@ ADR and diagram indexes list everything, every page is reachable from
 and every `METHOD /path` cited in the docs is declared by a controller **and**
 called by a request of `api/bruno/`. A route cited before it is built goes in
 the `PLANNED` list of `scripts/doc-checks/routes.mjs`. It names the file and
-line of each problem.
+line of each problem. It also **warns**, without failing, on a page over 300
+lines (diagram pages excepted): such a page is probably two.
 
 `lint:check` runs with `--max-warnings 0`. On top of the usual rules it
 enforces a complexity / size budget (function length, nesting depth,
