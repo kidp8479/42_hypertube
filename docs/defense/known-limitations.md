@@ -137,7 +137,7 @@ then revoked: no new token, but the last one lives out its 15 minutes
   documented field works, behind `currentPassword`, and the risk is
   contained: the new email is marked unverified, so the first provider
   sign-in with that address claims the account for its verified owner
-  (ADR-0007, amendment 2026-10-25).
+  (ADR-0007, "Linking to an existing account").
 - **Real-world:** an email change is normally confirmed from the new address.
 - **Cost to fix later:** medium, with HYP-39 (a confirmation link to the new
   address).

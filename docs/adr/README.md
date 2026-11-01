@@ -1,17 +1,22 @@
 # Architecture Decision Records
 
-Short, append-only notes recording *structural, hard-to-reverse* technical
+Short notes recording *structural, hard-to-reverse* technical
 decisions and the reasoning behind them - the choices a defense evaluator
 might ask us to justify.
 
 - One file per decision: `NNNN-slug.md`, numbered sequentially.
-- **The decision is immutable, the facts around it are kept current.** A
-  decision that no longer holds is not rewritten: add a new ADR that
-  supersedes it and mark the old one `superseded by ADR-NNNN`. A decision
-  that evolves without being reversed gets a dated `Amendment` section. A
-  follow-up, consequence or status that went stale (a gap since closed, a
-  file that moved) is corrected in place, so no ADR states something
-  false about the code.
+- **An ADR says what is true now.** A decision that no longer holds is not
+  rewritten: add a new ADR that supersedes it and mark the old one
+  `superseded by ADR-NNNN`, cut down to the decision and why it was
+  replaced. A decision that evolves without being reversed is rewritten in
+  place as one coherent text, with `**Revised:** <date> (HYP-N)` in its
+  header; the commit history keeps the earlier wording. A follow-up,
+  consequence or status that went stale (a gap since closed, a file that
+  moved) is corrected in place, so no ADR states something false about the
+  code.
+- Each ADR keeps to context, decision, consequences (plus the options
+  weighed when they matter), and stays short: details of the code live in
+  the code and its diagrams.
 - Only for decisions that are hard to reverse, surprising without context,
   and the result of a real trade-off. Not for routine implementation
   choices.
@@ -25,10 +30,10 @@ might ask us to justify.
 | [0005](0005-lint-complexity-budget.md) | Lint complexity budget as an anti-slop net | accepted |
 | [0006](0006-frontend-architecture.md) | Frontend architecture: declarative routing, feature folders, split state | accepted |
 | [0007](0007-oauth-identity-linking-and-second-provider.md) | OAuth identity linking, GitHub as the second provider | accepted |
-| [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | accepted, revocation superseded by 0011 |
+| [0008](0008-client-side-logout-with-short-lived-jwt.md) | Logout is client-side: discard the token, keep the TTL short | superseded by 0011 |
 | [0009](0009-nginx-edge-proxy-with-tls.md) | An nginx edge proxy terminates TLS in front of the app | accepted |
 | [0010](0010-typeorm-migrations-build-the-schema.md) | TypeORM migrations build the schema, `synchronize` is off | accepted |
-| [0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md) | Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session | accepted (backend; SPA side HYP-78) |
+| [0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md) | Refresh tokens rotate in an HttpOnly cookie, and logout revokes the session | accepted |
 | [0012](0012-tailwind-css-v4-on-top-of-the-design-tokens.md) | Tailwind CSS v4 on top of the design tokens | accepted |
 | [0013](0013-compose-base-with-dev-and-prod-files.md) | Compose: one shared file, a dev file and a prod file | accepted |
 | [0014](0014-security-headers-split-between-edge-backend-and-spa.md) | Security headers: the edge, the backend and the SPA server each own a set | accepted |

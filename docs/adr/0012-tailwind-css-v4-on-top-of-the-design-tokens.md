@@ -62,7 +62,5 @@ class can only use a project token. There is no JavaScript config: the
 - The shared focus ring is in the base layer, so a utility wins over it: an
   `outline-hidden` or `outline-*` class removes the keyboard focus indicator
   (WCAG 2.4.7). Never put one on a focusable element.
-- Vitest no longer processes CSS (the `css: true` option was there for CSS
-  Modules imports).
-- The new dependency needs `npm ci` in the frontend container after the pull
-  (HYP-86).
+- Vitest does not process CSS (no `css: true`): no test imports a CSS
+  Module.

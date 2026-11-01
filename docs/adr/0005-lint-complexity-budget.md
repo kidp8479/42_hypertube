@@ -66,5 +66,5 @@ they are not part of the submitted tree. Layer 3 is what ships.
   with a note, not bypassed per-file.
 - Once this has lived on a few PRs without friction, the rule block is
   promoted to `42-project-template` (HYP-26) so later projects inherit it.
-- The frontend CI job now runs `npm run test` (Vitest) like the backend
+- The frontend CI job runs `npm run test` (Vitest) like the backend
   one, so both packages gate on format, lint, typecheck, test and build.

@@ -1,6 +1,6 @@
 # JWT bearer tokens for authentication (not server-side sessions)
 
-**Date:** 2026-08-29 · **Status:** accepted
+**Date:** 2026-08-29 · **Revised:** 2026-10-31 (HYP-122) · **Status:** accepted
 
 Hypertube authenticates users with a **signed JWT** sent as
 `Authorization: Bearer <token>`, issued by `POST /auth/login` and verified
@@ -21,25 +21,17 @@ server-side sessions (cookie + session store).
 - **Stateless verification.** No Redis/DB round-trip to check a session on
   every request; the signature and `exp` claim are enough. Simpler to run
   in containers.
-- **Matches the target internship stack** (`@nestjs/passport` 
-and `passport-jwt` and `@nestjs/jwt`), which is a deliberate learning goal 
-for this project.
+- **Matches the target internship stack** (`@nestjs/passport`,
+  `passport-jwt`, `@nestjs/jwt`), a deliberate learning goal of this project.
 
 ## Nuance: `POST /oauth/token` is a different grant
 
 The subject's `oauth/token` (`client + secret`) is the OAuth2
-**client-credentials** grant - it authenticates a *client application* of
-the API, not a browser user logging in. It is related to, but not the same
-as, `POST /auth/login`. Both will mint JWTs verified by the same strategy;
-they differ in who authenticates and how.
-
-## Amendment (2026-10-31): the client is a user's API key
-
-The client of `POST /oauth/token` is an API key a user creates for
-themselves, so the token it returns acts on that user's behalf, like a login
-token, plus a `cid` claim naming the key
-([ADR-0015](0015-api-keys-per-user-for-the-client-credentials-grant.md)). The
-grant is still client credentials, verified by the same strategy.
+**client-credentials** grant. Here the client is an API key a user creates
+for themselves ([ADR-0015](0015-api-keys-per-user-for-the-client-credentials-grant.md)),
+so the token it returns acts on that user's behalf like a login token, plus
+a `cid` claim naming the key. Both grants mint JWTs verified by the same
+strategy; they differ in who authenticates and how.
 
 ## Consequences
 
@@ -49,9 +41,7 @@ grant is still client credentials, verified by the same strategy.
     (ADR-0011); the access token itself stays stateless.
   - **One-click logout** (subject requirement): `POST /auth/logout` revokes
     the session's refresh token on the server and clears the cookie
-    ([ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md), which
-    supersedes the client-side-only logout of
-    [ADR-0008](0008-client-side-logout-with-short-lived-jwt.md)). An access
+    ([ADR-0011](0011-rotating-refresh-tokens-in-an-httponly-cookie.md)). An access
     token already issued stays valid until it expires, 15 minutes at most.
 - `JWT_SECRET` (and TTL config) live in `.env`, never committed.
 - Token payload stays minimal (`sub` = user id); profile data is fetched,

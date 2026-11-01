@@ -78,10 +78,8 @@ the Vite dev proxy) and `/api-docs` to the backend.
 ## Consequences
 
 - **A browser warning** on the self-signed certificate, once per browser.
-- **Existing `.env` files need an update**: `FRONTEND_ORIGIN`, the two
-  `*_CALLBACK_URL`, and the redirect URIs registered at the providers. The
-  old `HYPERTUBE_BACKEND_PORT` and `HYPERTUBE_FRONTEND_PORT` no longer do
-  anything.
+- **`FRONTEND_ORIGIN`, the two `*_CALLBACK_URL` and the redirect URIs
+  registered at the providers** are the proxy's HTTPS addresses.
 - **One more container to explain and keep in step**: a route added to the
   backend is reachable through `/api/` with no proxy change, but a new
   top-level path (like `/api-docs`) needs its own `location`.

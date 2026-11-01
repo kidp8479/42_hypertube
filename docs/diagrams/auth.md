@@ -195,7 +195,7 @@ flowchart TD
 An account's email is verified when a provider vouched for it: created or
 linked through OAuth. A local registration or an email change leaves it
 unverified, and the next provider sign-in with that email claims the account
-for its verified owner (ADR-0007, amendment 2026-10-25).
+for its verified owner (ADR-0007, "Linking to an existing account").
 
 ## 5. OAuth callback page, frontend side (HYP-57)
 
