@@ -15,6 +15,7 @@ the root [README](../README.md), then [`onboarding.md`](onboarding.md).
 | [`defense/`](defense/README.md) | the evaluator, and whoever prepares the defense | traceability matrix, security checklist, CI and quality gates, known limitations, last security review |
 | [`design/`](design/README.md) | UI work | the reference mockup, tokens and accessibility floor |
 | [`deps/framework-major-upgrades.md`](deps/framework-major-upgrades.md) | dependency updates | before taking a major bump Dependabot ignores |
+| [`deps/security-overrides.md`](deps/security-overrides.md) | dependency updates | before adding or dropping an npm `override` for a security alert |
 | [`.github/pull_request_template.md`](../.github/pull_request_template.md) | PR authors | filled on every PR |
 
 Generated, not committed: the Compodoc backend reference (`make doc`, into

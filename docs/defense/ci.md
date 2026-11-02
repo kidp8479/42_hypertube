@@ -69,8 +69,10 @@ the run (kept 7 days).
   `docs/deps/framework-major-upgrades.md`).
 - **Dependabot alerts** are on (since 2026-11-02): GitHub flags a dependency
   with a known advisory. `npm audit --omit=dev` gives the same list locally.
-- Known open advisory: `js-yaml` through `@nestjs/swagger` 11 (moderate,
-  only our own decorators reach it), gone with the Nest 12 upgrade.
+- A transitive dependency pinned to a vulnerable version is forced to a
+  patched one with npm `overrides`, each listed with its reason and its exit
+  in [`deps/security-overrides.md`](../deps/security-overrides.md).
+  `npm audit --omit=dev` is clean in both packages.
 
 ## Showing it at the defense
 

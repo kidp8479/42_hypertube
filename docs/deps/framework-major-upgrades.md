@@ -48,10 +48,9 @@ Kept in the `ignore:` block until then.
 
 ## @nestjs/* 11 -> 12 (backend) - unblocked, not done
 
-Also clears a moderate `npm audit` advisory: `@nestjs/swagger` 11 bundles
-`js-yaml` 5.0 to 5.4 (GHSA-r3ph-w7gj-g6xm, CPU use on crafted merge keys).
-Swagger only writes YAML from our own decorators, no request reaches it, so
-the advisory waits for this upgrade (HYP-146).
+Lets the backend drop its `js-yaml` override: `@nestjs/swagger` 11 pins
+`js-yaml` 5.3.0 (GHSA-r3ph-w7gj-g6xm), forced to a patched 5.x until then
+([`security-overrides.md`](security-overrides.md)).
 
 Attempted the coordinated bump of every `@nestjs/*` package to 12.
 
