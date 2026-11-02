@@ -83,6 +83,22 @@ free one, so someone can probe which emails have an account.
 - **Real-world:** the uniform answer plus the email above.
 - **Cost:** medium, both tickets already scoped.
 
+## Someone else can keep a username's password login at 429
+
+The login has a limit per identifier, whatever the IP (5 attempts a minute,
+`docs/diagrams/auth.md` section 10). Anyone who knows a username can send 5
+wrong passwords a minute and keep that account's password login answering
+429 for as long as they keep going.
+
+- **Why:** that counter is what stops guesses on one account spread over
+  many IPs. Counting per identifier and IP would let them through again.
+  Nothing outlasts the attempts (no lock after N failures), and the 42 and
+  GitHub logins still work.
+- **Real-world:** larger systems add a CAPTCHA or a step-up challenge after a
+  few failures, instead of a plain 429.
+- **Cost:** medium, a challenge on the login form; not worth it here
+  (decided in HYP-147).
+
 ## An access token cannot be revoked before it expires
 
 Logout and a detected theft end the **session**: the refresh token is revoked,

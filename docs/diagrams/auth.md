@@ -423,9 +423,12 @@ even for the same account. An unknown identifier gets a counter like any
 other, so a 429 does not tell whether the account exists, and the
 `X-RateLimit-*` headers show the caller's per-IP counter only.
 
-Trade-off: someone who keeps sending 5 bad attempts a minute on a known
-username keeps its password login at 429 for as long as they keep going
-(OAuth login still works). There is no lockout that outlasts the attempts.
+Trade-off, accepted (HYP-147): someone who keeps sending 5 bad attempts a
+minute on a known username keeps its password login at 429 for as long as
+they keep going (OAuth login still works). There is no lockout that outlasts
+the attempts. Counting per identifier and IP instead would give back what the
+counter is for: guesses on one account spread over many IPs. See
+`known-limitations.md`.
 
 ## 11. API keys and `POST /oauth/token` (HYP-122)
 
