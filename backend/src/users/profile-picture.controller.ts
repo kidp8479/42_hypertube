@@ -2,7 +2,6 @@
 import {
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   ParseFilePipe,
@@ -37,6 +36,7 @@ import {
   ProfilePictureStore,
 } from './profile-picture.store';
 import { UsersService } from './users.service';
+import { assertOwnAccount } from './own-account.util';
 
 /** A stored picture never changes: a new upload gets a new name. */
 const IMMUTABLE = 'public, max-age=31536000, immutable';
@@ -90,9 +90,7 @@ export class ProfilePictureController {
     @UploadedFile(new ParseFilePipe()) picture: Express.Multer.File,
     @CurrentUser() user: AuthUser,
   ) {
-    if (user.id !== id) {
-      throw new ForbiddenException();
-    }
+    assertOwnAccount(user, id);
     return this.usersService.setPicture(id, picture.buffer);
   }
 
@@ -110,9 +108,7 @@ export class ProfilePictureController {
     @Param('id', ParseIdPipe) id: number,
     @CurrentUser() user: AuthUser,
   ) {
-    if (user.id !== id) {
-      throw new ForbiddenException();
-    }
+    assertOwnAccount(user, id);
     return this.usersService.clearPicture(id);
   }
 

@@ -14,7 +14,7 @@ vi.mock('../api-keys/api-keys-section', () => ({
   ApiKeysSection: () => null,
 }));
 
-function renderProfile(answer: Response) {
+function renderProfile(answer: Response, account = fakeUser) {
   const fetchMock = vi.fn().mockResolvedValue(answer);
   vi.stubGlobal('fetch', fetchMock);
   const updateUser = vi.fn();
@@ -22,7 +22,7 @@ function renderProfile(answer: Response) {
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider
         value={fakeAuth(
-          { status: 'authenticated', user: fakeUser },
+          { status: 'authenticated', user: account },
           { updateUser },
         )}
       >
@@ -165,6 +165,47 @@ describe('ProfilePage picture form', () => {
 
     expect(
       await screen.findByText('This file is not a JPEG, PNG or WebP image.'),
+    ).toBeInTheDocument();
+  });
+
+  it('says so when the backend finds the file over the size cap (413)', async () => {
+    const { user } = renderProfile(new Response(null, { status: 413 }));
+
+    await user.upload(screen.getByLabelText('Profile picture'), picture);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+    expect(
+      await screen.findByText('The picture is over 2 MB.'),
+    ).toBeInTheDocument();
+  });
+
+  it('drops the last answer once another file is picked: it was about the previous one', async () => {
+    const { user } = renderProfile(new Response(null, { status: 400 }));
+
+    await user.upload(screen.getByLabelText('Profile picture'), picture);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
+    await screen.findByText('This file is not a JPEG, PNG or WebP image.');
+
+    await user.upload(
+      screen.getByLabelText('Profile picture'),
+      new File(['png'], 'other.png', { type: 'image/png' }),
+    );
+
+    expect(
+      screen.queryByText('This file is not a JPEG, PNG or WebP image.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows the generic error when removing the picture fails', async () => {
+    const { user } = renderProfile(new Response(null, { status: 500 }), {
+      ...fakeUser,
+      profilePicture: 'a.png',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove picture' }));
+
+    expect(
+      await screen.findByText('Something went wrong. Please try again.'),
     ).toBeInTheDocument();
   });
 

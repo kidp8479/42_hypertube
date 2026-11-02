@@ -138,6 +138,24 @@ describe('apiFetch', () => {
   );
 });
 
+describe('apiFetch on a body that is not JSON', () => {
+  it('throws a 502 ApiError, not a raw SyntaxError', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: async () => '<!doctype html><title>Proxy page</title>',
+      }),
+    );
+
+    await expect(apiFetch('/users/me')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 502,
+    });
+  });
+});
+
 describe('apiFetch ahead of expiry', () => {
   it('refreshes a token about to expire before sending, so no 401 is ever answered', async () => {
     setAuthToken(tokenExpiringIn(10));

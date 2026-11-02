@@ -1,5 +1,6 @@
 // Wires the login flow together: JwtStrategy (bearer tokens), the 42 and
 // GitHub OAuth strategies, AuthService, OAuthExchangeService, AuthController,
+// OAuthLoginController,
 // and the client-credentials grant (OAuthTokenService, OAuthTokenController).
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +10,7 @@ import { AuthService } from './auth.service';
 import { AccountClaimService } from './account-claim.service';
 import { OAuthExchangeService } from './oauth-exchange.service';
 import { AuthController } from './auth.controller';
+import { OAuthLoginController } from './oauth-login.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { ApiClientsModule } from '../api-clients/api-clients.module';
@@ -31,7 +33,7 @@ import { GithubStrategy } from './strategies/github.strategy';
  *
  * Also owns the OAuth login paths (42, GitHub): each provider is its own
  * Passport strategy ({@link FortyTwoStrategy}, {@link GithubStrategy})
- * plus a pair of routes on {@link AuthController}, sharing this module's
+ * plus a pair of routes on {@link OAuthLoginController}, sharing this module's
  * `OAuthAccount` repository via {@link AuthService.resolveOAuthUser}.
  *
  * And the OAuth2 client-credentials grant, `POST /oauth/token`
@@ -64,6 +66,6 @@ import { GithubStrategy } from './strategies/github.strategy';
     FortyTwoStrategy,
     GithubStrategy,
   ],
-  controllers: [AuthController, OAuthTokenController],
+  controllers: [AuthController, OAuthLoginController, OAuthTokenController],
 })
 export class AuthModule {}

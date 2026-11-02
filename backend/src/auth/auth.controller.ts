@@ -1,4 +1,5 @@
-// HTTP entry point for the login flow.
+// HTTP entry point for the session routes: login, OAuth code exchange,
+// refresh, logout.
 import {
   Controller,
   Post,
@@ -6,15 +7,12 @@ import {
   UnauthorizedException,
   HttpCode,
   HttpStatus,
-  Get,
   UseGuards,
   Req,
   Res,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import {
-  ApiExcludeEndpoint,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -31,9 +29,7 @@ import {
   setRefreshCookie,
 } from '../sessions/refresh-cookie.util';
 import { Public } from '../common/decorators/public.decorator';
-import { OAuthCallback } from './decorators/oauth-callback.decorator';
 import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttler.guard';
-import { spaCallbackUrl } from './spa-callback-url.util';
 import {
   LOGIN_THROTTLE,
   OAUTH_EXCHANGE_THROTTLE,
@@ -41,15 +37,13 @@ import {
 } from '../config/throttle.config';
 import { ExchangeCodeDto } from './dto/exchange-code.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthGuard } from '@nestjs/passport';
 import type { Request, Response } from 'express';
-import type { OAuthProfile } from './strategies/oauth-profile.interface';
 
 /**
- * Authentication routes: username-or-email + password login, the 42 and GitHub OAuth
- * handshakes, the session routes (refresh, logout) - all public, since each
- * proves itself with credentials or the refresh cookie rather than a bearer
- * token. All credential logic lives in {@link AuthService}, the refresh-token
+ * Session routes: username-or-email + password login, the OAuth code
+ * exchange, refresh and logout - all public, since each proves itself with
+ * credentials, a code or the refresh cookie rather than a bearer token. The
+ * OAuth redirects that hand out the code live in {@link OAuthLoginController}. All credential logic lives in {@link AuthService}, the refresh-token
  * lifecycle in {@link RefreshTokenService} (ADR-0011).
  */
 @ApiTags('auth')
@@ -59,7 +53,6 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly oauthExchange: OAuthExchangeService,
     private readonly refreshTokens: RefreshTokenService,
-    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -176,61 +169,6 @@ export class AuthController {
   }
 
   /**
-   * Starts the 42 OAuth handshake: the browser navigates here (a link,
-   * not a fetch) and is redirected (302) to 42's authorize page, with a
-   * fresh `state` bound to it by {@link CookieStateStore}.
-   */
-  @ApiExcludeEndpoint()
-  @Public()
-  @UseGuards(AuthGuard('42'))
-  @Get('42/login')
-  loginWith42() {
-    // Passport intercepts here and redirects to 42's authorize page -
-    // this body never runs.
-  }
-
-  /**
-   * Where 42 sends the browser back after consent. Redirects (302) to the
-   * SPA's `/oauth/callback` with a single-use exchange code on success, or
-   * with `?error=` on any failure (see {@link OAuthCallbackFilter}) - never
-   * a JSON error, since this is a top-level navigation.
-   */
-  // `req.user` is whatever FortyTwoStrategy.validate() returned - Passport
-  // types it as the generic Express.User, so the cast trusts that guard
-  // chain rather than proving it to the compiler.
-  @OAuthCallback('42')
-  async fortyTwoCallback(@Req() req: Request) {
-    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
-  }
-
-  /**
-   * Starts the GitHub OAuth handshake: the browser navigates here (a link,
-   * not a fetch) and is redirected (302) to GitHub's authorize page, with a
-   * fresh `state` bound to it by {@link CookieStateStore}.
-   */
-  @ApiExcludeEndpoint()
-  @Public()
-  @UseGuards(AuthGuard('github'))
-  @Get('github/login')
-  loginWithGithub() {
-    // Passport intercepts here and redirects to GitHub's authorize page -
-    // this body never runs.
-  }
-
-  /**
-   * GitHub's counterpart of {@link AuthController.fortyTwoCallback}, plus
-   * one failure of its own: an account with no verified primary email
-   * ends on `?error=email_unverified`.
-   */
-  // `req.user` is whatever GithubStrategy.validate() returned - see the
-  // 42 callback above for why the cast, not a type check, is what backs
-  // this.
-  @OAuthCallback('github')
-  async githubCallback(@Req() req: Request) {
-    return { url: await this.spaHandoffUrl(req.user as OAuthProfile) };
-  }
-
-  /**
    * Trades the single-use code from the OAuth callback redirect for the
    * access token, from a normal SPA fetch (ADR-0007). Answers 200 (nothing
    * is created).
@@ -269,19 +207,5 @@ export class AuthController {
     res: Response,
   ): Promise<void> {
     setRefreshCookie(req, res, await this.refreshTokens.issue(userId));
-  }
-
-  /**
-   * Where the browser goes after a successful OAuth callback: the SPA's
-   * `/oauth/callback` page with a single-use exchange code, never the JWT
-   * (it would land in browser history and access logs, ADR-0007). The SPA
-   * trades the code for the token with a normal fetch.
-   */
-  private async spaHandoffUrl(profile: OAuthProfile): Promise<string> {
-    const user = await this.authService.resolveOAuthUser(profile);
-    return spaCallbackUrl(
-      this.configService.getOrThrow<string>('FRONTEND_ORIGIN'),
-      { code: this.oauthExchange.issue(user.id) },
-    );
   }
 }

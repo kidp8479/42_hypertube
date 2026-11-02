@@ -133,6 +133,62 @@ describe('ApiKeysSection', () => {
     expect(await screen.findByText('No API key yet.')).toBeInTheDocument();
   });
 
+  it('keeps the key listed and says so when revoking fails', async () => {
+    const { user } = renderSection({
+      'GET /api/api-clients': () => json([key]),
+      'DELETE /api/api-clients/3': () => new Response(null, { status: 500 }),
+    });
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Revoke the key my script' }),
+    );
+
+    expect(
+      await screen.findByText('Something went wrong. Please try again.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('my script')).toBeInTheDocument();
+  });
+
+  describe('copying a new secret', () => {
+    async function showSecret() {
+      const rendered = renderSection({
+        'GET /api/api-clients': () => json([]),
+        'POST /api/api-clients': () => json({ ...key, secret: 's3cr3t' }, 201),
+      });
+      await rendered.user.type(screen.getByLabelText('Key name'), 'k');
+      await rendered.user.click(
+        screen.getByRole('button', { name: 'Create a key' }),
+      );
+      await screen.findByText('s3cr3t');
+      return rendered;
+    }
+
+    it('puts the secret on the clipboard', async () => {
+      const { user } = await showSecret();
+
+      await user.click(screen.getByRole('button', { name: 'Copy the secret' }));
+
+      expect(await screen.findByText('Secret copied.')).toBeInTheDocument();
+      expect(await navigator.clipboard.readText()).toBe('s3cr3t');
+    });
+
+    it('says to copy by hand when the clipboard refuses, and keeps the secret shown', async () => {
+      const { user } = await showSecret();
+      vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(
+        new Error('denied'),
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Copy the secret' }));
+
+      expect(
+        await screen.findByText(
+          'Copy failed: select the secret and copy it by hand.',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('s3cr3t')).toBeInTheDocument();
+    });
+  });
+
   it('offers a retry when the list fails to load', async () => {
     renderSection({});
 

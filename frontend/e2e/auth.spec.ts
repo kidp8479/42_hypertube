@@ -5,17 +5,13 @@
 // previous run's account.
 import { test, expect, type Page } from '@playwright/test';
 import { trackConsoleIssues } from './console-issues';
-import { signIn } from './sign-up';
+import { PASSWORD, signIn, uniqueSuffix } from './sign-up';
 
 // An 8x8 PNG: small enough to inline, real enough for the browser to draw.
 const AVATAR_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGN4kGCAFTEMLQkAHuRcAXZg/9cAAAAASUVORK5CYII=',
   'base64',
 );
-
-function uniqueSuffix() {
-  return `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
-}
 
 async function fillRegisterForm(
   page: Page,
@@ -56,7 +52,7 @@ test.describe('register -> login', () => {
     const suffix = uniqueSuffix();
     const email = `e2e-${suffix}@example.com`;
     const username = `e2e${suffix}`;
-    const password = 'correct horse battery';
+    const password = PASSWORD;
 
     await page.goto('/register');
     await fillRegisterForm(page, {
@@ -89,7 +85,7 @@ test.describe('register -> login', () => {
     const consoleIssues = trackConsoleIssues(page);
     const suffix = uniqueSuffix();
     const username = `e2ep${suffix}`;
-    const password = 'correct horse battery';
+    const password = PASSWORD;
 
     await page.goto('/register');
     await fillRegisterForm(page, {
@@ -121,7 +117,7 @@ test.describe('register -> login', () => {
   }) => {
     const suffix = uniqueSuffix();
     const email = `e2e-dup-${suffix}@example.com`;
-    const password = 'correct horse battery';
+    const password = PASSWORD;
 
     await page.goto('/register');
     await fillRegisterForm(page, {
@@ -156,7 +152,10 @@ test.describe('register -> login', () => {
 test('a French word as password is refused, with a message saying why', async ({
   page,
 }) => {
-  const consoleIssues = trackConsoleIssues(page);
+  // The 422 is the refusal this test asks for.
+  const consoleIssues = trackConsoleIssues(page, [
+    { status: 422, path: '/api/users' },
+  ]);
   const suffix = uniqueSuffix();
 
   await page.goto('/register');

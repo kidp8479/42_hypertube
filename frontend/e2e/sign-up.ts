@@ -1,14 +1,20 @@
 // Fresh-account and sign-in helpers shared by the e2e specs.
 import { expect, type Page } from '@playwright/test';
 
-const PASSWORD = 'correct horse battery';
+/** The password of every account a spec creates: strong enough to pass. */
+export const PASSWORD = 'correct horse battery';
+
+/** A suffix no earlier run used, for emails and usernames. */
+export function uniqueSuffix() {
+  return `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
+}
 
 /**
  * Registers a fresh account through the API. `tag` keeps the username short
  * enough for its 30-character limit. Returns what a spec checks against.
  */
 export async function createAccount(page: Page, tag: string) {
-  const suffix = `${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
+  const suffix = uniqueSuffix();
   const username = `e2e${tag}${suffix}`;
   const email = `e2e-${tag}-${suffix}@example.com`;
   const created = await page.request.post('/api/users', {

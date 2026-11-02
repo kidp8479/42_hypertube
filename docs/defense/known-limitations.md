@@ -49,6 +49,9 @@ does the same (403 on another user's profile, 404, 400).
 - **Real-world:** identical on every SPA.
 - **Cost to "fix":** answering `200` with an error body, which breaks REST
   and the subject's status-code requirement. Not done.
+- **Tests:** an e2e spec that fails a request on purpose lists its status
+  and path (`trackConsoleIssues` in `frontend/e2e/console-issues.ts`); any
+  other red line, an unexpected 404 or 500 included, fails the spec.
 
 ## Firefox logs a font download cut short by a reload
 
