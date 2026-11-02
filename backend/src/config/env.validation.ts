@@ -1,11 +1,15 @@
 // Startup validation for every environment variable the app reads.
 import * as Joi from 'joi';
+import { parseDuration } from './duration.util';
 
 /**
  * Placeholder values shipped in `.env.example`. Rejected here so copying
  * the example verbatim fails the boot instead of running with a signing
  * key that is public in the repo history.
  */
+/** The longest access token the app accepts to issue (HYP-147). */
+const MAX_ACCESS_TOKEN_MS = 3_600_000;
+
 const ENV_EXAMPLE_PLACEHOLDERS = [
   'replace_with_a_random_64_char_secret_before_running_the_app_0000',
   'change_me',
@@ -48,10 +52,17 @@ export const envValidationSchema = Joi.object({
     .invalid(...ENV_EXAMPLE_PLACEHOLDERS)
     .required(),
   // Access-token lifetime, in the vercel/ms format @nestjs/jwt accepts
-  // (e.g. "15m", "7d"). The pattern is enforced here so auth.module can
-  // safely assert the value as an ms StringValue.
+  // (e.g. "15m"). The pattern is enforced here so auth.module can safely
+  // assert the value as an ms StringValue. Capped at one hour: a logout
+  // cannot end a token already issued (known-limitations.md), so a typo
+  // such as "7d" for "7m" would leave stolen tokens alive for a week.
   JWT_EXPIRES_IN: Joi.string()
     .pattern(/^\d+(s|m|h|d)$/)
+    .custom((value: string, helpers) =>
+      parseDuration(value) > MAX_ACCESS_TOKEN_MS
+        ? helpers.message({ custom: '"JWT_EXPIRES_IN" must be at most 1h' })
+        : value,
+    )
     .default('15m'),
 
   // Refresh-token lifetime (HYP-77), same format. Sliding: every rotation
