@@ -105,6 +105,10 @@ browser checks log in with; create it the same way on a fresh database.
   changes a Dockerfile or adds a volume, rebuild once (`make up` does not):
   `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
   --build` (`podman-compose` takes the same arguments).
+- **The backend's watch mode can miss a new file** after a branch switch or
+  a pull that adds one (a new controller): its routes answer 404 while the
+  old build keeps running. `docker restart 42-hypertube-backend-1` (or
+  `docker compose restart backend`) and check the route list in its logs.
 - **`backend_dist` can come up root-owned** on a fresh `up`, and
   `tsc --watch` fails with `EACCES`: `docker compose exec -u root backend
   chown -R node:node /app/dist`, then restart `backend`.
@@ -144,7 +148,10 @@ top of the current `main`. Full rules: [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 - Tests: co-located specs, one layout ([CONTRIBUTING > Spec file
   layout](../CONTRIBUTING.md#spec-file-layout)); a Bruno request with
   assertions per route (`api/bruno/`); Playwright specs in
-  `frontend/e2e/` run through the proxy.
+  `frontend/e2e/` run through the proxy, and fail on any console error they
+  did not declare.
+- Every gate, job by job, and how to show them at the defense:
+  [`defense/ci.md`](defense/ci.md).
 
 ## 6. Docs map
 
