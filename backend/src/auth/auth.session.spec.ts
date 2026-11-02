@@ -17,6 +17,7 @@ import { LoginIdentifierThrottlerGuard } from './guards/login-identifier-throttl
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersService } from '../users/users.service';
+import { ApiClientsService } from '../api-clients/api-clients.service';
 
 const EXPIRES = new Date('2026-10-30T12:00:00.000Z');
 const COOKIE = 'refresh_token';
@@ -57,6 +58,10 @@ describe('session routes', () => {
             findCredentialsChangedAt: () =>
               Promise.resolve({ credentialsChangedAt: null }),
           },
+        },
+        {
+          provide: ApiClientsService,
+          useValue: { exists: () => Promise.resolve(true) },
         },
       ],
     })

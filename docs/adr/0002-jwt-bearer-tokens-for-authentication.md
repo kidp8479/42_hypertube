@@ -1,6 +1,6 @@
 # JWT bearer tokens for authentication (not server-side sessions)
 
-**Date:** 2026-08-29 · **Revised:** 2026-11-01 (HYP-122, HYP-149) · **Status:** accepted
+**Date:** 2026-08-29 · **Revised:** 2026-11-02 (HYP-122, HYP-149, HYP-147) · **Status:** accepted
 
 Hypertube authenticates users with a **signed JWT** sent as
 `Authorization: Bearer <token>`, issued by `POST /auth/login` and verified
@@ -22,8 +22,10 @@ server-side sessions (cookie + session store).
   per-token state is kept anywhere. One read remains on every request: the
   user's `credentialsChangedAt` by primary key, so that every token of an
   account dies when the account changes hands (an OAuth claim, ADR-0007).
-  It also refuses the token of a deleted account. Simpler to run in
-  containers than a session layer.
+  It also refuses the token of a deleted account. A token bought with an API
+  key adds one read: the key must still exist, so revoking it ends its
+  tokens at once (ADR-0015). Simpler to run in containers than a session
+  layer.
 - **Matches the target internship stack** (`@nestjs/passport`,
   `passport-jwt`, `@nestjs/jwt`), a deliberate learning goal of this project.
 

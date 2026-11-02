@@ -58,8 +58,8 @@ export class ApiClientsService {
   }
 
   /**
-   * Revokes one of the caller's keys. Tokens already bought with it stay
-   * valid until they expire (stateless JWT, ADR-0002).
+   * Revokes one of the caller's keys. Tokens already bought with it stop
+   * working at their next request (`JwtStrategy`).
    *
    * @throws {NotFoundException} 404 for an unknown id.
    * @throws {ForbiddenException} 403 for another user's key.
@@ -73,6 +73,15 @@ export class ApiClientsService {
       throw new ForbiddenException();
     }
     await this.clients.delete(id);
+  }
+
+  /**
+   * Whether key `id` still exists and belongs to `userId`: `JwtStrategy`
+   * asks on every request a token bought with that key makes, so revoking
+   * a key ends its tokens at once.
+   */
+  exists(id: number, userId: number): Promise<boolean> {
+    return this.clients.existsBy({ id, userId });
   }
 
   /**

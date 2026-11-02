@@ -1,5 +1,5 @@
 // Unit spec for the env schema: a valid environment boots, a missing or
-// placeholder JWT_SECRET does not.
+// placeholder JWT_SECRET does not, and the access-token lifetime is capped.
 import { envValidationSchema } from './env.validation';
 
 const base = {
@@ -46,6 +46,30 @@ describe('envValidationSchema', () => {
     });
 
     expect(error?.message).toMatch(/REFRESH_EXPIRES_IN/);
+  });
+
+  describe('JWT_EXPIRES_IN', () => {
+    const lifetime = (JWT_EXPIRES_IN: string) =>
+      envValidationSchema.validate({ ...base, JWT_EXPIRES_IN }).error;
+
+    it('defaults to 15 minutes', () => {
+      const { value } = envValidationSchema.validate(base) as {
+        value: { JWT_EXPIRES_IN: string };
+      };
+
+      expect(value.JWT_EXPIRES_IN).toBe('15m');
+    });
+
+    it('accepts up to one hour', () => {
+      expect(lifetime('30s')).toBeUndefined();
+      expect(lifetime('60m')).toBeUndefined();
+      expect(lifetime('1h')).toBeUndefined();
+    });
+
+    it('refuses a lifetime over one hour, which a typo like 7d for 7m would give', () => {
+      expect(lifetime('61m')?.message).toMatch(/JWT_EXPIRES_IN/);
+      expect(lifetime('7d')?.message).toMatch(/JWT_EXPIRES_IN/);
+    });
   });
 
   it('rejects a missing JWT_SECRET', () => {

@@ -1,6 +1,6 @@
 # API keys per user for the client-credentials grant
 
-**Date:** 2026-10-31 · **Revised:** 2026-11-01 (HYP-143) · **Status:** accepted
+**Date:** 2026-10-31 · **Revised:** 2026-11-02 (HYP-143, HYP-147) · **Status:** accepted
 
 The subject's API section documents `POST oauth/token`: "Expects client +
 secret, returns an auth token". The same API must let an authenticated user
@@ -47,9 +47,10 @@ table, `backend/src/api-clients/`):
 
 ## Consequences
 
-- **A revoked key's tokens live until they expire**, 15 minutes by default:
-  access tokens are stateless (ADR-0002, `known-limitations.md`). Revoking
-  stops new tokens at once.
+- **Revoking a key ends its tokens at once.** A token carries the key in
+  `cid`, and `JwtStrategy` checks on every request that the key still
+  exists for its owner (one read by primary key, ADR-0002). The key also
+  stops buying new tokens. Login tokens do not pay that read.
 - **Keys survive a password change.** They are separate credentials, like a
   personal access token, and the owner revokes them one by one. The email or
   password change ends the browser sessions only (HYP-84).

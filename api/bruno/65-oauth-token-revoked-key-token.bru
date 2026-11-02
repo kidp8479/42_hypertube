@@ -1,0 +1,25 @@
+meta {
+  name: 65 OAuth: a token bought before its key was revoked is refused
+  type: http
+  seq: 65
+}
+
+get {
+  url: {{baseUrl}}/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{clientToken}}
+}
+
+docs {
+  The token from request 49 read the users at 52. Its key was revoked at 55:
+  JwtStrategy checks the key on every request, so the same token is now 401
+  instead of living out its 15 minutes (HYP-147).
+}
+
+assert {
+  res.status: eq 401
+}

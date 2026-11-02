@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import { Public } from '../../common/decorators/public.decorator';
 import { UsersService } from '../../users/users.service';
+import { ApiClientsService } from '../../api-clients/api-clients.service';
 
 describe('JwtAuthGuard', () => {
   describe('wired globally over HTTP', () => {
@@ -51,6 +52,10 @@ describe('JwtAuthGuard', () => {
               findCredentialsChangedAt: () =>
                 Promise.resolve({ credentialsChangedAt }),
             },
+          },
+          {
+            provide: ApiClientsService,
+            useValue: { exists: () => Promise.resolve(true) },
           },
         ],
       }).compile();

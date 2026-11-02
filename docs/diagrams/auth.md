@@ -205,7 +205,11 @@ flowchart TD
     U -- no --> X
     U -- yes --> T{"token iat earlier than the second<br/>of credentialsChangedAt?"}
     T -- yes --> X
-    T -- "no, or never changed" --> OK["req.user = { id, apiClientId? }"]
+    T -- "no, or never changed" --> K{"bought with an API key (cid)?"}
+    K -- no --> OK["req.user = { id }"]
+    K -- yes --> KE{"that key still exists?<br/>(one more read)"}
+    KE -- no --> X
+    KE -- yes --> OKC["req.user = { id, apiClientId }"]
 ```
 
 ## 5. OAuth callback page, frontend side (HYP-57)
@@ -419,9 +423,12 @@ even for the same account. An unknown identifier gets a counter like any
 other, so a 429 does not tell whether the account exists, and the
 `X-RateLimit-*` headers show the caller's per-IP counter only.
 
-Trade-off: someone who keeps sending 5 bad attempts a minute on a known
-username keeps its password login at 429 for as long as they keep going
-(OAuth login still works). There is no lockout that outlasts the attempts.
+Trade-off, accepted (HYP-147): someone who keeps sending 5 bad attempts a
+minute on a known username keeps its password login at 429 for as long as
+they keep going (OAuth login still works). There is no lockout that outlasts
+the attempts. Counting per identifier and IP instead would give back what the
+counter is for: guesses on one account spread over many IPs. See
+`known-limitations.md`.
 
 ## 11. API keys and `POST /oauth/token` (HYP-122)
 
@@ -448,8 +455,9 @@ sequenceDiagram
     A-->>S: 403 (SessionTokenGuard: no API key token here)
 ```
 
-A revoked key buys no new token (401); one already bought lives out its 15
-minutes.
+A revoked key buys no new token (401), and a token already bought with it is
+refused at its next request (HYP-147): `JwtStrategy` checks that the key in
+its `cid` still exists.
 
 ### The "API keys" section of `/profile` (HYP-123)
 
