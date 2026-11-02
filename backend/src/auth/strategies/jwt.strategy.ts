@@ -5,6 +5,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { AuthUser } from '../../common/decorators/current-user.decorator';
 import { UsersService } from '../../users/users.service';
+import { ApiClientsService } from '../../api-clients/api-clients.service';
 
 /**
  * Shape of our signed token payload (see {@link AuthService.login}). `cid`
@@ -22,7 +23,8 @@ export type VerifiedJwtPayload = JwtPayload & { iat: number };
  * Validates the Bearer token on incoming requests: checks the signature
  * against `JWT_SECRET` and that the token is not expired, then that its
  * account still exists and did not change hands after the token was issued
- * (`User.credentialsChangedAt`, one primary-key read). Hands the route a
+ * (`User.credentialsChangedAt`, one primary-key read), and, for a token
+ * bought with an API key, that the key is not revoked (one more read). Hands the route a
  * minimal `req.user`; profile data is not read here - a handler that needs
  * it fetches it (ADR-0002).
  */
@@ -40,6 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     config: ConfigService,
     private readonly usersService: UsersService,
+    private readonly apiClients: ApiClientsService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -55,8 +58,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!account || issuedBefore(payload.iat, account.credentialsChangedAt)) {
       throw new UnauthorizedException();
     }
-    return payload.cid === undefined
-      ? { id: payload.sub }
-      : { id: payload.sub, apiClientId: payload.cid };
+    if (payload.cid === undefined) {
+      return { id: payload.sub };
+    }
+    // Bought with an API key: dead as soon as the key is revoked.
+    if (!(await this.apiClients.exists(payload.cid, payload.sub))) {
+      throw new UnauthorizedException();
+    }
+    return { id: payload.sub, apiClientId: payload.cid };
   }
 }

@@ -87,8 +87,9 @@ free one, so someone can probe which emails have an account.
 
 Logout and a detected theft end the **session**: the refresh token is revoked,
 so nothing renews the access token (ADR-0011). A copy already made works until
-it expires, 15 minutes by default (`JWT_EXPIRES_IN`). Same for a token bought
-with an API key that is then revoked (ADR-0015).
+it expires, 15 minutes by default (`JWT_EXPIRES_IN`, at most 1 hour). A token
+bought with an API key is different: revoking the key ends it at once
+(ADR-0015).
 
 - **Why:** no per-token state is kept (ADR-0002). A request reads one user
   column, which ends every token of an account at once (an OAuth claim,

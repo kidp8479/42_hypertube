@@ -1,15 +1,19 @@
 // Unit spec for JwtStrategy: a verified payload becomes a minimal req.user,
-// unless its account is gone or its credentials changed after it was issued.
+// unless its account is gone, its credentials changed after it was issued, or
+// the API key it was bought with has been revoked.
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersService } from '../../users/users.service';
+import { ApiClientsService } from '../../api-clients/api-clients.service';
 
 describe('JwtStrategy', () => {
   const findCredentialsChangedAt = jest.fn();
+  const keyExists = jest.fn();
   const strategy = new JwtStrategy(
     { getOrThrow: () => 'a'.repeat(32) } as unknown as ConfigService,
     { findCredentialsChangedAt } as unknown as UsersService,
+    { exists: keyExists } as unknown as ApiClientsService,
   );
   // 2026-11-01T12:00:00Z, in the seconds a token's `iat` counts.
   const changedAt = new Date('2026-11-01T12:00:00.600Z');
@@ -17,6 +21,7 @@ describe('JwtStrategy', () => {
 
   beforeEach(() => {
     findCredentialsChangedAt.mockReset();
+    keyExists.mockReset();
   });
 
   it('maps a verified payload to a minimal req.user', async () => {
@@ -26,14 +31,27 @@ describe('JwtStrategy', () => {
       id: 7,
     });
     expect(findCredentialsChangedAt).toHaveBeenCalledWith(7);
+    // A login token names no key: nothing more to read.
+    expect(keyExists).not.toHaveBeenCalled();
   });
 
-  it('keeps the API client a token was issued to', async () => {
+  it('keeps the API client a token was issued to, while its key exists', async () => {
     findCredentialsChangedAt.mockResolvedValue({ credentialsChangedAt: null });
+    keyExists.mockResolvedValue(true);
 
     await expect(
       strategy.validate({ sub: 7, cid: 3, iat: 1 }),
     ).resolves.toEqual({ id: 7, apiClientId: 3 });
+    expect(keyExists).toHaveBeenCalledWith(3, 7);
+  });
+
+  it('refuses a token bought with a key revoked since', async () => {
+    findCredentialsChangedAt.mockResolvedValue({ credentialsChangedAt: null });
+    keyExists.mockResolvedValue(false);
+
+    await expect(strategy.validate({ sub: 7, cid: 3, iat: 1 })).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('refuses a token whose account no longer exists', async () => {

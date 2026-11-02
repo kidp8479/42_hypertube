@@ -205,7 +205,11 @@ flowchart TD
     U -- no --> X
     U -- yes --> T{"token iat earlier than the second<br/>of credentialsChangedAt?"}
     T -- yes --> X
-    T -- "no, or never changed" --> OK["req.user = { id, apiClientId? }"]
+    T -- "no, or never changed" --> K{"bought with an API key (cid)?"}
+    K -- no --> OK["req.user = { id }"]
+    K -- yes --> KE{"that key still exists?<br/>(one more read)"}
+    KE -- no --> X
+    KE -- yes --> OKC["req.user = { id, apiClientId }"]
 ```
 
 ## 5. OAuth callback page, frontend side (HYP-57)
@@ -448,8 +452,9 @@ sequenceDiagram
     A-->>S: 403 (SessionTokenGuard: no API key token here)
 ```
 
-A revoked key buys no new token (401); one already bought lives out its 15
-minutes.
+A revoked key buys no new token (401), and a token already bought with it is
+refused at its next request (HYP-147): `JwtStrategy` checks that the key in
+its `cid` still exists.
 
 ### The "API keys" section of `/profile` (HYP-123)
 
