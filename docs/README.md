@@ -12,7 +12,7 @@ the root [README](../README.md), then [`onboarding.md`](onboarding.md).
 | [`frontend/README.md`](../frontend/README.md) | frontend work | to find a feature folder, how the SPA reaches the API |
 | [`adr/`](adr/README.md) | anyone asking "why is it built this way" | before changing a structural choice; the planned decisions are listed there |
 | [`diagrams/`](diagrams/README.md) | anyone touching a flow | before reading a flow's code; one page per domain |
-| [`defense/`](defense/README.md) | the evaluator, and whoever prepares the defense | traceability matrix, security checklist, known limitations, last security review |
+| [`defense/`](defense/README.md) | the evaluator, and whoever prepares the defense | traceability matrix, security checklist, CI and quality gates, known limitations, last security review |
 | [`design/`](design/README.md) | UI work | the reference mockup, tokens and accessibility floor |
 | [`deps/framework-major-upgrades.md`](deps/framework-major-upgrades.md) | dependency updates | before taking a major bump Dependabot ignores |
 | [`.github/pull_request_template.md`](../.github/pull_request_template.md) | PR authors | filled on every PR |
