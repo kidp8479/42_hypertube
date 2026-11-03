@@ -7,7 +7,8 @@ paths:
 # React conventions (frontend)
 
 Additions to ADR-0006 (routing, feature folders, split state) and
-`CONTRIBUTING.md` > File naming. Those win where they cover a topic.
+`docs/code-conventions.md` > File naming. Those win where they cover a
+topic.
 
 ## Components
 

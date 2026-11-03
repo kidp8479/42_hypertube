@@ -131,7 +131,8 @@ issue to In Progress and merging moves it to Done, **even when the PR only
 does part of it**: put the rest in a child issue, or move the issue back.
 The PR template's checklist is filled honestly. `main` merges only when the
 required checks (`backend`, `frontend`, `e2e`, `scan`, `docs`) are green on
-top of the current `main`. Full rules: [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+top of the current `main`. Full rules: [`CONTRIBUTING.md`](../CONTRIBUTING.md);
+the coding rules by topic: [`code-conventions.md`](code-conventions.md).
 
 ## 5. Quality gates
 
@@ -142,11 +143,12 @@ top of the current `main`. Full rules: [`CONTRIBUTING.md`](../CONTRIBUTING.md).
   capped with zero warnings allowed. Over budget means split the code, never
   disable the rule.
 - **`make check-docs`** fails on a broken link, a dash, a route cited in the
-  docs that no controller or Bruno request has, or an env variable missing
-  from compose, `.env.example` or CI. A new env variable touches the Joi
+  docs that no controller or Bruno request has, or a required env variable
+  not wired through compose (and `.env.example` and CI when compose reads it
+  from the environment). A new env variable touches the Joi
   schema, `.env.example`, `docker-compose.yml` and the `e2e` job.
-- Tests: co-located specs, one layout ([CONTRIBUTING > Spec file
-  layout](../CONTRIBUTING.md#spec-file-layout)); a Bruno request with
+- Tests: co-located specs, one layout ([code conventions > Spec file
+  layout](code-conventions.md#spec-file-layout)); a Bruno request with
   assertions per route (`api/bruno/`); Playwright specs in
   `frontend/e2e/` run through the proxy, and fail on any console error they
   did not declare.

@@ -7,7 +7,8 @@ the root [README](../README.md), then [`onboarding.md`](onboarding.md).
 |---|---|---|
 | [`README.md`](../README.md) | everyone | first: what this is, how to run it, the `make` targets |
 | [`onboarding.md`](onboarding.md) | a developer joining or taking over | second: setup with your own OAuth apps, day-one traps, how work flows, where the state lives |
-| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | anyone opening a PR | before a branch: workflow, commits, tests, naming, API and doc-comment conventions |
+| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | anyone opening a PR | before a branch: workflow, commits, checks, dependency updates, security baseline |
+| [`code-conventions.md`](code-conventions.md) | anyone writing code | while writing: spec layout, file naming, DTOs, schema changes, OpenAPI, status codes, doc comments |
 | [`backend/README.md`](../backend/README.md) | backend work | to find a module and its npm scripts |
 | [`frontend/README.md`](../frontend/README.md) | frontend work | to find a feature folder, how the SPA reaches the API |
 | [`adr/`](adr/README.md) | anyone asking "why is it built this way" | before changing a structural choice; the planned decisions are listed there |

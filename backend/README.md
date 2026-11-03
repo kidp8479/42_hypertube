@@ -21,9 +21,9 @@ src/
 ```
 
 Files are named `<kebab-name>.<role>.ts`, specs co-located as
-`<kebab-name>.<role>.spec.ts` (`CONTRIBUTING.md` > File naming). Every class
-carries a `/** */` doc comment, which `make doc` renders
-(`CONTRIBUTING.md` > Doc comments).
+`<kebab-name>.<role>.spec.ts` (`docs/code-conventions.md` > File naming).
+Every class carries a `/** */` doc comment, which `make doc` renders
+(`docs/code-conventions.md` > Doc comments).
 
 ## Scripts
 

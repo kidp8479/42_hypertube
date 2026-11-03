@@ -48,43 +48,24 @@ Kept in the `ignore:` block until then.
 
 ## @nestjs/* 11 -> 12 (backend) - unblocked, not done
 
-Lets the backend drop its `js-yaml` override: `@nestjs/swagger` 11 pins
-`js-yaml` 5.3.0 (GHSA-r3ph-w7gj-g6xm), forced to a patched 5.x until then
+Every package the backend uses has a release that accepts Nest 12:
+`@nestjs/throttler` 6.7.1 (installed) peers `^12`, and `config`, `passport`,
+`jwt`, `swagger`, `typeorm` and `mapped-types` all have a 12. `config` and
+`passport` are already on 12. Taking it also lets the backend drop its
+`js-yaml` override: `@nestjs/swagger` 11 pins `js-yaml` 5.3.0
+(GHSA-r3ph-w7gj-g6xm), forced to a patched 5.x until then
 ([`security-overrides.md`](security-overrides.md)).
 
-Attempted the coordinated bump of every `@nestjs/*` package to 12.
+The work left is the test runner. A forced probe (`npm i --legacy-peer-deps
+@nestjs/*@12`, reverted) built and type-checked, but 12 of 14 Jest suites
+failed to load: Nest 12 ships ESM and ts-jest loads it as CJS (`Must use
+import to load ES Module`). Fix path: widen `jest.transformIgnorePatterns`
+in `backend/package.json` (it already carries `@nestjs/(config|passport)`),
+move the Jest config to ESM, or rely on Node >= 24.9 `require(esm)`.
 
-**Hard blocker:** `@nestjs/throttler` latest is `6.5.0`, peers cap at
-`@nestjs/common: ^11`. There is no Nest 12 release. Throttler drives the
-auth rate-limiting required by the security checklist, so it cannot be
-dropped or left un-upgraded against Nest 12.
-
-The rest of the ecosystem is ready: `@nestjs/config` 12, `jwt` 12.0.1,
-`swagger` 12.0.1, `typeorm` 12.0.1, `passport` 12, `mapped-types` 12 all
-declare a `^12` peer.
-
-**Forced probe** (`npm i --legacy-peer-deps @nestjs/*@12`, throttler left
-at 6.5.0), for reference only - reverted:
-
-- `nest build` : passes.
-- `tsc --noEmit` : passes.
-- `jest` : **12 of 14 suites fail to run** -
-  `Must use import to load ES Module: .../@nestjs/common/index.js`.
-  Nest 12 ships ESM; ts-jest loads it as CJS. Fix path: widen
-  `jest.transformIgnorePatterns` in `backend/package.json` (already
-  carries `@nestjs/(config|passport)`), or move the jest config to ESM,
-  or Node >= 24.9 `require(esm)`.
-
-**Update 2026-10-09: the retry trigger has fired.** `@nestjs/throttler`
-6.7.1 (installed since the 2026-10-08 Dependabot batch) peers
-`@nestjs/common` / `@nestjs/core` `^12`. `@nestjs/config` 12 and
-`@nestjs/passport` 12 are already installed (their peers accept 11 or 12,
-hence the existing `transformIgnorePatterns` entry). The migration has not
-been re-attempted yet.
-
-**Retry trigger (met):** `@nestjs/throttler` publishes a release with a
-`^12` peer. Next: bump the remaining `@nestjs/*` together, widen
-`transformIgnorePatterns` for the ESM subpackages, re-run the full gate. Kept in the `ignore:` block.
+Next: bump the remaining `@nestjs/*` together on one branch, fix the Jest
+loading, run the full gate. The `ignore:` line stays in `dependabot.yml`
+until then.
 
 ## typescript 5.9 -> 7 (backend) / 6 -> 7 (frontend) - deferred
 

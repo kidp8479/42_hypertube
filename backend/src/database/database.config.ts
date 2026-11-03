@@ -16,8 +16,8 @@ const SRC = join(__dirname, '..');
  * The schema is built by the migrations alone: `synchronize` stays off in
  * every environment, and the app applies pending migrations at boot, so dev,
  * CI and production take the same path (ADR-0010). Entities are found by the
- * `*.entity` file role (CONTRIBUTING > File naming), so a new entity is seen
- * by the CLI without a list to keep in step.
+ * `*.entity` file role (`docs/code-conventions.md` > File naming), so a new
+ * entity is seen by the CLI without a list to keep in step.
  */
 export function databaseOptions(
   read: (key: string) => string | undefined,

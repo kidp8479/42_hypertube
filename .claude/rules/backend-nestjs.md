@@ -5,16 +5,17 @@ paths:
 
 # NestJS conventions (backend)
 
-Additions to `CONTRIBUTING.md` (API conventions, File naming, Testing) and
-the ADRs. Where those cover a topic, they win: this file does not restate
-them.
+Additions to `docs/code-conventions.md` (API conventions, File naming, Spec
+file layout) and the ADRs. Where those cover a topic, they win: this file
+does not restate them.
 
 ## Layers
 
 - **Controllers are thin**: validate (DTO), delegate to one service call,
   return. No query, no business conditional, no repository injection.
 - **Services own the logic** and the "not found" / ownership checks
-  (single source of truth, see CONTRIBUTING > HTTP status codes).
+  (single source of truth, see `docs/code-conventions.md` > HTTP status
+  codes).
 - Injected dependencies are `private readonly`, always.
 - A service never injects another module's repository. It goes through
   that module's exported service (add the method there if missing).
@@ -37,7 +38,8 @@ them.
   propagate.
 - Error responses never carry internals: no SQL, no stack, no clashing
   value. A unique violation is already mapped to 409 globally
-  (CONTRIBUTING > HTTP status codes): do not catch it per handler.
+  (`docs/code-conventions.md` > HTTP status codes): do not catch it per
+  handler.
 - Logging goes through Nest's `Logger` (`new Logger(Foo.name)`), never
   `console.*`. Never log a password, hash, token or cookie.
 
