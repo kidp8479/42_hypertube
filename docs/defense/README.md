@@ -16,7 +16,7 @@ land.
 | [`security-review-2026-10-24.md`](security-review-2026-10-24.md) | `web-security-review` run over the auth surface, point by point, with its evidence | done - run again before HYP-16 |
 | `rest-proof.md` | endpoint x method x status-code table, REST constraints satisfied (subject asks for this explicitly) | todo |
 | Architecture diagram | containers + data flow | partial - containers and the request path in [`diagrams/network.md`](../diagrams/network.md); the full app once the core lands |
-| ERD | database entities and relations | todo |
+| [ERD](../diagrams/database.md#tables-erd) | database entities and relations | done for the account tables; the movie, torrent and comment tables come with the core |
 | [Sequence diagrams](../diagrams/) | login, OAuth, password reset, "watch a movie" (search -> torrent -> stream) | partial - auth (login, OAuth, refresh, logout, API keys) in `diagrams/auth.md`, language in `diagrams/i18n.md`, pictures in `diagrams/profile-pictures.md`; reset and "watch a movie" to come |
 | App bootstrap diagram | startup order: env validation -> DB -> JWT -> listen (see ADR-0003) | todo |
 | [`known-limitations.md`](known-limitations.md) | deliberate prod-vs-school gaps, owned not overlooked | ongoing |
