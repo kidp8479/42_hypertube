@@ -100,7 +100,7 @@ same budget as an up-front checklist.
 ## Dependency updates (Dependabot)
 
 Config: `.github/dependabot.yml`. Weekly, per ecosystem (npm backend, npm
-frontend, GitHub Actions).
+frontend, npm root tooling, GitHub Actions). Dependabot alerts are on.
 
 - **Dev-dependency minor/patch bumps are grouped** into one PR per
   ecosystem. Review the changelog, check CI is green, merge.
@@ -115,6 +115,10 @@ frontend, GitHub Actions).
   triage them individually; most action bumps are safe.
 - Don't let the queue pile up - a stale queue hides the one bump that
   matters.
+- **A security alert on a transitive dependency** is fixed with an npm
+  `override`, same major when possible, never `npm audit fix --force`. Each
+  one is listed with its reason and its exit in
+  [`docs/deps/security-overrides.md`](docs/deps/security-overrides.md).
 
 ## Testing
 
