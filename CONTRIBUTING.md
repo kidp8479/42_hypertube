@@ -77,7 +77,8 @@ typecheck, test, build, check-docs) and is the command to run before
 declaring a change ready - it mirrors what CI checks, minus the e2e job.
 
 `make check-docs` (`scripts/check-docs.mjs`, the `docs` CI job) checks the
-docs against the code: links, dashes, env variables, indexes, and every
+docs against the code: links, dashes, the wiring of required env variables,
+the ADR and diagram indexes, and every
 `METHOD /path` they cite (declared by a controller **and** called by a Bruno
 request; a route cited before it is built goes in the `PLANNED` list of
 `scripts/doc-checks/routes.mjs`). It warns on a page over 300 lines. Every
