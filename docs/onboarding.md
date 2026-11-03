@@ -143,8 +143,9 @@ the coding rules by topic: [`code-conventions.md`](code-conventions.md).
   capped with zero warnings allowed. Over budget means split the code, never
   disable the rule.
 - **`make check-docs`** fails on a broken link, a dash, a route cited in the
-  docs that no controller or Bruno request has, or an env variable missing
-  from compose, `.env.example` or CI. A new env variable touches the Joi
+  docs that no controller or Bruno request has, or a required env variable
+  not wired through compose (and `.env.example` and CI when compose reads it
+  from the environment). A new env variable touches the Joi
   schema, `.env.example`, `docker-compose.yml` and the `e2e` job.
 - Tests: co-located specs, one layout ([code conventions > Spec file
   layout](code-conventions.md#spec-file-layout)); a Bruno request with

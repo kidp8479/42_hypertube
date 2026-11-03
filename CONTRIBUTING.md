@@ -81,7 +81,8 @@ docs against the code: links, dashes, the wiring of required env variables,
 the ADR and diagram indexes, and every
 `METHOD /path` they cite (declared by a controller **and** called by a Bruno
 request; a route cited before it is built goes in the `PLANNED` list of
-`scripts/doc-checks/routes.mjs`). It warns on a page over 300 lines. Every
+`scripts/doc-checks/routes.mjs`). It names the file and line of each
+problem, and warns on a page over 300 lines (diagram pages excepted). Every
 gate, job by job: [`docs/defense/ci.md`](docs/defense/ci.md).
 
 `lint:check` runs with `--max-warnings 0`. On top of the usual rules it
