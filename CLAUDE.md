@@ -97,13 +97,13 @@ and additions specific to this project:
 - File naming: backend files are `<kebab-name>.<role>.ts`
   (`cookie-state.store.ts`, `fortytwo.strategy.ts`), frontend files are
   kebab-case `<feature>-<descriptor>`. Reuse an existing role suffix
-  before inventing one. Full rule in `CONTRIBUTING.md` > File naming.
+  before inventing one. Full rule in `docs/code-conventions.md` > File naming.
 - Compodoc docs (JSDoc `/** */`) on **every class and every React
   component**, always (defense evidence + onboarding), and on any method
   whose WHY is not obvious from reading it - public or private (e.g.
   `AuthService.dummyHash`, `UsernameAllocator.available`). No
   comment on a method when the name + signature already make the WHY
-  clear. Full rule in `CONTRIBUTING.md` > Doc comments.
+  clear. Full rule in `docs/code-conventions.md` > Doc comments.
 - Commits: `type(HYP-N): summary`, with the Linear issue key, one logical
   change per commit.
 - Branches: rebase onto `main`, never merge `main` into a feature branch.
@@ -127,13 +127,13 @@ and additions specific to this project:
   diagram is committed to its domain page `docs/diagrams/<domain>.md`
   (Mermaid overview of the domain first, then one section per flow), in
   the same PR. Mandatory - `docs/diagrams/README.md`.
-- DTO rules, HTTP status codes and spec layout are in `CONTRIBUTING.md`
-  (API conventions, Testing). Read them before adding an endpoint or a
+- DTO rules, HTTP status codes and spec layout are in
+  `docs/code-conventions.md`. Read them before adding an endpoint or a
   spec.
 - Stack conventions (NestJS, TypeORM, React, Tailwind) are in
   `.claude/rules/`, loaded only when the matching files are touched
-  (`paths:` frontmatter). They add to CONTRIBUTING and the ADRs, never
-  override them.
+  (`paths:` frontmatter). They add to `docs/code-conventions.md` and the
+  ADRs, never override them.
 
 ## Not yet decided / to settle at the start of the work session
 

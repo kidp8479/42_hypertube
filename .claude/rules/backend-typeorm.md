@@ -8,7 +8,7 @@ paths:
 
 # TypeORM conventions (backend)
 
-Additions to `CONTRIBUTING.md` > Database schema and ADR-0010 (migrations
+Additions to `docs/code-conventions.md` > Database schema and ADR-0010 (migrations
 build the schema, `synchronize` off). Keep the existing entity style
 (integer primary keys, camelCase columns): changing it means a migration
 for no gain.
@@ -59,7 +59,8 @@ for no gain.
 ## Migrations
 
 - Generated (`make migration-generate NAME=...`), then read: see
-  CONTRIBUTING for the rename-as-drop trap.
+  `docs/code-conventions.md` > Database schema for the rename-as-drop
+  trap.
 - Every `up()` has a `down()` that undoes it.
 - One migration per logical schema change; data backfills
   (`INSERT`/`UPDATE`) in their own migration, not mixed into an `ALTER`.

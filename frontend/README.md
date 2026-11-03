@@ -24,7 +24,7 @@ e2e/                  # Playwright specs (Chromium and Firefox, against a runnin
 
 Files are kebab-case `<feature>-<descriptor>`, tests `.test.ts(x)`, styles
 Tailwind classes in the component, on the tokens of `src/styles/tokens.css`
-(ADR-0012, `CONTRIBUTING.md` > File naming).
+(ADR-0012, `docs/code-conventions.md` > File naming).
 
 ## API access
 

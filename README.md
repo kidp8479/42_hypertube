@@ -19,7 +19,7 @@ in [`docs/README.md`](docs/README.md).
 - **Language**: TypeScript everywhere (backend and frontend)
 - **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser e2e in Chromium and Firefox: the auth flow, the OAuth handshake guards, the layout on a phone, `frontend/e2e/`)
 - **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
-- **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand) from the `/** */` comment every class carries (`CONTRIBUTING.md` > Doc comments)
+- **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand) from the `/** */` comment every class carries (`docs/code-conventions.md` > Doc comments)
 - **API testing**: [Bruno](https://www.usebruno.com) collection in `api/bruno/` - plain-text `.bru` files tracked in git (diffs in PRs, no account), with status/body assertions on every request. Open the folder in the Bruno app, or run it headless with `make test-api` (needs the stack up and `make install`); CI runs it on every PR
 - **Lint/format**: [ESLint](https://eslint.org) + [Prettier](https://prettier.io), shared config across packages
 - **Task runner**: [GNU Make](https://www.gnu.org/software/make/) wrapping the npm scripts
@@ -105,4 +105,5 @@ See `make help` for the up-to-date list.
 ## Contributing
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (issues,
-branches, commits, tests, conventions).
+branches, commits, checks) and
+[`docs/code-conventions.md`](./docs/code-conventions.md) for the coding rules.
