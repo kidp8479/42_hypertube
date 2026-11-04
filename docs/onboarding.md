@@ -65,7 +65,9 @@ Open **https://localhost:8443** and accept the self-signed certificate once
 ### The `.env`
 
 The comments in `.env.example` say what each variable expects; the app
-refuses to boot on a missing value or a left-over placeholder (ADR-0003).
+refuses to boot on a missing or malformed value, and on the `JWT_SECRET`
+placeholder (ADR-0003). Other placeholders are not detected: a fake OAuth
+secret boots and only fails at sign-in.
 Set `THROTTLE_LIMIT_MULTIPLIER` (e.g. 100) for dev: a Bruno run alone
 registers 8 accounts, and `POST /users` allows 10 per hour.
 

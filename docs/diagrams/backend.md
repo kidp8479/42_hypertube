@@ -10,7 +10,7 @@ Code: `backend/src/app.module.ts` (the composition root) and
 ```mermaid
 flowchart TD
     start["node dist/main"] --> env{"ConfigModule:<br/>env valid? (Joi, ADR-0003)"}
-    env -- "a variable missing,<br/>malformed or a placeholder" --> stop["process exits:<br/>it never listens"]
+    env -- "a variable missing or malformed,<br/>or the JWT_SECRET placeholder" --> stop["process exits:<br/>it never listens"]
     env -- yes --> db["TypeORM connects to PostgreSQL"]
     db --> mig["pending migrations run<br/>(ADR-0010)"]
     mig --> mods["feature modules:<br/>Users, ApiClients, Auth<br/>(JWT, 42 and GitHub strategies)"]
@@ -19,8 +19,9 @@ flowchart TD
     app --> listen["listen on PORT (3000)"]
 ```
 
-- **A bad environment never starts.** The schema is checked before anything
-  connects; a missing secret or a value left from `.env.example` stops the
+- **A missing or malformed environment never starts.** The schema is checked
+  before anything connects; a missing variable, a malformed one or the
+  `JWT_SECRET` copied from `.env.example` stops the
   boot with the variable's name.
 - **The schema is current before the first request.** Migrations run as part
   of the database connection, so a request never meets an old schema.

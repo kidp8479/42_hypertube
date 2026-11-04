@@ -23,7 +23,9 @@ once (`http://localhost:8080` redirects there).
 ## The `.env`
 
 Each variable has its comment in `.env.example`. The app refuses to boot on a
-missing value or a placeholder left as is, and names it.
+missing or malformed value, and on the `JWT_SECRET` copied from the example,
+and names the variable. A fake OAuth secret is not detected: it boots, and
+only the 42 or GitHub sign-in fails.
 
 | Variables | What to put |
 |---|---|
@@ -40,7 +42,7 @@ The prod stack pins the rate-limit multiplier to 1: the real limits apply.
 | What | Where |
 |---|---|
 | The app | `https://localhost:8443`: register, sign in with a password, 42 or GitHub |
-| The REST API and its codes | Swagger at `https://localhost:8443/api-docs`; the Bruno collection asserts every status (`make test-api`, on the dev stack: the prod limits answer 429 halfway through a run) |
+| The REST API and its codes | Swagger at `https://localhost:8443/api-docs`; the Bruno collection asserts every status (`make test-api`, on the dev stack with `THROTTLE_LIMIT_MULTIPLIER=100` in `.env`: at the real limits, which the prod stack enforces, a run answers 429 halfway through) |
 | Security headers and CSP | `curl -skI https://localhost:8443/` |
 | A clean console | the browser's DevTools on every page (only the network lines of a deliberate 4xx, `known-limitations.md`) |
 | The quality gates | [`ci.md`](ci.md): the CI checks of any merged PR on GitHub |
@@ -50,7 +52,7 @@ The prod stack pins the rate-limit multiplier to 1: the real limits apply.
 | Command | Effect |
 |---|---|
 | `make down` | stop, keep the data |
-| `make wipe-db` | delete the database (accounts included); the next `up` starts empty |
+| `make wipe-db` | delete the database (accounts included); the next `make up-prod` starts empty |
 | `make fclean` | remove containers, volumes and the images built here |
 
-`make help` lists every target.
+`make help` lists the everyday targets; the `Makefile` has them all.
