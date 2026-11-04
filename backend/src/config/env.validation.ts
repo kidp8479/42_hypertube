@@ -2,14 +2,14 @@
 import * as Joi from 'joi';
 import { parseDuration } from './duration.util';
 
-/**
- * Placeholder values shipped in `.env.example`. Rejected here so copying
- * the example verbatim fails the boot instead of running with a signing
- * key that is public in the repo history.
- */
 /** The longest access token the app accepts to issue (HYP-147). */
 const MAX_ACCESS_TOKEN_MS = 3_600_000;
 
+/**
+ * Placeholder values shipped in `.env.example` for `JWT_SECRET`. Rejected
+ * there so copying the example verbatim fails the boot instead of running
+ * with a signing key that is public in the repo history.
+ */
 const ENV_EXAMPLE_PLACEHOLDERS = [
   'replace_with_a_random_64_char_secret_before_running_the_app_0000',
   'change_me',
