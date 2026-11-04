@@ -17,6 +17,7 @@ directly, so there is nothing to export.
 | Profile pictures | [`profile-pictures.md`](profile-pictures.md) | overview, storing an upload, showing a picture |
 | Database | [`database.md`](database.md) | overview (entity change, migration, boot, drift check), the tables (ERD) |
 | Layout | [`layout.md`](layout.md) | overview (header, main, footer around every route), header by session state |
+| Backend | [`backend.md`](backend.md) | overview (the boot order), one request inside Nest (guards, validation, serializer, filters) |
 
 Domains still to come, each with its own page once built: video library
 and search (HYP-13), torrent download (HYP-12), streaming and transcoding
