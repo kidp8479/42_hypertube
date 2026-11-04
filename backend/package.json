@@ -71,7 +71,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-oauth2": "^1.8.0",
     "@types/supertest": "^7.0.0",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.5.7",
     "eslint-plugin-sonarjs": "^4.2.2",
@@ -85,7 +85,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.72.1"
   },
   "jest": {
     "moduleFileExtensions": [
