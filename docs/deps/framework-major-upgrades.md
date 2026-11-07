@@ -6,7 +6,7 @@ state of each one. Re-run the attempt with the full CI gate
 (`format:check`, `lint:check`, `typecheck`, `test`, `build`) in the
 affected package before changing a verdict.
 
-Snapshot date: 2026-09-09, peer ranges rechecked 2026-10-09. Node runtime
+Snapshot date: 2026-09-09, peer ranges rechecked 2026-11-07. Node runtime
 pinned to **24** (`*/Dockerfile`, `.github/workflows/ci.yml`, `docker-compose.yml`).
 
 | Migration | From -> To | Verdict |
@@ -14,8 +14,9 @@ pinned to **24** (`*/Dockerfile`, `.github/workflows/ci.yml`, `docker-compose.ym
 | `eslint` + `@eslint/js` (backend) | 9 -> 10 | **landed** - ignore line kept, now blocks 10 -> 11 |
 | `eslint` / `@eslint/js` (frontend) | already on 10 | n/a - ignore line kept, blocks 10 -> 11 |
 | `@types/node` (both) | 24 -> 26 | **blocked** - runtime is Node 24 |
-| `@nestjs/*` (backend) | 11 -> 12 | **unblocked, not done** - `@nestjs/throttler` 6.7.1 peers `^12`; `config` + `passport` already on 12 |
-| `typescript` (backend) | 5.9 -> 7 | **deferred** - `ts-jest` + `typescript-eslint` cap below 7 |
+| `@nestjs/*` (backend) | 11 -> 12 | **landed** - ignore line kept, now blocks 12 -> 13 |
+| `typescript` (backend) | 5.9 -> 6.0 | **landed** with Nest 12 |
+| `typescript` (backend) | 6 -> 7 | **deferred** - `ts-jest` + `typescript-eslint` cap below 7 |
 | `typescript` (frontend) | 6 -> 7 | **deferred** - `typescript-eslint` caps at `<6.1.0` |
 
 ---
@@ -46,46 +47,41 @@ not have.
 Dockerfiles + CI + compose, with `@types/node` moved in the same PR.
 Kept in the `ignore:` block until then.
 
-## @nestjs/* 11 -> 12 (backend) - unblocked, not done
+## @nestjs/* 11 -> 12 + typescript 5.9 -> 6.0 (backend) - landed
 
-Every package the backend uses has a release that accepts Nest 12:
-`@nestjs/throttler` 6.7.1 (installed) peers `^12`, and `config`, `passport`,
-`jwt`, `swagger`, `typeorm` and `mapped-types` all have a 12. `config` and
-`passport` are already on 12. Taking it also lets the backend drop its
-`js-yaml` override: `@nestjs/swagger` 11 pins `js-yaml` 5.3.0
-(GHSA-r3ph-w7gj-g6xm), forced to a patched 5.x until then
-([`security-overrides.md`](security-overrides.md)).
+- Every `@nestjs/*` package on 12 in one branch (`common`, `core`,
+  `platform-express`, `jwt`, `swagger`, `typeorm`, `testing`, `cli`,
+  `schematics`; `config`, `passport` and `throttler` already accepted 12).
+- Jest: Nest 12 ships ESM. The test scripts run Jest with
+  `NODE_OPTIONS="--experimental-vm-modules"`, so Node 24 loads it through
+  `require(esm)`; no `transformIgnorePatterns`, no spec rewritten.
+- TypeScript 6.0 (the frontend's version) came with it. TS 6 no longer
+  picks up every `@types/*` package, so `tsconfig.json` lists
+  `types: ["node", "jest", "multer"]` (the build config drops `jest`),
+  and `rootDir` is explicit. `tsconfig.build.json` keeps its build info in
+  `dist/`.
+- `@nestjs/swagger` 12 ships a patched `js-yaml` (5.5.0): the backend
+  override is gone ([`security-overrides.md`](security-overrides.md)).
+- Checked on 2026-11-07: the full gate, 316 unit tests, the dev container
+  boot with no warning, Bruno (65 requests), Playwright (46 tests),
+  `make up-prod`. `/api-docs`, `/api-docs-json` and `/api-docs-yaml`
+  answer 200; the OpenAPI document is identical to Nest 11's except that
+  `token_type` now carries `enum: ["Bearer"]` (Swagger's CLI plugin reads
+  the literal type).
+- The `@nestjs/*` ignore line stays in `dependabot.yml` and now guards
+  12 -> 13.
 
-The work left is the test runner. A forced probe (`npm i --legacy-peer-deps
-@nestjs/*@12`, reverted) built and type-checked, but 12 of 14 Jest suites
-failed to load: Nest 12 ships ESM and ts-jest loads it as CJS (`Must use
-import to load ES Module`). Fix path: widen `jest.transformIgnorePatterns`
-in `backend/package.json` (it already carries `@nestjs/(config|passport)`),
-move the Jest config to ESM, or rely on Node >= 24.9 `require(esm)`.
-
-Next: bump the remaining `@nestjs/*` together on one branch, fix the Jest
-loading, run the full gate. The `ignore:` line stays in `dependabot.yml`
-until then.
-
-## typescript 5.9 -> 7 (backend) / 6 -> 7 (frontend) - deferred
+## typescript 6 -> 7 (both) - deferred
 
 TS 7 is the native-compiler rewrite. Toolchain support is not there:
 
-- `ts-jest` `29.4.14` peers `typescript: '>=4.3 <7'` - no TS 7.
-- `typescript-eslint` `8.71.0` peers `typescript: '>=4.8.4 <6.1.0'`
+- `ts-jest` `29.4.15` peers `typescript: '>=4.3 <7'` - no TS 7.
+- `typescript-eslint` `8.72.1` peers `typescript: '>=4.8.4 <6.1.0'`
   - no TS 7, and nothing past 6.0.x either.
 
-Frontend is already on `typescript@~6.0.3` - that is the ceiling its
-`typescript-eslint@8.71` allows, so the frontend `ignore:` line on
-`typescript` majors stays until typescript-eslint moves.
-
-**Backend to TS 6.0** (intermediate, matching the frontend) was probed and
-reverted: `tsc --noEmit` produced ~330 errors, all
-`Cannot find name 'describe' / 'it' / 'expect'` - TS 6 no longer
-auto-includes `@types/jest` globals the way 5.x did. Fixable with an
-explicit `"types": ["node", "jest"]` (or a test-only tsconfig), but low
-value while 6.1+/7 are still blocked by the linter.
+Both packages are on TypeScript 6.0, the ceiling `typescript-eslint`
+allows, so the `typescript` ignore lines stay in both ecosystems.
 
 **Retry trigger:** `typescript-eslint` and `ts-jest` publish TS 7 support.
-Then do it as its own migration (backend + frontend), starting with the
-tsconfig `types` fix. Kept in the `ignore:` block.
+Then do it as its own migration (backend + frontend). Kept in the
+`ignore:` block.
