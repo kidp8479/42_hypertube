@@ -142,7 +142,7 @@ before the token check runs. The counter is in-process
 |---|---|
 | Secrets only via env; no `.env` file read in-process (Compose / deploy inject directly) | `app.module.ts` `ConfigModule.forRoot({ ignoreEnvFile: true })` |
 | `.env` git-ignored; `.env.example` ships placeholders only | `.gitignore`, `.env.example` |
-| Placeholder secrets rejected at boot | `config/env.validation.ts` `ENV_EXAMPLE_PLACEHOLDERS` |
+| The `JWT_SECRET` placeholder rejected at boot | `config/env.validation.ts` `ENV_EXAMPLE_PLACEHOLDERS` |
 | Full env schema validated at startup, deploy fails fast on a missing / malformed var | `config/env.validation.ts`; ADR-0003 |
 | gitleaks secret scan | CI (`.github/workflows/gitleaks.yml`, required `scan` check on `main`) |
 | Dependency CVEs | Dependabot (policy in `docs/deps/`) |
