@@ -44,7 +44,7 @@
     "@zxcvbn-ts/language-en": "^4.1.1",
     "@zxcvbn-ts/language-fr": "^4.1.2",
     "an-array-of-french-words": "^2.0.0",
-    "argon2": "^0.45.1",
+    "argon2": "^0.45.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "8.3.0",
