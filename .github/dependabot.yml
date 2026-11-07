@@ -17,9 +17,9 @@ updates:
       # Dependabot merge - each is done by hand on its own branch, then
       # this line stays to block the *next* major the same way.
       # Status of each: docs/deps/framework-major-upgrades.md (HYP-41).
-      - dependency-name: "@nestjs/*"
+      - dependency-name: "@nestjs/*" # on 12 (HYP-41); this now blocks 12 -> 13
         update-types: ["version-update:semver-major"]
-      - dependency-name: "typescript"
+      - dependency-name: "typescript" # on 6 (HYP-41); this now blocks 6 -> 7
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]

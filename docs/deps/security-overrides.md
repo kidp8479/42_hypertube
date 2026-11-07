@@ -33,16 +33,14 @@ Drop an entry once a Bruno release ships the patched version itself.
 | Override | Where | Note |
 |---|---|---|
 | `minimatch` `^11.0.1` | backend, frontend | ReDoS in glob patterns. Only build tooling uses it (ESLint, Jest, Compodoc), on our own config. 3/10 to 11: lint still catches a planted error, tests, build and `make doc` pass |
-| `js-yaml` `^5.4.1` under `@nestjs/swagger` | backend | Swagger 11 pins 5.3.0. It turns our own OpenAPI document into the YAML `SwaggerModule` serves by default at `/api-docs-yaml` (checked: still 200, next to `/api-docs` and `/api-docs-json`). Drop with the Nest 12 upgrade ([`framework-major-upgrades.md`](framework-major-upgrades.md)) |
 
 ## Left on purpose
 
 - `deepmerge` (backend, low): the advisory covers every version from 4.2.0,
-  there is no patched release. Only Jest and the Nest CLI use it, on our own
-  config.
+  there is no patched release. Only Jest uses it, on our own config.
 - `glob` 10 (backend dev tooling, moderate): the patched line is 14, under
-  Jest and the Nest CLI; a forced jump would be a larger risk than a
-  timeout bypass in a build tool.
+  Jest's coverage plugin (`babel-plugin-istanbul`); a forced jump would be
+  a larger risk than a timeout bypass in a build tool.
 
 `npm audit --omit=dev` is clean in both packages: nothing above reaches the
 running app.

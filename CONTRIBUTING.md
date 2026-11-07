@@ -104,9 +104,9 @@ frontend, npm root tooling, GitHub Actions). Dependabot alerts are on.
   ecosystem. Review the changelog, check CI is green, merge.
 - **Semver-major bumps on `@nestjs/*`, `typescript`, `@types/node`,
   `eslint` / `@eslint/js` are ignored.** These are deliberate migrations,
-  not a Dependabot merge (e.g. `@nestjs/core` 12 is the ESM line and
-  breaks the current `ts-jest` setup; TypeScript 7 is the native-compiler
-  rewrite; `@types/node` must track the Node runtime, not lead it). When
+  not a Dependabot merge (e.g. Nest 12 ships ESM and needed Jest on Node's
+  `require(esm)`; TypeScript 7 is the native-compiler rewrite;
+  `@types/node` must track the Node runtime, not lead it). When
   we take one on: open an issue, remove that dependency's line from the
   `ignore:` block, let Dependabot reopen the PR, migrate on a branch.
 - **Other majors (GitHub Actions, non-listed libs) are not ignored** -
