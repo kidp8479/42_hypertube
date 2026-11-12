@@ -120,8 +120,11 @@ describe('UsersService', () => {
       expect(user.password).not.toBe(dto.password);
       expect(await argon2.verify(user.password!, dto.password)).toBe(true);
       // The encoded hash carries its parameters; assert argon2id with the
-      // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults.
-      expect(user.password).toMatch(/^\$argon2id\$v=19\$m=19456,p=1,t=2\$/);
+      // pinned OWASP cost (ARGON2_OPTIONS), not the library defaults. The
+      // parameters are compared as a set: their order is the library's choice.
+      const [, algorithm, version, params] = user.password!.split('$');
+      expect([algorithm, version]).toEqual(['argon2id', 'v=19']);
+      expect(params.split(',').sort()).toEqual(['m=19456', 'p=1', 't=2']);
     });
 
     it('refuses a weak password before hashing or storing anything', async () => {
