@@ -28,8 +28,9 @@ land.
 
 ## Notes
 
-- Diagrams: draw in Excalidraw, commit the `.excalidraw` source **and** an
-  exported `.png` (or `.svg`) so they render without the editor.
+- Diagrams: Mermaid in the domain's page of `docs/diagrams/`, plus an
+  optional Excalidraw poster (source and exported `.png` side by side), per
+  [`diagrams/README.md`](../diagrams/README.md).
 - Draw a flow only once the feature it describes is built - a half-done
   sequence diagram is rework.
 - The traceability matrix is the highest-leverage document: it lets the

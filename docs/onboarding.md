@@ -26,7 +26,9 @@ Every requirement, with its status, code and test:
 
 **State today:** accounts, sessions, OAuth, profiles, pictures, API keys,
 two languages and the security headers are done. The core (library,
-torrent, streaming, video page, comments) is next.
+torrent, streaming, video page, comments) is next: its decisions are
+ADR-0018 to 0021, its code is not written yet. The mail flows (password
+reset, email change) are open too.
 
 ## 2. Architecture tour
 
@@ -50,7 +52,7 @@ torrent, streaming, video page, comments) is next.
 ## 3. Getting it running
 
 Needs Docker (or rootless Podman with `podman-compose`), GNU Make and
-Node.js (latest LTS, for the host-side gates).
+Node.js 24 (the version the images run, for the host-side gates).
 
 ```sh
 git clone git@github.com:kidp8479/42_hypertube.git && cd 42_hypertube
@@ -123,6 +125,15 @@ browser checks log in with; create it the same way on a fresh database.
   container: Jest's workers get killed by the container's memory cap.
 - **Playwright** needs its browsers once per machine: `cd frontend && npx
   playwright install chromium firefox`.
+- **`npm ci` warns that install scripts are blocked** (argon2,
+  `@parcel/watcher`, `unrs-resolver`, `@scarf/scarf`) with the current
+  `node:24-alpine` npm. Expected and harmless today: argon2 loads its
+  prebuilt binary.
+- **Docker Desktop on WSL:** the `desktop.exe` credential helper sometimes
+  fails a `--build` with `error getting credentials`. Retry, or point
+  `DOCKER_CONFIG` at a folder whose `config.json` is `{}` (every base image
+  is public). After a WSL restart, recreate the frontend container if its
+  bind mount is gone, and restart the proxy if `:8443` stops answering.
 
 ## 4. How work flows
 

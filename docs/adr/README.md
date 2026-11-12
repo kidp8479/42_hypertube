@@ -57,5 +57,4 @@ becomes a numbered ADR when the decision is actually taken - not before.
 | file retention | how "delete if unwatched for 1 month" is enforced (scheduled job) |
 | subtitles | the subtitle source (OpenSubtitles, the `.srt` files of archive.org items) and the conversion to WebVTT |
 | stream token | how the player's `<video>` is authorised without the access JWT (HYP-14 design note) |
-| test database | isolated DB strategy for e2e tests + CI wiring (HYP-27) |
 | ORM | TypeORM over Prisma - deliberate, for the internship stack; worth stating explicitly |

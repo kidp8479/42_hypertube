@@ -111,6 +111,12 @@ frontend, npm root tooling, GitHub Actions). Dependabot alerts are on.
   `ignore:` block, let Dependabot reopen the PR, migrate on a branch.
 - **Other majors (GitHub Actions, non-listed libs) are not ignored** -
   triage them individually; most action bumps are safe.
+- **Held back: `@playwright/test` stays on 1.64.1.** 1.65.0 ships a
+  Firefox that crashes the page on a named `getByRole` of an
+  `aria-labelledby` element (microsoft/playwright#43967, fixed upstream,
+  not released yet). When the frontend dev group brings 1.65 back, take
+  the rest of the group and keep Playwright on 1.64.1 until a release
+  carries the fix.
 - Don't let the queue pile up - a stale queue hides the one bump that
   matters.
 - **A security alert on a transitive dependency** is fixed with an npm
