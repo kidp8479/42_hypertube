@@ -1,9 +1,24 @@
 # Hypertube
 
 Video streaming platform built for the 42 school curriculum
-(post-common-core). The core of the project is a BitTorrent client
-implemented from scratch (low-level protocol, no ready-made streaming
-library) that lets a video start playing while it's still downloading.
+(post-common-core): search movies from legal sources and watch them in the
+browser. The core of the project is a BitTorrent client written from
+scratch (no BitTorrent or streaming library) that lets a video start
+playing while it is still downloading.
+
+## Where it stands
+
+- **Done:** accounts (email + password, OAuth 42 and GitHub), sessions with
+  rotating refresh tokens, profiles and pictures, API keys and
+  `POST /oauth/token`, English and French, security headers, CI.
+- **Next:** the core. The BitTorrent client, the movie library
+  (archive.org + PeerTube, TMDb + OMDb), streaming with ffmpeg, the video
+  page and comments. The decisions are taken (ADR-0018 to 0021), the code is
+  not written yet.
+- **Also open:** password reset and email change by mail (HYP-34, HYP-39).
+
+Status of every subject requirement:
+[`docs/defense/traceability.md`](docs/defense/traceability.md).
 
 New on the project: read this page, then
 [`docs/onboarding.md`](docs/onboarding.md). Every other document is listed
@@ -17,7 +32,7 @@ in [`docs/README.md`](docs/README.md).
 ## Tooling
 
 - **Language**: TypeScript everywhere (backend and frontend)
-- **Testing**: [Jest](https://jestjs.io) (backend unit + e2e), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser e2e in Chromium and Firefox: the auth flow, the OAuth handshake guards, the layout on a phone, `frontend/e2e/`)
+- **Testing**: [Jest](https://jestjs.io) (backend unit), [Vitest](https://vitest.dev) (frontend unit), [Playwright](https://playwright.dev) (real-browser e2e in Chromium and Firefox, through the edge proxy: sign-up and login, OAuth, session, profile and API keys, the layout on a phone, `frontend/e2e/`)
 - **API docs**: [Swagger](https://github.com/nestjs/swagger) at `/api-docs` once the backend is running - also serves as evidence the API is RESTful
 - **Code docs**: [Compodoc](https://compodoc.app) - `make doc` generates browsable module/controller/service docs into `docs/backend/` (gitignored, regenerate on demand) from the `/** */` comment every class carries (`docs/code-conventions.md` > Doc comments)
 - **API testing**: [Bruno](https://www.usebruno.com) collection in `api/bruno/` - plain-text `.bru` files tracked in git (diffs in PRs, no account), with status/body assertions on every request. Open the folder in the Bruno app, or run it headless with `make test-api` (needs the stack up and `make install`); CI runs it on every PR
@@ -29,7 +44,7 @@ in [`docs/README.md`](docs/README.md).
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org) (check the active version with `node --version`; kept on latest LTS/current) - only needed for local (non-Docker) development
+- [Node.js](https://nodejs.org) 24, the version the images run - for the host-side gates (`make verify`, `make test-e2e`, `make test-api`) and non-Docker runs
 - [Docker](https://www.docker.com) or [Podman](https://podman.io) (with `podman-compose`)
 - [GNU Make](https://www.gnu.org/software/make/)
 
@@ -38,13 +53,18 @@ in [`docs/README.md`](docs/README.md).
 ```
 Hypertube/
 ├── backend/            # NestJS API (Dockerfile: dev + prod stages)
-├── frontend/           # React SPA (Dockerfile: dev + prod stages, nginx.conf for prod)
+├── frontend/           # React SPA + Playwright specs in e2e/ (Dockerfile: dev + prod stages, nginx.conf for prod)
+├── proxy/              # nginx edge proxy: TLS on :8443, / to the SPA, /api/* to the backend (ADR-0009)
 ├── api/bruno/          # Bruno request collection (assertion-checked API calls, run in CI)
-├── db/init/            # optional Postgres init scripts
+├── db/init/            # optional Postgres init scripts (empty today)
 ├── docs/               # ADRs, defense packet, diagrams, design mockup, dependency-upgrade log
-├── docker-compose.yml           # what dev and prod share (db, backend, frontend, proxy)
-├── docker-compose.dev.yml  # dev: dev targets, mounted source (make up)
-├── docker-compose.prod.yml      # prod: built backend, static SPA (make up-prod)
+├── scripts/            # check-docs.mjs, the doc drift check (make check-docs)
+├── .github/            # CI workflows, Dependabot config, PR template
+├── .githooks/          # pre-commit and commit-msg hooks (enabled by make install)
+├── docker-compose.yml       # what dev and prod share (db, backend, frontend, proxy)
+├── docker-compose.dev.yml   # dev: dev targets, mounted source (make up)
+├── docker-compose.prod.yml  # prod: built backend, static SPA (make up-prod)
+├── AUTHORS             # required by the marking sheet
 └── .env.example        # required environment variables, copy to .env
 ```
 
@@ -64,7 +84,8 @@ The app is served only through the edge proxy at **https://localhost:8443** (sel
 
 `make up` auto-detects `docker compose` vs `podman-compose` (see the Makefile) - same command works on Docker or Podman.
 
-**Without containers (backend/frontend only, no Postgres):**
+**Without containers (backend/frontend only, no Postgres, so anything that
+touches the database fails; use `make up` for real work):**
 
 ```sh
 make install         # install root tooling (TypeScript LSP, Bruno CLI) + backend + frontend dependencies, set up git hooks
@@ -83,11 +104,15 @@ make dev-frontend     # run the Vite dev server (http://localhost:5173)
 | `make up-prod` | The prod stack: built backend, SPA as static files, no mounted source (ADR-0013) |
 | `make down` | Compose down |
 | `make ps` | Compose ps |
-| `make logs` | Compose logs -f |
+| `make logs` | Compose logs -f (`logs-backend`, `logs-frontend`, `logs-db` for one service) |
+| `make psql` | psql prompt on the dev database |
+| `make be CMD="..."` / `make fe CMD="..."` | Run a command in the backend / frontend container (e.g. `npm install <pkg>`) |
 | `make format` | Format code (Prettier, writes) on backend + frontend |
 | `make format-check` | Check formatting without writing (used by the pre-commit hook and CI) |
 | `make lint` | Lint (ESLint --fix) on backend + frontend |
 | `make lint-check` | Lint without auto-fixing (used by the pre-commit hook and CI) |
+| `make clean` | Stop and remove the containers (keeps volumes and images) |
+| `make fclean` | `clean` + remove the volumes (database, `node_modules`) and the locally built images |
 | `make re` | Full reset: `fclean` then `up` |
 | `make wipe-db` | Drop only the database volume (fast schema reset) |
 | `make typecheck` | `tsc --noEmit` on backend + frontend |

@@ -48,8 +48,9 @@ malformed, the process refuses to boot.
   rejects it as unknown / the app reads `undefined`.
 - `ConfigModule.forRoot({ ignoreEnvFile: true })`: Compose (dev) and the
   deploy environment (prod) inject variables into the process directly;
-  there is no `.env` file inside the container. Local host-side runs
-  (tests) get their own strategy - see HYP-27.
+  there is no `.env` file inside the container. Host-side unit specs never
+  boot `AppModule`, so they need no environment; the end-to-end checks
+  (Playwright, Bruno) run against the compose stack (HYP-27).
 - `TypeOrmModule` and `JwtModule` move to their `*Async` form so their
   factories can read the validated config via `ConfigService` instead of
   `process.env`.

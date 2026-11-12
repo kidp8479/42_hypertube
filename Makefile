@@ -46,7 +46,7 @@ PROJECT := $(notdir $(CURDIR))
 
 help:
 	@echo "Setup"
-	@echo "  install         - install root tooling (TypeScript LSP only), backend + frontend dependencies, set up git hooks"
+	@echo "  install         - install root tooling (TypeScript LSP, Bruno CLI), backend + frontend dependencies, set up git hooks"
 	@echo ""
 	@echo "Local dev (no containers)"
 	@echo "  dev-backend     - backend in watch mode, NO DATABASE (db isn't exposed to"
@@ -81,6 +81,7 @@ help:
 	@echo "  lint[-check]     - ESLint, --fix (or check only) on backend + frontend"
 	@echo "  typecheck        - tsc --noEmit on backend + frontend"
 	@echo "  test             - backend + frontend unit tests"
+	@echo "  test-e2e         - Playwright specs (Chromium + Firefox) against the running stack, through the proxy"
 	@echo "  test-api         - run the Bruno request collection (api/bruno) against a running backend"
 	@echo "  build            - production build, backend + frontend"
 	@echo "  check-docs       - doc drift check: links, dashes, env variables, indexes, every page in docs/README.md, cited routes vs controllers and Bruno"
@@ -295,9 +296,9 @@ test-backend:
 test-frontend:
 	cd frontend && npm run test
 
-# Real-browser auth-flow coverage. Needs the stack already up (`make up`
-# or `make dev-backend` + `make dev-frontend` in two shells) - this target
-# does not start it, since it needs a real Postgres behind the backend.
+# Real-browser coverage (auth, OAuth, session, profile, layout). Needs the
+# stack already up (`make up`): the specs go through the edge proxy and need
+# a real Postgres behind the backend, so this target does not start it.
 test-e2e:
 	cd frontend && E2E_BASE_URL=$${E2E_BASE_URL:-https://localhost:$(HTTPS_PORT)} npm run test:e2e
 
